@@ -8,7 +8,7 @@ const QUESTS: Record<QuestKey, { label: string; href: string }> = {
   expert: { label: "Valide un défi expert", href: "/defis" },
   lancer: { label: "Lance ton premier défi", href: "/defis?onglet=catalogue" },
   scan: { label: "Scanne un produit", href: "/scanner" },
-  meilleur_choix: { label: "Choisis une alternative mieux notée au scanner", href: "/scanner" },
+  meilleur_choix: { label: "Choisis un produit mieux noté au scanner", href: "/scanner" },
   bravo: { label: "Encourage un collègue dans le fil", href: "/fil#publications" },
   cap: { label: "Garde le cap sur une habitude", href: "/defis" },
 };
@@ -33,7 +33,7 @@ export function DailyQuests({ daily }: { daily: DailyState }) {
   return (
     <section className="card flex flex-col gap-2 py-3.5" aria-labelledby="quetes">
       <div className="flex items-center justify-between">
-        <h2 id="quetes" className="font-display text-base font-bold">Quêtes du jour <span className="text-xs font-normal text-terre">· changent chaque matin</span></h2>
+        <h2 id="quetes" className="font-display text-base font-bold">Quêtes du jour</h2>
         <span className="chip bg-peche">
           {done}/{order.length} · +{POINTS.quete} pousses
         </span>
@@ -64,7 +64,9 @@ export function DailyQuests({ daily }: { daily: DailyState }) {
           );
         })}
       </ul>
-      {done === order.length - 1 ? <p className="text-xs font-semibold text-argile-fonce">Plus qu&apos;une pour le bonus du jour !</p> : null}
+      <p className={`text-xs ${done === order.length - 1 ? "font-semibold text-argile-fonce" : "text-terre"}`}>
+        {done === order.length - 1 ? "Plus qu'une pour le bonus du jour !" : "Nouvelles quêtes chaque matin."}
+      </p>
     </section>
   );
 }
