@@ -99,6 +99,21 @@ signalent une avancée, titre sans mot négatif : `src/lib/news/rss.ts`), au plu
 titre, un court extrait et un lien vers l'article d'origine. Un média injoignable est simplement ignoré.
 `/api/news` renvoie la sélection du jour en JSON.
 
+## Appli installable et rappels
+
+Pousse s'installe sur l'écran d'accueil (manifeste `src/app/manifest.ts`, icônes dans `public/`,
+service worker `public/sw.js` avec une page hors ligne). Sur Android et ordinateur, un bandeau propose
+« Installer » ; sur iPhone, il indique le geste Safari (Partager → Sur l'écran d'accueil).
+
+Rappel du soir (Web Push, à activer dans le profil) : vers 18 h, `/api/cron/rappels` relance les personnes
+abonnées qui n'ont encore rien fait dans la journée, au plus une fois par jour. La notification part
+**vide** (signature VAPID faite avec `node:crypto`, sans dépendance) : à l'arrivée, le téléphone lit le
+texte sur `/api/rappel` avec sa propre session (« Ta série de 4 jours s'arrête ce soir »). Pas besoin de
+clé secrète Supabase : la base vérifie elle-même `CRON_SECRET`, dont seule l'empreinte SHA-256 est
+stockée (table `cron_keys`). Variables : `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (publique, dans
+`.env.production`), `VAPID_PRIVATE_KEY` et `CRON_SECRET` (dans Vercel). Nouvelle paire de clés :
+`node src/lib/push/vapid.ts`.
+
 ## Installation
 
 Prérequis : Node 22.18 ou plus récent, un compte Supabase (région UE).
@@ -172,6 +187,7 @@ createdb pousse_test
 for f in supabase/tests/supabase_stub.sql supabase/migrations/*.sql; do psql -d pousse_test -v ON_ERROR_STOP=1 -f "$f"; done
 psql -d pousse_test -f supabase/tests/scenario.sql
 psql -d pousse_test -f supabase/tests/scenario_engagement.sql
+psql -d pousse_test -f supabase/tests/scenario_rappels.sql
 ```
 
 Le premier scénario vérifie 22 points : code d'entreprise, domaine e-mail, calculs identiques au TypeScript,

@@ -13,6 +13,7 @@ import { WeekSummary } from "@/components/WeekSummary";
 import { IntroCard } from "@/components/IntroCard";
 import { GardenHero } from "@/components/GardenHero";
 import { DailyQuests } from "@/components/DailyQuests";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { reportPost, toggleCheer } from "./actions";
 import { NewsCard } from "./NewsCard";
 import { Fragment } from "react";
@@ -109,6 +110,8 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       />
 
       {daily ? <DailyQuests daily={daily} /> : null}
+
+      <InstallPrompt />
 
       <WeekSummary team={ranking.mine} teamsCount={ranking.teams.length} goal={goal} />
 

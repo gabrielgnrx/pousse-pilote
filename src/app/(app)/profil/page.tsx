@@ -6,6 +6,7 @@ import { DeleteAccount } from "./DeleteAccount";
 import { SubmitButton } from "@/components/ui";
 import { getEngagement } from "@/lib/engagement-data";
 import { RecentGains } from "@/components/RecentGains";
+import { PhoneCard } from "./PhoneCard";
 
 export default async function ProfilPage() {
   const { supabase, user, profile } = await requireProfile();
@@ -60,6 +61,8 @@ export default async function ProfilPage() {
       </section>
 
       <RecentGains items={e.recent.slice(0, 8)} />
+
+      <PhoneCard vapidKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null} />
 
       <section className="card flex flex-col gap-2">
         <p className="label">Ton impact · la planète</p>

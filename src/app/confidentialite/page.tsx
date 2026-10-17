@@ -26,6 +26,11 @@ export default function ConfidentialitePage() {
           Aucune donnée n&apos;est vendue ni utilisée à des fins publicitaires. Données hébergées en Union
           européenne.
         </p>
+        <p>
+          Rappels sur le téléphone : seulement si tu les actives, au plus un par jour. La notification part vide
+          vers le service de push de ton téléphone (Google, Apple ou Mozilla) ; son texte n&apos;est lu
+          qu&apos;à l&apos;arrivée, sur ton téléphone. Tu peux les couper à tout moment depuis ton profil.
+        </p>
       </Section>
       <Section title="Conservation et droits">
         <p>

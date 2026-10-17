@@ -9,7 +9,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "non connecté" }, { status: 401 });
 
-  const [profile, footprints, habits, challenges, validations, cheers, checkins, points, scans, swaps] = await Promise.all([
+  const [profile, footprints, habits, challenges, validations, cheers, checkins, points, scans, swaps, devices] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     supabase.from("footprints").select("*").eq("user_id", user.id),
     supabase.from("habits").select("*").eq("user_id", user.id).maybeSingle(),
@@ -20,6 +20,7 @@ export async function GET() {
     supabase.from("points_ledger").select("*").eq("user_id", user.id),
     supabase.from("product_scans").select("*").eq("user_id", user.id),
     supabase.from("product_swaps").select("*").eq("user_id", user.id),
+    supabase.from("push_subscriptions").select("created_at, last_sent_on").eq("user_id", user.id),
   ]);
 
   const body = {
@@ -35,6 +36,7 @@ export async function GET() {
     points: points.data,
     product_scans: scans.data,
     product_swaps: swaps.data,
+    reminder_devices: devices.data,
   };
   return new NextResponse(JSON.stringify(body, null, 2), {
     headers: {
