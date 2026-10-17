@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Pages accessibles sans être connecté. */
-const PUBLIC_PATHS = ["/rejoindre", "/auth", "/methodologie", "/confidentialite", "/api/cron", "/api/news"];
+const PUBLIC_PATHS = ["/rejoindre", "/connexion", "/auth", "/methodologie", "/confidentialite", "/api/cron", "/api/news"];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   const isPublic = path === "/" || PUBLIC_PATHS.some((p) => path.startsWith(p));
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
-    url.pathname = "/rejoindre";
+    url.pathname = "/connexion";
     return NextResponse.redirect(url);
   }
   return response;

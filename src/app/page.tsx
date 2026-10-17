@@ -37,6 +37,9 @@ export default async function Home() {
       <Link href="/rejoindre" className="btn-primary">
         Rejoindre avec le code de mon entreprise
       </Link>
+      <Link href="/connexion" className="btn-ghost">
+        J&apos;ai déjà un compte
+      </Link>
       <Link href="/methodologie" className="text-center text-sm font-semibold text-brun underline">
         Comment on calcule
       </Link>

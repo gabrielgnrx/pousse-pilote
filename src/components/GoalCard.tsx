@@ -1,10 +1,11 @@
 import { formatKg } from "@/lib/co2/challenges.ts";
 import type { CollectiveGoal } from "@/lib/engagement-data";
+import { daysUntil } from "@/lib/dates";
 
 /** L'impact : objectif de l'entreprise en kg de CO₂ évités, tous ensemble. */
 export function GoalCard({ goal, compact = false }: { goal: CollectiveGoal; compact?: boolean }) {
   const pct = Math.min(100, Math.round((goal.kg / goal.goal_kg) * 100));
-  const daysLeft = Math.max(0, Math.ceil((new Date(`${goal.ends_on}T23:59:59`).getTime() - Date.now()) / 86_400_000));
+  const daysLeft = Math.max(0, daysUntil(goal.ends_on) + 1);
 
   return (
     <div className="flex flex-col gap-1.5">

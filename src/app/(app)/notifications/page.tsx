@@ -1,6 +1,6 @@
 import { requireProfile } from "@/lib/session";
 import { TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
-import { relativeTime } from "@/lib/dates";
+import { formatDay, relativeTime } from "@/lib/dates";
 import { respondWitness } from "./actions";
 
 interface Row {
@@ -39,7 +39,7 @@ export default async function NotificationsPage() {
               <p className="text-sm leading-relaxed">
                 <strong>{r.author?.display_name ?? "Un collègue"}</strong> te demande de confirmer :{" "}
                 <strong>{t?.title ?? "un défi"}</strong>, {r.units} {r.units > 1 ? t?.unit.many : t?.unit.one} le{" "}
-                {new Date(r.day).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}.
+                {formatDay(r.day)}.
               </p>
               <form action={respondWitness} className="flex gap-2">
                 <input type="hidden" name="validation" value={r.id} />

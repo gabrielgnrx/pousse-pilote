@@ -52,7 +52,7 @@ export async function saveBilan(answersJson: string): Promise<{ error?: string }
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/rejoindre");
+  if (!user) redirect("/connexion");
 
   // Le calcul est fait ici, côté serveur, à partir des réponses brutes.
   const footprint = computeFootprint(answers);

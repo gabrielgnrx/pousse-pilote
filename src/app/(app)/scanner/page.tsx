@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/session";
-import { relativeTime } from "@/lib/dates";
+import { parisMidnightISO, relativeTime } from "@/lib/dates";
 import { normalizeGrade } from "@/lib/off/product.ts";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Scanner } from "./Scanner";
@@ -26,7 +26,7 @@ export default async function ScannerPage() {
       .from("product_swaps")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+      .gte("created_at", parisMidnightISO()),
   ]);
   // Un produit par ligne, le plus récent.
   const history = [...new Map((scans ?? []).map((s) => [s.code, s])).values()].slice(0, 8);

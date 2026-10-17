@@ -71,7 +71,7 @@ export async function requireProfile() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/rejoindre");
+  if (!user) redirect("/connexion");
 
   const { data: profile } = await supabase
     .from("profiles")

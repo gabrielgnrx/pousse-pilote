@@ -8,7 +8,7 @@ import {
   impactLevel,
   templateEligibility,
 } from "@/lib/co2/challenges.ts";
-import { todayParis } from "@/lib/dates";
+import { formatDay, todayParis } from "@/lib/dates";
 import { POINTS, keptHabits } from "@/lib/co2/engagement.ts";
 import { getEngagement } from "@/lib/engagement-data";
 import { keepHabit } from "./actions";
@@ -27,9 +27,9 @@ const LEVEL_STYLE = { fort: "bg-abricot", moyen: "bg-sauge", modeste: "bg-creme"
 export default async function DefisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ onglet?: string; garde?: string; erreur?: string }>;
+  searchParams: Promise<{ onglet?: string; garde?: string; erreur?: string; valide?: string; cree?: string }>;
 }) {
-  const { onglet, garde, erreur } = await searchParams;
+  const { onglet, garde, erreur, valide, cree } = await searchParams;
   const tab = onglet === "catalogue" ? "catalogue" : "en-cours";
   const { supabase, user, habits } = await requireHabits();
   const today = todayParis();
@@ -96,6 +96,20 @@ export default async function DefisPage({
       {garde ? (
         <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
           Noté pour cette semaine : +{POINTS.maintien} pousses !
+        </p>
+      ) : null}
+      {valide ? (
+        <p role="status" className="animate-pousse-pop rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#402a16]">
+          Validé ! Tes pousses et ton CO₂ évité sont comptés.
+          <span className="block text-xs font-semibold">
+            Sans preuve, la validation reste privée. Ajoute une photo ou un collègue la prochaine fois : +5 pousses et
+            elle apparaît dans le fil.
+          </span>
+        </p>
+      ) : null}
+      {cree ? (
+        <p role="status" className="animate-pousse-pop rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
+          Défi lancé ! Reviens le valider chaque fois que tu le réalises.
         </p>
       ) : null}
       {erreur ? (
@@ -187,7 +201,7 @@ export default async function DefisPage({
               <article key={c.id} className="card flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="label">
-                    {CATEGORY_LABEL[t.category]} · {done ? "réussi" : `jusqu'au ${new Date(c.ends_on).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`}
+                    {CATEGORY_LABEL[t.category]} · {done ? "réussi" : `jusqu'au ${formatDay(c.ends_on, "short")}`}
                   </span>
                   <span className="text-xs font-bold text-argile-fonce">
                     {p.units}/{c.target} {c.target > 1 ? t.unit.many : t.unit.one}

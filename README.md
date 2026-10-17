@@ -119,6 +119,19 @@ Prérequis : Node 22.18 ou plus récent, un compte Supabase (région UE).
    ```
    Ouvrir http://localhost:3000, cliquer sur « Rejoindre », code `DEMO-2026`.
 
+### Connexion par e-mail
+
+`/rejoindre` (première fois : code entreprise + e-mail) et `/connexion` (compte existant : e-mail seul)
+envoient un e-mail de connexion. Pour que cet e-mail contienne aussi un **code à 6 chiffres**, plus fiable sur
+téléphone que le lien :
+1. configurer un SMTP (Authentication > Emails > SMTP Settings : Brevo, Resend…), ce qui débloque aussi la
+   limite de quelques e-mails par heure ;
+2. dans le modèle « Magic link or OTP » (et « Confirm sign up »), ajouter `{{ .Token }}` ;
+3. mettre `NEXT_PUBLIC_LOGIN_CODE=1` dans `.env.production` (ou dans Vercel) et redéployer.
+
+Le code de l'entreprise de démo du seed (`DEMO-2026`) est public : en production, le remplacer par un code
+secret (`update companies set join_code = '…'`) et créer les vraies entreprises avec leur `email_domain`.
+
 ### Déployer sur Vercel
 
 Importer le dépôt, ajouter les variables de `.env.example` (dont `SUPABASE_SERVICE_ROLE_KEY` et

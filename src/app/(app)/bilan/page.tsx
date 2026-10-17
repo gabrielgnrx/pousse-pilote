@@ -5,6 +5,7 @@ import { computeFootprint, type BilanAnswers, type Footprint } from "@/lib/co2/f
 import { actionPlan } from "@/lib/co2/plan.ts";
 import { TEMPLATE_BY_ID, carKmEquivalent, formatKg } from "@/lib/co2/challenges.ts";
 import { headStartKgYear, keptHabits, remainingBigItems } from "@/lib/co2/engagement.ts";
+import { formatInstant } from "@/lib/dates";
 
 const CATEGORIES: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
   { key: "transport", label: "Transports", color: "#f0a97b" },
@@ -46,7 +47,7 @@ export default async function BilanPage() {
       <div>
         <h1 className="font-display text-2xl font-bold">Ton bilan carbone</h1>
         <p className="mt-1 text-sm text-terre">
-          Calculé le {new Date(fp.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })} avec
+          Calculé le {formatInstant(fp.created_at)} avec
           les facteurs de l&apos;ADEME.
         </p>
       </div>
@@ -152,7 +153,7 @@ export default async function BilanPage() {
           ) : null}
         </div>
         <p className="rounded-xl bg-sauge px-3 py-2 text-sm font-semibold text-[#2e3a22]">
-          Prochain bilan conseillé : {nextBilan.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+          Prochain bilan conseillé : {formatInstant(nextBilan)}
         </p>
       </section>
 
