@@ -80,8 +80,8 @@ values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000
        ('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001',
         my_company_id(), 'transports', 'base', 10, current_date + 30);
 
-select pg_temp.check(v.units = 2 and round(v.kg, 3) = 1.327 and v.visibility = 'private' and v.points = 20,
-  'sans preuve : 2 trajets comptés, non publiés')
+select pg_temp.check(v.units = 2 and round(v.kg, 3) = 1.327 and v.visibility = 'private' and v.points = 0,
+  'sans preuve : 2 trajets comptés (CO₂), ni publiés ni récompensés en pousses')
 from validate_challenge_day('10000000-0000-0000-0000-000000000001', 5) v;
 
 do $$ begin

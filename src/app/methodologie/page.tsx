@@ -73,9 +73,13 @@ export default function MethodologiePage() {
       <Section title="Deux chiffres, deux rôles">
         <p>
           <strong>Les pousses servent à jouer.</strong> C&apos;est le seul chiffre du classement, individuel
-          comme par équipe. Défi du quotidien 10 pousses par unité, train 30, défis expert de 15 à 150, +5 avec
-          une preuve ; garder le cap sur une habitude bas carbone déjà acquise, 10 pousses par semaine ; les trois quêtes du jour, 15 ; une série de 3, 7, 14 ou 30 jours actifs, 10, 25, 50 ou 100 ; un
-          collègue qui relève un défi depuis ta publication, 15 ; confirmer le défi d&apos;un collègue, 3.
+          comme par équipe. Seules les validations avec preuve (photo ou collègue témoin) en rapportent : défi du
+          quotidien 10 pousses par unité, train 30, défis expert de 15 à 150, plus 5 de bonus de preuve. Sans
+          preuve, le CO₂ évité est compté mais pas les pousses. Garder le cap sur une habitude bas carbone déjà
+          acquise : 10 pousses, pour 2 habitudes par semaine au plus ; les trois quêtes du jour, tirées chaque
+          matin selon ton profil : 15 ; une série de 3, 7, 14 ou 30 jours actifs (défi, habitude, bravo, scan) :
+          10, 25, 50 ou 100 ; un meilleur choix au scanner : 5, trois fois par jour ; un collègue qui relève un
+          défi depuis ta publication : 15 ; confirmer le défi d&apos;un collègue : 3.
         </p>
         <p>
           <strong>Les kg de CO₂ évités mesurent l&apos;impact.</strong> Ils restent stricts (seulement ce que

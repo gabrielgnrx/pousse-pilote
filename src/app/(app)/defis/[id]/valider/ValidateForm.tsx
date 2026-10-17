@@ -88,6 +88,11 @@ export function ValidateForm({
           </div>
           <span className="text-xs font-bold">{["Aucun", "Moyen", "Fort"][proofLevel]}</span>
         </div>
+        <p className={`rounded-xl px-3 py-2 text-xs font-semibold ${proofLevel > 0 ? "bg-sauge text-[#2e3a22]" : "bg-peche text-argile-fonce"}`}>
+          {proofLevel > 0
+            ? "Avec preuve : pousses gagnées (+5 de bonus) et publication possible dans le fil."
+            : "Sans preuve, ton CO₂ évité est compté mais tu ne gagnes pas de pousses."}
+        </p>
       </fieldset>
 
       <label className="flex flex-col gap-1.5">

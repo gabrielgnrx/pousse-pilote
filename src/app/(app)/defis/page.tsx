@@ -5,7 +5,6 @@ import {
   TEMPLATE_BY_ID,
   TEMPLATES,
   formatKg,
-  impactLevel,
   templateEligibility,
 } from "@/lib/co2/challenges.ts";
 import { formatDay, todayParis } from "@/lib/dates";
@@ -21,8 +20,6 @@ interface ChallengeRow {
   ends_on: string;
   status: string;
 }
-
-const LEVEL_STYLE = { fort: "bg-abricot", moyen: "bg-sauge", modeste: "bg-creme" } as const;
 
 export default async function DefisPage({
   searchParams,
@@ -50,6 +47,9 @@ export default async function DefisPage({
     getEngagement(supabase, user.id),
   ]);
   const kept = keptHabits(habits);
+  // Garder le cap : 2 habitudes récompensées par semaine (keep_habit, 0009_equilibrage.sql).
+  const MAX_REWARDED = 2;
+  const rewardedThisWeek = Math.min(MAX_REWARDED, engagement.keptThisWeek.size);
 
   const progress = new Map<string, { units: number; kg: number }>();
   for (const v of validations ?? []) {
@@ -128,8 +128,8 @@ export default async function DefisPage({
                   </p>
                 </div>
                 <div className="shrink-0 rounded-xl bg-white/10 px-3 py-2 text-center">
-                  <p className="font-display text-xl leading-none font-bold">{engagement.streak}</p>
-                  <p className="mt-0.5 text-[10px]">semaine{engagement.streak > 1 ? "s" : ""} d&apos;affilée</p>
+                  <p className="font-display text-xl leading-none font-bold">{rewardedThisWeek}/{MAX_REWARDED}</p>
+                  <p className="mt-0.5 text-[10px]">récompensées<br />cette semaine</p>
                 </div>
               </div>
               <ul className="flex flex-col gap-2">
@@ -149,7 +149,7 @@ export default async function DefisPage({
                         <form action={keepHabit}>
                           <input type="hidden" name="habit" value={k.key} />
                           <button type="submit" className="flex h-10 items-center rounded-full bg-abricot px-3.5 text-sm font-bold text-[#402a16]">
-                            Je garde · +{POINTS.maintien}
+                            {rewardedThisWeek < MAX_REWARDED ? `Je garde · +${POINTS.maintien}` : "Je garde"}
                           </button>
                         </form>
                       )}
@@ -158,7 +158,8 @@ export default async function DefisPage({
                 })}
               </ul>
               <p className="text-[11px] opacity-90">
-                Des pousses pour toi et ton équipe. Pas de CO₂ évité en plus : il ne compte que ce qui change.
+                +{POINTS.maintien} pousses pour les 2 premières habitudes confirmées chaque semaine ; les suivantes
+                comptent pour ta série. Pas de CO₂ évité en plus : il ne compte que ce qui change.
               </p>
             </section>
           ) : null}
@@ -168,7 +169,7 @@ export default async function DefisPage({
             <div className="flex gap-4">
               {[
                 { label: "Trajets", used: todayUnits(["velo", "transports", "covoiturage"]), max: 2 },
-                { label: "Repas", used: todayUnits(["vege", "moins_boeuf"]), max: 2 },
+                { label: "Repas", used: todayUnits(["vege", "moins_boeuf", "vegetalien"]), max: 2 },
               ].map((c) => (
                 <div key={c.label} className="flex-1">
                   <p className="text-xs font-semibold">
@@ -227,17 +228,15 @@ export default async function DefisPage({
       ) : (
         <>
           {eligible.map(({ t, e }) => {
-            const level = impactLevel(e.maxKg * t.defaultTarget);
             return (
               <article key={t.id} className="card flex items-center gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="label">{CATEGORY_LABEL[t.category]}</span>
-                    <span className={`chip ${LEVEL_STYLE[level]} px-2 py-0.5 text-[10px] tracking-wide uppercase`}>Impact {level}</span>
                   </div>
                   <h2 className="mt-1 font-bold">{t.title}</h2>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    <span className="chip bg-peche">+{t.pointsPerUnit} pousses</span>
+                    <span className="chip bg-peche">+{t.pointsPerUnit} pousses avec preuve</span>
                     <span className="chip bg-sauge">
                       −{e.minKg === e.maxKg ? formatKg(e.minKg) : `${formatKg(e.minKg)} à ${formatKg(e.maxKg)}`} CO₂ par {t.unit.one}
                     </span>
@@ -271,7 +270,7 @@ export default async function DefisPage({
                     <h3 className="mt-1 font-bold">{t.title}</h3>
                     {t.pitch ? <p className="mt-1 text-xs leading-relaxed text-brun">{t.pitch}</p> : null}
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      <span className="chip bg-peche">+{t.pointsPerUnit} pousses</span>
+                      <span className="chip bg-peche">+{t.pointsPerUnit} pousses avec preuve</span>
                       <span className="chip bg-sauge">
                         −{e.minKg === e.maxKg ? formatKg(e.minKg) : `${formatKg(e.minKg)} à ${formatKg(e.maxKg)}`} CO₂ par {t.unit.one}
                       </span>

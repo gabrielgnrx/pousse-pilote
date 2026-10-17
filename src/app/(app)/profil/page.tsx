@@ -33,15 +33,15 @@ export default async function ProfilPage() {
         <p>
           <span className="font-display text-4xl font-bold">{e.points.total}</span>
           <span className="ml-1.5 text-sm font-semibold">pousses depuis le début</span>
-          <span className="block text-xs text-terre">dont {e.week.points} cette semaine</span>
+          <span className="block text-xs text-terre">
+            dont {e.week.points} cette semaine
+            {e.streak > 0 ? ` · série de ${e.streak} jour${e.streak > 1 ? "s" : ""} d'affilée` : ""}
+          </span>
         </p>
         <ul className="flex flex-col text-sm">
           {[
             { l: "Défis validés", v: e.points.defis },
-            {
-              l: `Habitudes gardées${e.streak > 0 ? ` (${e.streak} sem. d'affilée)` : ""}`,
-              v: e.points.maintien,
-            },
+            { l: "Habitudes gardées", v: e.points.maintien },
             {
               l: `Collègues inspirés${e.influence.challenges > 0 ? ` (${e.influence.challenges} défi${e.influence.challenges > 1 ? "s" : ""})` : ""}`,
               v: e.points.influence,

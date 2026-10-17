@@ -30,11 +30,12 @@ export const STREAK_MILESTONES = [
 
 /** Le barème, tel qu'il est expliqué dans l'application. */
 export const POINT_RULES: { label: string; points: string }[] = [
-  { label: "Défi du quotidien (trajet, repas, vêtement, semaine de chauffage)", points: "+10" },
-  { label: "Train au lieu de l'avion (aller simple)", points: "+30" },
-  { label: "Défis expert : végétalien, réparation, vacances en train", points: "+15 à +150" },
-  { label: "Preuve (photo ou collègue témoin)", points: "+5" },
-  { label: "Garder le cap sur une habitude, chaque semaine", points: "+10" },
+  { label: "Défi du quotidien validé avec preuve (trajet, repas, vêtement, semaine de chauffage)", points: "+10" },
+  { label: "Train au lieu de l'avion, avec preuve (aller simple)", points: "+30" },
+  { label: "Défis expert avec preuve : végétalien, réparation, vacances en train", points: "+15 à +150" },
+  { label: "Bonus de preuve (photo ou collègue témoin)", points: "+5" },
+  { label: "Défi validé sans preuve : le CO₂ compte, pas les pousses", points: "0" },
+  { label: "Garder le cap sur une habitude (2 récompensées par semaine)", points: "+10" },
   { label: "Les 3 quêtes du jour réussies", points: "+15" },
   { label: "Série de jours actifs : 3, 7, 14, 30 jours", points: "+10, +25, +50, +100" },
   { label: "Scanner : choisir une alternative mieux notée (3 par jour)", points: "+5" },
@@ -46,7 +47,7 @@ export const POINT_RULES: { label: string; points: string }[] = [
 export const LEVELS = [
   { name: "Graine", min: 0 },
   { name: "Germe", min: 50 },
-  { name: "Pousse", min: 150 },
+  { name: "Jeune pousse", min: 150 },
   { name: "Plantule", min: 300 },
   { name: "Arbuste", min: 600 },
   { name: "Arbre", min: 1000 },

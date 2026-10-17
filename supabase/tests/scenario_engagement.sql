@@ -100,13 +100,13 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000005');
 select pg_temp.check(kept_habits(h) @> array['trajet_doux', 'repas_vege', 'sans_avion', 'peu_de_neuf', 'telephone_garde'],
   'Hugo : cinq habitudes à garder') from habits h;
 select keep_habit('trajet_doux');
--- Classement en points, Data (6 personnes) :
---   Gabriel 2 trajets (20) + repas avec photo (15) + garder le cap (10) + influence de Léa (15) = 60
+-- Classement en pousses, Data (6 personnes) — pas de pousses sans preuve (0009) :
+--   Gabriel 2 trajets sans preuve (0) + repas avec photo (15) + garder le cap (10) + influence de Léa (15) = 40
 --   Léa repas confirmé par témoin (15) ; témoin 3 ; Hugo 10 ; Inès 0 (refusée) ; une personne inactive.
---   Total 88 → 14,7 points par participant, 4 actifs.
-select pg_temp.check(s.team_name = 'Data' and s.points = 88 and s.points_per_person = 14.7
+--   Total 68 → 11,3 pousses par participant, 4 actifs.
+select pg_temp.check(s.team_name = 'Data' and s.points = 68 and s.points_per_person = 11.3
                      and s.active = 4 and s.is_mine,
-  'classement : points par participant, inactifs à 0') from team_stats() s;
+  'classement : pousses par participant, inactifs à 0') from team_stats() s;
 select pg_temp.expect_error($$select member_points('00000000-0000-0000-0000-000000000001', null)$$,
   'permission denied%', 'points d''un collègue non consultables');
 reset role;
@@ -118,14 +118,34 @@ select pg_temp.check(g.name = 'Entreprise démo' and g.participants = 7 and g.go
 from collective_goal() g;
 reset role;
 
--- 10. Pousses du jour (0007) : quêtes et série.
+-- 10. Quêtes du jour (0009) : 3 quêtes tirées pour la journée, la première est toujours liée aux défis.
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
--- Gabriel a validé un défi, avec photo, et gardé le cap aujourd'hui : les trois quêtes sont faites.
-select pg_temp.check((r->'quests')::text = '{"defi": true, "lien": true, "preuve": true}'
-                     and (r->>'gained')::int = 15 and (r->>'quest_done')::boolean,
-  'quêtes du jour : +15 pousses') from claim_daily_rewards() r;
+select pg_temp.check(jsonb_array_length(r->'order') = 3 and r->'order'->>0 = 'preuve'
+                     and (r->'quests'->>'preuve')::boolean,
+  'quêtes : 3 tirées, « défi avec preuve » en premier et déjà faite') from claim_daily_rewards() r;
+select pg_temp.check((select quests from daily_quests) = (select array(select jsonb_array_elements_text(claim_daily_rewards()->'order'))),
+  'quêtes figées pour la journée');
+select pg_temp.check((select not ('lancer' = any (quests)) from daily_quests), 'pas « lancer un défi » quand on en a déjà');
+reset role;
+-- Toutes les quêtes du jour faites : +15, une seule fois.
+update daily_quests set quests = array['preuve', 'cap', 'scan'] where user_id = '00000000-0000-0000-0000-000000000001';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
+select pg_temp.check(not (claim_daily_rewards()->>'quest_done')::boolean, 'scan pas encore fait : pas de bonus');
+insert into product_scans (user_id, company_id, code, name) values (auth.uid(), my_company_id(), '3017620422003', 'Test');
+select pg_temp.check((r->>'gained')::int = 15 and (r->>'quest_done')::boolean, 'trois quêtes faites : +15') from claim_daily_rewards() r;
 select pg_temp.check((claim_daily_rewards()->>'gained')::int = 0, 'bonus crédité une seule fois');
 reset role;
+
+-- Garder le cap : au plus 2 habitudes récompensées par semaine (20 pousses).
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005');
+select keep_habit('repas_vege');
+select keep_habit('peu_de_neuf');
+select pg_temp.check((select sum(points) from points_ledger where kind = 'maintien') = 20,
+  'garder le cap : 3 habitudes confirmées, 20 pousses');
+reset role;
+delete from habit_checkins where user_id = '00000000-0000-0000-0000-000000000005' and habit in ('repas_vege', 'peu_de_neuf');
+delete from points_ledger where user_id = '00000000-0000-0000-0000-000000000005' and kind = 'maintien'
+  and ref_id not in (select id from habit_checkins);
 
 -- Hugo a été actif aujourd'hui, hier et avant-hier : série de 3 jours, +10.
 insert into habit_checkins (user_id, company_id, habit, week_start, created_at)

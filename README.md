@@ -48,8 +48,11 @@ Le calcul existe en deux exemplaires, qui doivent rester identiques :
 Deux chiffres, deux rôles, expliqués dans l'app (`/regles` et l'écran « Comment ça marche » du fil) :
 
 - **Les pousses = le jeu.** Seul chiffre du classement, individuel et par équipe (pousses par participant,
-  inactifs à 0). Barème : défi du quotidien +10 par unité, train +30, défis expert +15 à +150, +5 avec une
-  preuve, garder le cap +10 par habitude et par semaine, les 3 quêtes du jour +15, série de jours actifs
+  inactifs à 0). Seules les validations avec preuve rapportent des pousses (`0009_equilibrage.sql`) : défi
+  du quotidien +10 par unité, train +30, défis expert +15 à +150, +5 de bonus de preuve ; sans preuve, le CO₂
+  compte mais pas les pousses. Garder le cap +10 pour 2 habitudes par semaine au plus, les 3 quêtes du jour
+  +15 (tirées chaque matin parmi : défi avec preuve, défi expert, lancer un défi, scanner un produit,
+  meilleur choix au scanner, bravo à un collègue, garder le cap), une seule série : les jours actifs
   (+10 à 3 jours, +25 à 7, +50 à 14, +100 à 30), influence +15, témoin +3. Dans la base, la colonne
   s'appelle toujours `points` ; les pousses hors défis sont dans `points_ledger`, écrites uniquement par la
   base (`claim_daily_rewards` pour les quêtes et les séries, appelée à l'ouverture de l'accueil).
@@ -67,7 +70,7 @@ points d'influence quand un collègue relève un défi depuis leur publication (
 et dans le bilan les plus gros postes restants et « ce que tes habitudes évitent déjà » (une comparaison,
 jamais ajoutée au CO₂ évité).
 
-Migrations `0005_engagement.sql`, `0006_points.sql` et `0007_pousses.sql` ; scénario `supabase/tests/scenario_engagement.sql`
+Migrations `0005_engagement.sql` à `0009_equilibrage.sql` ; scénario `supabase/tests/scenario_engagement.sql`
 (à jouer après `scenario.sql`).
 
 ## Scanner de produits
@@ -103,7 +106,7 @@ Prérequis : Node 22.18 ou plus récent, un compte Supabase (région UE).
 1. **Créer le projet Supabase** (région Europe, ex. Paris ou Francfort).
 2. **Appliquer les migrations** dans l'ordre, depuis l'éditeur SQL de Supabase ou avec la CLI
    (`supabase db push`) :
-   `0001_schema.sql`, `0002_functions.sql`, `0003_policies.sql`, `0004_seed.sql`, `0005_engagement.sql`, `0006_points.sql`, `0007_pousses.sql`, `0008_scanner.sql`.
+   `0001_schema.sql`, `0002_functions.sql`, `0003_policies.sql`, `0004_seed.sql`, `0005_engagement.sql`, `0006_points.sql`, `0007_pousses.sql`, `0008_scanner.sql`, `0009_equilibrage.sql`.
    Le dernier crée une entreprise de démonstration, code **DEMO-2026**, avec 6 équipes.
 3. **Réglages d'authentification** (Authentication > URL Configuration) :
    - Site URL : `http://localhost:3000` en local, puis l'URL Vercel ;

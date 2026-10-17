@@ -55,7 +55,7 @@ test("niveaux : la plante grandit avec les pousses", () => {
   assert.equal(levelFor(0).name, "Graine");
   assert.deepEqual(levelFor(20).next, { name: "Germe", min: 50, missing: 30 });
   near(levelFor(20).progress, 0.4);
-  assert.equal(levelFor(150).name, "Pousse");
+  assert.equal(levelFor(150).name, "Jeune pousse");
   assert.equal(levelFor(5000).name, "Forêt");
   assert.equal(levelFor(5000).next, null);
   assert.equal(levelFor(5000).progress, 1);

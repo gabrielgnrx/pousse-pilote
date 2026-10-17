@@ -117,7 +117,7 @@ export function NewChallengeForm({
         <div className="mt-2 flex gap-4">
           <div className="flex-1">
             <p className="font-display text-2xl font-bold">+{target * template.pointsPerUnit} pousses</p>
-            <p className="text-xs">pour toi et ton équipe (+5 par preuve)</p>
+            <p className="text-xs">avec une preuve à chaque fois (+5 de bonus par validation)</p>
           </div>
           <div className="flex-1">
             <p className="font-display text-2xl font-bold">{formatKg(total)}</p>

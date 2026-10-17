@@ -17,9 +17,10 @@ export default function ReglesPage() {
           <h2 className="font-display text-lg font-bold">Les pousses</h2>
         </div>
         <p className="text-sm leading-relaxed">
-          C&apos;est le seul chiffre qui compte pour le classement. Tout geste engagé en rapporte, y compris
-          garder des habitudes que tu as déjà : quelqu&apos;un de très sobre gagne autant de pousses que
-          quelqu&apos;un qui part de loin.
+          C&apos;est le seul chiffre qui compte pour le classement. On en gagne avec ce qui se vérifie : un défi
+          validé avec une preuve, les quêtes du jour, une série de jours actifs, un meilleur choix au scanner,
+          les habitudes déjà acquises. Quelqu&apos;un de très sobre gagne autant de pousses que quelqu&apos;un
+          qui part de loin.
         </p>
         <table className="w-full text-left text-sm">
           <tbody>

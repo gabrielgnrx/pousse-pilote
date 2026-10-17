@@ -114,6 +114,8 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
 
       <WeekSummary team={ranking.mine} teamsCount={ranking.teams.length} goal={goal} />
 
+      <span id="publications" className="-mb-4 block scroll-mt-4" aria-hidden="true" />
+
       {(posts ?? []).length === 0 ? (
         <section className="card flex flex-col gap-3 text-center">
           <p className="font-display text-lg font-bold">Le fil est encore calme</p>

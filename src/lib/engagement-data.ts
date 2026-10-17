@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { currentStreak, weekStart } from "@/lib/co2/engagement.ts";
+import { weekStart } from "@/lib/co2/engagement.ts";
 import { TEMPLATE_BY_ID } from "@/lib/co2/challenges.ts";
 import { todayParis } from "@/lib/dates";
 
@@ -20,7 +20,7 @@ export interface Engagement {
   };
   /** Cette semaine (depuis lundi) : points et kg. */
   week: { points: number; kg: number };
-  /** Semaines consécutives avec au moins une habitude confirmée. */
+  /** Série : jours actifs d'affilée (défi, habitude gardée, bravo, scan). */
   streak: number;
   /** Dernières pousses gagnées, les plus récentes d'abord. */
   recent: { label: string; points: number; at: string }[];
@@ -31,7 +31,7 @@ export interface Engagement {
 
 /** Points, impact et série de la personne connectée (lus sous ses propres droits). */
 export async function getEngagement(supabase: SupabaseClient, userId: string): Promise<Engagement> {
-  const [{ data: validations }, { data: ledger }, { data: checkins }, { data: influence }] = await Promise.all([
+  const [{ data: validations }, { data: ledger }, { data: checkins }, { data: influence }, { data: dayStreak }] = await Promise.all([
     supabase
       .from("validations")
       .select("kg, points, day, template_id, units, proof_level, created_at")
@@ -40,6 +40,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
     supabase.from("points_ledger").select("kind, points, created_at").eq("user_id", userId),
     supabase.from("habit_checkins").select("habit, week_start").eq("user_id", userId),
     supabase.rpc("my_influence").maybeSingle<{ challenges: number; colleagues: number; kg: number }>(),
+    supabase.rpc("my_day_streak"),
   ]);
 
   const today = todayParis();
@@ -96,7 +97,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
       kg: thisWeek.reduce((s, v) => s + Number(v.kg), 0),
     },
     recent,
-    streak: currentStreak([...new Set((checkins ?? []).map((c) => c.week_start as string))], today),
+    streak: Number(dayStreak ?? 0),
     keptThisWeek: new Set((checkins ?? []).filter((c) => c.week_start === monday).map((c) => c.habit as string)),
     influence: {
       challenges: Number(influence?.challenges ?? 0),
@@ -142,8 +143,12 @@ export async function getTeamRanking(supabase: SupabaseClient, since: string | n
   return { teams, mine: mineIndex >= 0 ? { rank: mineIndex + 1, row: teams[mineIndex] } : null };
 }
 
+export type QuestKey = "preuve" | "defi" | "expert" | "lancer" | "scan" | "meilleur_choix" | "bravo" | "cap";
+
 export interface DailyState {
-  quests: { defi: boolean; preuve: boolean; lien: boolean };
+  /** Les 3 quêtes du jour, dans l'ordre. */
+  order: QuestKey[];
+  quests: Partial<Record<QuestKey, boolean>>;
   questDone: boolean;
   /** Jours actifs consécutifs. */
   streak: number;
@@ -155,6 +160,6 @@ export interface DailyState {
 export async function claimDailyRewards(supabase: SupabaseClient): Promise<DailyState | null> {
   const { data, error } = await supabase.rpc("claim_daily_rewards");
   if (error || !data) return null;
-  const d = data as { quests: DailyState["quests"]; quest_done: boolean; streak: number; gained: number };
-  return { quests: d.quests, questDone: d.quest_done, streak: d.streak, gained: d.gained };
+  const d = data as { order: QuestKey[]; quests: DailyState["quests"]; quest_done: boolean; streak: number; gained: number };
+  return { order: d.order ?? [], quests: d.quests, questDone: d.quest_done, streak: d.streak, gained: d.gained };
 }
