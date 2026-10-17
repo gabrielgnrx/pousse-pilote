@@ -1,0 +1,399 @@
+/**
+ * Catalogue des défis et calcul du CO₂ évité.
+ *
+ * Principe : un défi ne rapporte du CO₂ que s'il remplace une habitude déclarée dans
+ * le bilan. Le gain est toujours « habitude remplacée − action réalisée ».
+ * Ce fichier sert à l'affichage et aux aperçus ; le calcul qui fait foi est refait
+ * dans la base (fonction SQL validate_challenge_day), avec les mêmes valeurs.
+ */
+import {
+  CLOTHING_KG,
+  COMMUTE_KG_PER_KM,
+  DEVICE_KG,
+  HEATING_SAVING_PER_DEGREE,
+  HEATING_WEEKS_PER_YEAR,
+  MEAL_KG,
+  SOURCES,
+  TRANSPORT_KG_PER_KM,
+  type CommuteMode,
+} from "./factors.ts";
+import { LONG_FLIGHT_KM_ROUND_TRIP, MEALS_PER_WEEK, OTHER_MEAT_MEAL_KG, type Habits } from "./footprint.ts";
+
+export type Category = "transport" | "alimentation" | "consommation" | "logement";
+
+export interface Variant {
+  key: string;
+  label: string;
+}
+
+export interface ChallengeTemplate {
+  id: string;
+  category: Category;
+  title: string;
+  /** Unité comptée à chaque validation. */
+  unit: { one: string; many: string };
+  variants: Variant[];
+  variantQuestion?: string;
+  proofHint: string;
+  pointsPerUnit: number;
+  /** Nombre maximum d'unités validables par jour, toutes variantes confondues. */
+  dailyCap: number;
+  defaultTarget: number;
+  source: string;
+  /** « expert » : pour aller plus loin quand les gestes du quotidien sont déjà acquis. */
+  level?: "standard" | "expert";
+  /** Explication courte affichée dans le catalogue pour les défis expert. */
+  pitch?: string;
+}
+
+export const CATEGORY_LABEL: Record<Category, string> = {
+  transport: "Transport",
+  alimentation: "Alimentation",
+  consommation: "Consommation",
+  logement: "Logement",
+};
+
+export const TEMPLATES: ChallengeTemplate[] = [
+  {
+    id: "velo",
+    category: "transport",
+    title: "Vélo au lieu de la voiture",
+    unit: { one: "trajet", many: "trajets" },
+    variants: [{ key: "base", label: "Ton trajet domicile-travail" }],
+    proofHint: "Photo de ton vélo ou confirmation d'un collègue",
+    pointsPerUnit: 10,
+    dailyCap: 2,
+    defaultTarget: 10,
+    source: SOURCES.transport,
+  },
+  {
+    id: "transports",
+    category: "transport",
+    title: "Métro ou RER au lieu de la voiture",
+    unit: { one: "trajet", many: "trajets" },
+    variants: [{ key: "base", label: "Ton trajet domicile-travail" }],
+    proofHint: "Photo de ton titre de transport",
+    pointsPerUnit: 10,
+    dailyCap: 2,
+    defaultTarget: 10,
+    source: SOURCES.transport,
+  },
+  {
+    id: "covoiturage",
+    category: "transport",
+    title: "Covoiturer à deux au lieu de rouler seul",
+    unit: { one: "trajet", many: "trajets" },
+    variants: [{ key: "base", label: "Ton trajet domicile-travail" }],
+    proofHint: "Confirmation du collègue covoituré",
+    pointsPerUnit: 10,
+    dailyCap: 2,
+    defaultTarget: 8,
+    source: SOURCES.transport,
+  },
+  {
+    id: "train",
+    category: "transport",
+    title: "Train au lieu de l'avion",
+    unit: { one: "aller simple", many: "allers simples" },
+    variantQuestion: "Distance du trajet",
+    variants: [
+      { key: "300", label: "300 km" },
+      { key: "500", label: "500 km" },
+      { key: "800", label: "800 km" },
+    ],
+    proofHint: "Photo du billet",
+    pointsPerUnit: 30,
+    dailyCap: 2,
+    defaultTarget: 2,
+    source: SOURCES.transport,
+  },
+  {
+    id: "vege",
+    category: "alimentation",
+    title: "Repas végétarien",
+    unit: { one: "repas", many: "repas" },
+    variantQuestion: "Au lieu d'un repas…",
+    variants: [
+      { key: "boeuf", label: "au bœuf" },
+      { key: "autre", label: "au porc, poulet ou poisson" },
+    ],
+    proofHint: "Photo du plat",
+    pointsPerUnit: 10,
+    dailyCap: 2,
+    defaultTarget: 5,
+    source: SOURCES.alimentation,
+  },
+  {
+    id: "moins_boeuf",
+    category: "alimentation",
+    title: "Porc, poulet ou poisson au lieu du bœuf",
+    unit: { one: "repas", many: "repas" },
+    variants: [{ key: "base", label: "Au lieu d'un repas au bœuf" }],
+    proofHint: "Photo du plat",
+    pointsPerUnit: 10,
+    dailyCap: 2,
+    defaultTarget: 5,
+    source: SOURCES.alimentation,
+  },
+  {
+    id: "occasion",
+    category: "consommation",
+    title: "Vêtement d'occasion au lieu de neuf",
+    unit: { one: "vêtement", many: "vêtements" },
+    variantQuestion: "Quel vêtement ?",
+    variants: [
+      { key: "tshirt", label: "T-shirt" },
+      { key: "chemise", label: "Chemise" },
+      { key: "chaussures", label: "Chaussures en cuir" },
+      { key: "jean", label: "Jean" },
+      { key: "pull", label: "Pull en laine" },
+      { key: "manteau", label: "Manteau" },
+    ],
+    proofHint: "Photo de l'achat ou de l'annonce",
+    pointsPerUnit: 10,
+    dailyCap: 3,
+    defaultTarget: 2,
+    source: SOURCES.habillement,
+  },
+  {
+    id: "chauffage",
+    category: "logement",
+    title: "Chauffage baissé de 1 °C",
+    unit: { one: "semaine", many: "semaines" },
+    variants: [{ key: "base", label: "7 % de ton chauffage déclaré" }],
+    proofHint: "Photo du thermostat",
+    pointsPerUnit: 10,
+    dailyCap: 1,
+    defaultTarget: 4,
+    source: SOURCES.chauffage,
+  },
+  // Défis expert : les postes qui restent quand le quotidien est déjà sobre.
+  {
+    id: "vegetalien",
+    category: "alimentation",
+    title: "Repas végétalien au lieu de végétarien",
+    unit: { one: "repas", many: "repas" },
+    variants: [{ key: "base", label: "Au lieu d'un repas végétarien" }],
+    proofHint: "Photo du plat",
+    pointsPerUnit: 15,
+    dailyCap: 2,
+    defaultTarget: 10,
+    source: SOURCES.alimentation,
+    level: "expert",
+    pitch: "Déjà végétarien ? Sans œufs ni produits laitiers, un repas émet encore un tiers de moins.",
+  },
+  {
+    id: "vacances_train",
+    category: "transport",
+    title: "Vacances en train au lieu du long-courrier",
+    unit: { one: "aller-retour évité", many: "allers-retours évités" },
+    variants: [{ key: "base", label: "Une destination en train plutôt qu'un vol long-courrier" }],
+    proofHint: "Photo du billet de train ou de la réservation",
+    pointsPerUnit: 150,
+    dailyCap: 1,
+    defaultTarget: 1,
+    source: SOURCES.transport,
+    level: "expert",
+    pitch: "Le plus gros geste possible : un aller-retour long-courrier pèse à lui seul près de 2 tonnes.",
+  },
+  {
+    id: "reparation",
+    category: "consommation",
+    title: "Réparer au lieu de racheter neuf",
+    unit: { one: "appareil", many: "appareils" },
+    variantQuestion: "Quel appareil ?",
+    variants: [
+      { key: "smartphone", label: "Smartphone" },
+      { key: "ordinateur", label: "Ordinateur, tablette ou console" },
+    ],
+    proofHint: "Photo de la facture de réparation ou de l'appareil réparé",
+    pointsPerUnit: 60,
+    dailyCap: 1,
+    defaultTarget: 1,
+    source: SOURCES.numerique,
+    level: "expert",
+    pitch: "La fabrication fait l'essentiel de l'empreinte d'un appareil : le garder, c'est l'éviter.",
+  },
+];
+
+export const TEMPLATE_BY_ID = Object.fromEntries(TEMPLATES.map((t) => [t.id, t])) as Record<
+  string,
+  ChallengeTemplate
+>;
+
+const CAR_MODES: CommuteMode[] = ["voiture_seul", "voiture_electrique"];
+const TRANSIT_KG_PER_KM = COMMUTE_KG_PER_KM.transports_en_commun;
+const TRAIN_SAVING_PER_KM = TRANSPORT_KG_PER_KM.avion_court - TRANSPORT_KG_PER_KM.tgv;
+/** Vacances en train : un aller-retour long-courrier remplacé par 2 000 km de TGV. */
+export const HOLIDAY_TRAIN_KM = 2000;
+const HOLIDAY_SAVING =
+  LONG_FLIGHT_KM_ROUND_TRIP * TRANSPORT_KG_PER_KM.avion_moyen_long - HOLIDAY_TRAIN_KM * TRANSPORT_KG_PER_KM.tgv;
+const CLOTHING_BY_VARIANT: Record<string, number> = {
+  tshirt: CLOTHING_KG.tshirt,
+  chemise: CLOTHING_KG.chemise,
+  chaussures: CLOTHING_KG.chaussures_cuir,
+  jean: CLOTHING_KG.jean,
+  pull: CLOTHING_KG.pull_laine,
+  manteau: CLOTHING_KG.manteau,
+};
+
+export interface UnitImpact {
+  /** kg de CO₂ évités pour une unité ; 0 si le défi ne remplace aucune habitude. */
+  kg: number;
+  eligible: boolean;
+  /** Pourquoi le défi (ou la variante) n'est pas proposé. */
+  reason?: string;
+  /** Le calcul en clair, affiché sous le chiffre. */
+  formula: string;
+}
+
+const fmt = (n: number, digits = 2) =>
+  n.toLocaleString("fr-FR", { maximumFractionDigits: digits });
+
+const no = (reason: string): UnitImpact => ({ kg: 0, eligible: false, reason, formula: "" });
+
+/** CO₂ évité pour une unité de défi, pour une personne et ses habitudes. */
+export function unitImpact(templateId: string, variantKey: string, h: Habits): UnitImpact {
+  const commuteFactor = COMMUTE_KG_PER_KM[h.commuteMode];
+  const hasCommute = h.commuteKm > 0 && h.commuteDaysPerWeek > 0;
+
+  switch (templateId) {
+    case "velo": {
+      if (!hasCommute || commuteFactor <= 0)
+        return no("Ton trajet domicile-travail déclaré n'émet déjà rien.");
+      const kg = h.commuteKm * commuteFactor;
+      return { kg, eligible: true, formula: `${fmt(h.commuteKm, 1)} km × ${fmt(commuteFactor, 4)} kg/km` };
+    }
+    case "transports": {
+      if (!hasCommute || commuteFactor <= TRANSIT_KG_PER_KM)
+        return no("Ton trajet déclaré émet déjà moins que le métro ou le RER.");
+      const kg = h.commuteKm * (commuteFactor - TRANSIT_KG_PER_KM);
+      return {
+        kg,
+        eligible: true,
+        formula: `${fmt(h.commuteKm, 1)} km × (${fmt(commuteFactor, 4)} − ${fmt(TRANSIT_KG_PER_KM, 4)}) kg/km`,
+      };
+    }
+    case "covoiturage": {
+      if (!hasCommute || !CAR_MODES.includes(h.commuteMode))
+        return no("Tu n'as pas déclaré aller au travail seul en voiture.");
+      const kg = (h.commuteKm * commuteFactor) / 2;
+      return { kg, eligible: true, formula: `${fmt(h.commuteKm, 1)} km × ${fmt(commuteFactor, 4)} kg/km ÷ 2` };
+    }
+    case "train": {
+      if (h.shortFlightsYear <= 0) return no("Aucun vol court déclaré dans ton bilan.");
+      const km = Number(variantKey);
+      if (!Number.isFinite(km) || km <= 0) return no("Distance inconnue.");
+      return {
+        kg: km * TRAIN_SAVING_PER_KM,
+        eligible: true,
+        formula: `${km} km × (${fmt(TRANSPORT_KG_PER_KM.avion_court, 4)} − ${fmt(TRANSPORT_KG_PER_KM.tgv, 4)}) kg/km`,
+      };
+    }
+    case "vege": {
+      if (variantKey === "boeuf") {
+        if (h.beefMealsWeek <= 0) return no("Tu n'as pas déclaré manger de bœuf.");
+        return {
+          kg: MEAL_KG.boeuf - MEAL_KG.vegetarien,
+          eligible: true,
+          formula: `${fmt(MEAL_KG.boeuf)} − ${fmt(MEAL_KG.vegetarien)} kg par repas`,
+        };
+      }
+      if (variantKey === "autre") {
+        if (h.otherMeatMealsWeek <= 0)
+          return no("Tu n'as pas déclaré manger de porc, poulet ou poisson.");
+        return {
+          kg: OTHER_MEAT_MEAL_KG - MEAL_KG.vegetarien,
+          eligible: true,
+          formula: `${fmt(OTHER_MEAT_MEAL_KG)} − ${fmt(MEAL_KG.vegetarien)} kg par repas`,
+        };
+      }
+      return no("Variante inconnue.");
+    }
+    case "moins_boeuf": {
+      if (h.beefMealsWeek <= 0) return no("Tu n'as pas déclaré manger de bœuf.");
+      return {
+        kg: MEAL_KG.boeuf - OTHER_MEAT_MEAL_KG,
+        eligible: true,
+        formula: `${fmt(MEAL_KG.boeuf)} − ${fmt(OTHER_MEAT_MEAL_KG)} kg par repas`,
+      };
+    }
+    case "occasion": {
+      if (h.newClothesYear <= 0) return no("Tu n'as pas déclaré acheter de vêtements neufs.");
+      const kg = CLOTHING_BY_VARIANT[variantKey];
+      if (kg === undefined) return no("Vêtement inconnu.");
+      return { kg, eligible: true, formula: `fabrication d'un article neuf évitée : ${fmt(kg, 1)} kg` };
+    }
+    case "chauffage": {
+      if (h.heatingKgYear <= 0) return no("Aucun chauffage déclaré.");
+      const kg = (h.heatingKgYear * HEATING_SAVING_PER_DEGREE) / HEATING_WEEKS_PER_YEAR;
+      return {
+        kg,
+        eligible: true,
+        formula: `${fmt(h.heatingKgYear, 0)} kg/an × 7 % ÷ ${HEATING_WEEKS_PER_YEAR} semaines`,
+      };
+    }
+    case "vegetalien": {
+      const vegMeals = MEALS_PER_WEEK - h.beefMealsWeek - h.otherMeatMealsWeek;
+      if (vegMeals <= 0) return no("Tu n'as pas déclaré de repas végétariens.");
+      const kg = MEAL_KG.vegetarien - MEAL_KG.vegetalien;
+      return { kg, eligible: true, formula: `${fmt(MEAL_KG.vegetarien)} − ${fmt(MEAL_KG.vegetalien)} kg par repas` };
+    }
+    case "vacances_train": {
+      if (h.longFlightsYear <= 0) return no("Aucun vol long-courrier déclaré dans ton bilan.");
+      return {
+        kg: HOLIDAY_SAVING,
+        eligible: true,
+        formula: `${fmt(LONG_FLIGHT_KM_ROUND_TRIP, 0)} km × ${fmt(TRANSPORT_KG_PER_KM.avion_moyen_long, 4)} − ${fmt(HOLIDAY_TRAIN_KM, 0)} km × ${fmt(TRANSPORT_KG_PER_KM.tgv, 4)} kg/km`,
+      };
+    }
+    case "reparation": {
+      if (variantKey === "smartphone") {
+        if (!h.buysNewPhone) return no("Tu n'as pas déclaré acheter de smartphone neuf.");
+        return { kg: DEVICE_KG.smartphone, eligible: true, formula: `fabrication d'un smartphone neuf évitée : ${fmt(DEVICE_KG.smartphone, 1)} kg` };
+      }
+      if (variantKey === "ordinateur") {
+        if (h.newDevicesYear <= 0) return no("Tu n'as pas déclaré acheter d'appareils électroniques neufs.");
+        return {
+          kg: DEVICE_KG.ordinateur_portable,
+          eligible: true,
+          formula: `fabrication d'un ordinateur portable neuf évitée : ${fmt(DEVICE_KG.ordinateur_portable, 0)} kg`,
+        };
+      }
+      return no("Appareil inconnu.");
+    }
+    default:
+      return no("Défi inconnu.");
+  }
+}
+
+/** Un défi est proposé si au moins une de ses variantes remplace une habitude. */
+export function templateEligibility(t: ChallengeTemplate, h: Habits) {
+  const impacts = t.variants.map((v) => ({ variant: v, impact: unitImpact(t.id, v.key, h) }));
+  const ok = impacts.filter((i) => i.impact.eligible);
+  return {
+    eligible: ok.length > 0,
+    reason: ok.length === 0 ? impacts[0]?.impact.reason : undefined,
+    minKg: ok.length ? Math.min(...ok.map((i) => i.impact.kg)) : 0,
+    maxKg: ok.length ? Math.max(...ok.map((i) => i.impact.kg)) : 0,
+    impacts,
+  };
+}
+
+/** Niveau d'impact affiché, sur l'objectif par défaut du défi. */
+export function impactLevel(totalKg: number): "fort" | "moyen" | "modeste" {
+  if (totalKg >= 50) return "fort";
+  if (totalKg >= 10) return "moyen";
+  return "modeste";
+}
+
+/** Équivalence parlante : kilomètres en voiture thermique. */
+export function carKmEquivalent(kg: number) {
+  return Math.round(kg / TRANSPORT_KG_PER_KM.voiture_thermique);
+}
+
+export function formatKg(kg: number) {
+  if (kg >= 1000) return `${fmt(kg / 1000, 1)} t`;
+  if (kg >= 10) return `${fmt(kg, 0)} kg`;
+  return `${fmt(kg, 1)} kg`;
+}

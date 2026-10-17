@@ -1,0 +1,191 @@
+# Pousse · web app salariés (version pilote)
+
+Application web pour le pilote entreprise de Pousse : un salarié rejoint son entreprise avec un
+code, fait son bilan carbone, relève des défis reliés à ses habitudes, les valide avec une
+preuve et les partage dans le fil interne de l'entreprise.
+
+Stack : Next.js 15 (App Router) · React 19 · Tailwind CSS 4 · Supabase (auth par lien e-mail,
+Postgres, stockage des photos). Pensée mobile d'abord, utilisable sur ordinateur.
+
+## Ce que fait l'application
+
+| Écran | Rôle |
+| --- | --- |
+| `/rejoindre` | Code d'entreprise + e-mail pro → lien de connexion (pas de mot de passe) |
+| `/bienvenue` | Prénom, équipe, consentements |
+| `/questionnaire` | Bilan en 14 questions |
+| `/bilan` | Empreinte par poste, ce que tu fais déjà, plus gros postes restants, plan d'action |
+| `/defis` | Garder le cap, défis en cours, plafonds du jour, catalogue (défis expert, défis non proposés et pourquoi) |
+| `/defis/nouveau/[défi]` | Choix de la variante et de l'objectif, impact calculé en direct |
+| `/defis/[id]/valider` | Validation avec photo et/ou collègue témoin, choix de publier |
+| `/scanner` | Scan d'un code-barres (caméra ou saisie), Green-Score, CO₂ Agribalyse, 3 alternatives mieux notées |
+| `/regles` | Comment ça marche : points, classement, kg, barème |
+| `/fil` | Fil interne de l'entreprise : bravos, signalement, « Relever aussi », et bonnes nouvelles des médias |
+| `/equipes` | Classement en points par participant (équipes de 5 minimum), toi, objectif de l'entreprise |
+| `/notifications` | Confirmations demandées par des collègues |
+| `/avis` | Questionnaire de 3 questions pour le pilote |
+| `/profil` | Points Pousse détaillés, série, influence, préférences, export, suppression du compte |
+| `/methodologie`, `/confidentialite` | Pages publiques |
+
+## Les règles de calcul (le cœur du produit)
+
+- Tous les facteurs viennent de l'ADEME (Impact CO₂, Agribalyse 3.2) : `src/lib/co2/factors.ts`.
+- **Un défi ne rapporte du CO₂ que s'il remplace une habitude déclarée dans le bilan.**
+  Sans voiture, le vélo ne compte pas ; sans vol déclaré, « train au lieu de l'avion » n'est pas proposé.
+- **Le CO₂ est recalculé par la base** à chaque validation (fonction SQL `validate_challenge_day`) :
+  le navigateur n'envoie jamais de chiffre. Les insertions directes dans `validations` sont refusées.
+- Plafonds partagés : 2 trajets domicile-travail et 2 repas par jour, 3 vêtements par jour,
+  1 semaine de chauffage à la fois.
+- Sans preuve (photo ou collègue), la validation compte mais n'est pas publiée. Si le collègue refuse,
+  la validation est annulée.
+
+Le calcul existe en deux exemplaires, qui doivent rester identiques :
+`src/lib/co2/challenges.ts` (aperçus à l'écran) et `unit_kg` dans
+`supabase/migrations/0002_functions.sql` (calcul officiel). Les tests vérifient les mêmes valeurs des deux côtés.
+
+## Le jeu et l'impact
+
+Deux chiffres, deux rôles, expliqués dans l'app (`/regles` et l'écran « Comment ça marche » du fil) :
+
+- **Les pousses = le jeu.** Seul chiffre du classement, individuel et par équipe (pousses par participant,
+  inactifs à 0). Barème : défi du quotidien +10 par unité, train +30, défis expert +15 à +150, +5 avec une
+  preuve, garder le cap +10 par habitude et par semaine, les 3 quêtes du jour +15, série de jours actifs
+  (+10 à 3 jours, +25 à 7, +50 à 14, +100 à 30), influence +15, témoin +3. Dans la base, la colonne
+  s'appelle toujours `points` ; les pousses hors défis sont dans `points_ledger`, écrites uniquement par la
+  base (`claim_daily_rewards` pour les quêtes et les séries, appelée à l'ouverture de l'accueil).
+- **Les kg de CO₂ évités = l'impact.** Stricts, ils ne servent pas à gagner : ils alimentent un seul objectif
+  collectif, celui de l'entreprise (30 kg par participant sur `companies.pilot_weeks`, 8 par défaut).
+
+L'accueil est construit pour donner envie de revenir : la plante grandit de niveau en niveau (Graine, Germe,
+Pousse, Plantule, Arbuste, Arbre, Forêt), le total de pousses monte en direct depuis la dernière visite avec
+un « +N », les quêtes du jour se cochent, la série de jours actifs promet son prochain bonus, et les
+dernières pousses gagnées défilent. Le compteur est aussi en haut de chaque page.
+
+Pour garder motivées les personnes déjà sobres : « garder le cap » sur les habitudes déjà acquises,
+points d'influence quand un collègue relève un défi depuis leur publication (`inspired_by`), défis expert
+(repas végétalien, vacances en train au lieu du long-courrier, réparer son smartphone ou son ordinateur),
+et dans le bilan les plus gros postes restants et « ce que tes habitudes évitent déjà » (une comparaison,
+jamais ajoutée au CO₂ évité).
+
+Migrations `0005_engagement.sql`, `0006_points.sql` et `0007_pousses.sql` ; scénario `supabase/tests/scenario_engagement.sql`
+(à jouer après `scenario.sql`).
+
+## Scanner de produits
+
+`/scanner` lit le code-barres avec la caméra (API BarcodeDetector sur Chrome Android, sinon la bibliothèque
+ZXing chargée à la demande depuis unpkg pour Safari) ou par saisie. La fiche vient d'**Open Food Facts**
+(licence ODbL, source citée sur chaque page) : Green-Score (ex-Eco-Score) et empreinte carbone Agribalyse en
+kg CO₂e par kg. Les alternatives sont cherchées dans la catégorie la plus précise du produit, puis la
+catégorie parente, parmi les produits vendus en France : mieux notées, ou même note et au moins 10 % de CO₂
+en moins, une par marque (`src/lib/off/`). Réponses mises en cache une journée.
+
+Choisir une alternative rapporte **+5 pousses, 3 fois par jour au plus** (`record_swap`, migration
+`0008_scanner.sql`), et compte comme un jour actif pour la série. Aucun CO₂ évité n'est compté : on ne sait
+pas ce que la personne aurait acheté sinon. Les deux fiches sont relues par le serveur de l'application avant
+l'appel ; un utilisateur qui appellerait directement `record_swap` avec de fausses notes resterait limité à
+15 pousses par jour. Seul l'alimentaire est couvert. La caméra demande une page en HTTPS (ou localhost).
+Optionnel : `OFF_CONTACT` (e-mail de contact transmis à Open Food Facts dans l'en-tête User-Agent).
+
+## Bonnes nouvelles des médias
+
+Le fil intercale une bonne nouvelle écologique toutes les 2 publications. Elles viennent des flux RSS de
+vrais médias (Vert, Novethic, Kaizen, Socialter, La Relève et La Peste), listés dans
+`src/lib/news/index.ts`. Chaque flux est relu au plus une fois par jour et la sélection change chaque jour
+(heure de Paris). Seuls les articles de moins de 10 jours avec une note positive sont gardés (mots qui
+signalent une avancée, titre sans mot négatif : `src/lib/news/rss.ts`), au plus 2 par média. On affiche le
+titre, un court extrait et un lien vers l'article d'origine. Un média injoignable est simplement ignoré.
+`/api/news` renvoie la sélection du jour en JSON.
+
+## Installation
+
+Prérequis : Node 22.18 ou plus récent, un compte Supabase (région UE).
+
+1. **Créer le projet Supabase** (région Europe, ex. Paris ou Francfort).
+2. **Appliquer les migrations** dans l'ordre, depuis l'éditeur SQL de Supabase ou avec la CLI
+   (`supabase db push`) :
+   `0001_schema.sql`, `0002_functions.sql`, `0003_policies.sql`, `0004_seed.sql`, `0005_engagement.sql`, `0006_points.sql`, `0007_pousses.sql`, `0008_scanner.sql`.
+   Le dernier crée une entreprise de démonstration, code **DEMO-2026**, avec 6 équipes.
+3. **Réglages d'authentification** (Authentication > URL Configuration) :
+   - Site URL : `http://localhost:3000` en local, puis l'URL Vercel ;
+   - Redirect URLs : ajouter `http://localhost:3000/auth/callback` et `https://<ton-domaine>/auth/callback`.
+   - Pour un vrai pilote, configurer un serveur SMTP (Authentication > SMTP) : l'envoi par défaut de
+     Supabase est limité à quelques e-mails par heure.
+4. **Variables d'environnement** : copier `.env.example` en `.env.local` et remplir l'URL et la clé
+   `anon` (Project Settings > API).
+5. **Lancer** :
+   ```bash
+   npm install
+   npm run dev
+   ```
+   Ouvrir http://localhost:3000, cliquer sur « Rejoindre », code `DEMO-2026`.
+
+### Déployer sur Vercel
+
+Importer le dépôt, ajouter les variables de `.env.example` (dont `SUPABASE_SERVICE_ROLE_KEY` et
+`CRON_SECRET` pour la purge des photos), mettre `NEXT_PUBLIC_SITE_URL` à l'URL Vercel, et ajouter
+`https://<ton-domaine>/auth/callback` aux Redirect URLs de Supabase.
+
+`vercel.json` programme chaque nuit la suppression des photos de plus de 90 jours
+(`/api/cron/purge-photos`), comme promis aux salariés.
+
+### Ajouter une entreprise pilote
+
+Dans l'éditeur SQL de Supabase :
+
+```sql
+with c as (
+  insert into companies (name, join_code, email_domain)
+  values ('Nom de l''entreprise', 'ACME-2026', 'acme.fr')   -- email_domain : null pour tout domaine
+  returning id
+)
+insert into teams (company_id, name)
+select c.id, t from c, unnest(array['Data', 'Produit', 'Finance']) as t;
+```
+
+## Tests
+
+```bash
+npm test                 # calcul du bilan, gains des défis, éligibilité, plan d'action
+```
+
+La base se teste sur un PostgreSQL 16 local (sans Supabase), avec une imitation minimale de
+l'authentification et du stockage. Le scénario se joue sur une base neuve :
+
+```bash
+createdb pousse_test
+for f in supabase/tests/supabase_stub.sql supabase/migrations/*.sql; do psql -d pousse_test -v ON_ERROR_STOP=1 -f "$f"; done
+psql -d pousse_test -f supabase/tests/scenario.sql
+psql -d pousse_test -f supabase/tests/scenario_engagement.sql
+```
+
+Le premier scénario vérifie 22 points : code d'entreprise, domaine e-mail, calculs identiques au TypeScript,
+plafond partagé, refus d'une insertion directe, photo hors de son dossier, témoin qui refuse,
+cloisonnement entre entreprises, classement anonyme (équipes de moins de 5 masquées).
+
+## État de cette version
+
+Testé :
+- les tests du calcul (`npm test`) et la vérification de types stricte des modules de calcul ;
+- les migrations et le scénario SQL sur PostgreSQL 16 ;
+- la syntaxe de tous les fichiers TypeScript/TSX.
+
+Pas encore testé (l'environnement de génération n'avait pas accès au registre npm) :
+- `npm install`, `npm run build` et la vérification de types complète avec Next.js et Supabase ;
+- le parcours réel dans un navigateur : envoi du lien e-mail, envoi des photos, rendu des écrans.
+
+À la première installation, lancer `npm run typecheck` puis `npm run build` et corriger les éventuels
+écarts de types liés aux versions exactes des paquets.
+
+## Limites connues et suites prévues
+
+- **Bilan simplifié** : il couvre trajets, avion, repas, chauffage, vêtements et smartphone, plus une
+  part commune d'environ 1 t (services publics, ordre de grandeur Nos Gestes Climat). L'électricité, les
+  loisirs et les autres achats ne sont pas comptés : le total est une estimation basse, affichée comme
+  telle. Étape suivante : brancher le modèle complet Nos Gestes Climat (paquet
+  `@incubateur-ademe/nosgestesclimat` avec `publicodes`), en vérifiant la licence des données ecoinvent
+  pour un usage commercial.
+- **Habitudes déclarées** : un salarié peut modifier son bilan pour devenir éligible à plus de défis.
+  Les valeurs sont bornées en base ; pour la suite, limiter la fréquence des modifications.
+- **Preuve GPS / Strava** : pas encore disponible ; seules la photo et la confirmation d'un collègue existent.
+- **Signalements** : enregistrés dans la table `reports`, à traiter depuis le tableau de bord Supabase.
+- **Côté RH** (tableau de bord, lancement, leviers, Teams/Slack) : prévu dans une seconde étape.
