@@ -13,7 +13,6 @@ import { WeekSummary } from "@/components/WeekSummary";
 import { IntroCard } from "@/components/IntroCard";
 import { GardenHero } from "@/components/GardenHero";
 import { DailyQuests } from "@/components/DailyQuests";
-import { RecentGains } from "@/components/RecentGains";
 import { reportPost, toggleCheer } from "./actions";
 import { NewsCard } from "./NewsCard";
 import { Fragment } from "react";
@@ -106,15 +105,17 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         week={me.week.points}
         streak={daily?.streak ?? 0}
         nextMilestone={nextStreakMilestone(daily?.streak ?? 0)}
+        last={me.recent[0] ? { ...me.recent[0], when: relativeTime(me.recent[0].at) } : undefined}
       />
 
       {daily ? <DailyQuests daily={daily} /> : null}
 
-      <RecentGains items={me.recent.slice(0, 4)} />
-
       <WeekSummary team={ranking.mine} teamsCount={ranking.teams.length} goal={goal} />
 
-      <span id="publications" className="-mb-4 block scroll-mt-4" aria-hidden="true" />
+      <div id="publications" className="-mb-2 flex scroll-mt-4 items-baseline justify-between pt-1">
+        <h2 className="font-display text-lg font-bold">Dans ton entreprise</h2>
+        <Link href="/defis?onglet=catalogue" className="text-xs font-bold underline underline-offset-2">Relever un défi</Link>
+      </div>
 
       {(posts ?? []).length === 0 ? (
         <section className="card flex flex-col gap-3 text-center">
@@ -237,6 +238,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         <span className="btn-primary min-h-10 px-4 text-sm">Répondre</span>
       </Link>
       <p className="text-center text-xs text-terre">
+        <Link href="/regles" className="font-bold underline underline-offset-2">Comment marchent les pousses ?</Link>{" "}
         Seuls tes collègues voient tes publications. Les bonnes nouvelles viennent de {news.length > 0 ? [...new Set(news.map((n) => n.source))].join(", ") : "médias écologiques"} et sont mises à jour chaque jour.
       </p>
     </>

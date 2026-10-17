@@ -5,6 +5,7 @@ import { signOut, updatePreferences } from "./actions";
 import { DeleteAccount } from "./DeleteAccount";
 import { SubmitButton } from "@/components/ui";
 import { getEngagement } from "@/lib/engagement-data";
+import { RecentGains } from "@/components/RecentGains";
 
 export default async function ProfilPage() {
   const { supabase, user, profile } = await requireProfile();
@@ -25,7 +26,7 @@ export default async function ProfilPage() {
         </div>
       </section>
 
-      <section className="card flex flex-col gap-3">
+      <section id="pousses" className="card flex scroll-mt-4 flex-col gap-3">
         <div className="flex items-baseline justify-between">
           <p className="label">Tes pousses · le jeu</p>
           <Link href="/regles" className="text-xs font-bold underline underline-offset-2">Le barème</Link>
@@ -57,6 +58,8 @@ export default async function ProfilPage() {
           ))}
         </ul>
       </section>
+
+      <RecentGains items={e.recent.slice(0, 8)} />
 
       <section className="card flex flex-col gap-2">
         <p className="label">Ton impact · la planète</p>

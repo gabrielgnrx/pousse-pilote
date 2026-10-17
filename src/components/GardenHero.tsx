@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import { LEVELS, levelFor } from "@/lib/co2/engagement.ts";
 import { Plant } from "./Plant";
@@ -13,17 +14,20 @@ const FALLING = [
   { left: "92%", dx: "-8px", rot: "-200deg", delay: "0.3s" },
 ];
 
-/** Le haut de l'accueil : ta plante, ton total de pousses qui monte, ton niveau, ta série. */
+/** Le haut de l'accueil, compact : ta plante, ton total qui monte, ton niveau, ta série et ton dernier gain. */
 export function GardenHero({
   total,
   week,
   streak,
   nextMilestone,
+  last,
 }: {
   total: number;
   week: number;
   streak: number;
   nextMilestone: { days: number; pousses: number } | null;
+  /** Le dernier gain (« when » calculé côté serveur, pour éviter un décalage à l'hydratation). */
+  last?: { label: string; points: number; when: string };
 }) {
   const level = levelFor(total);
   const [levelUp, setLevelUp] = useState<string | null>(null);
@@ -35,7 +39,7 @@ export function GardenHero({
   }, []);
 
   return (
-    <section className="relative overflow-hidden rounded-[24px] bg-sapin p-4 text-sapin-clair" aria-label="Tes pousses">
+    <section className="relative overflow-hidden rounded-[24px] bg-sapin px-4 pt-3.5 pb-3 text-sapin-clair" aria-label="Tes pousses">
       {levelUp ? (
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
           {FALLING.map((f, i) => (
@@ -54,51 +58,60 @@ export function GardenHero({
       ) : null}
 
       <div className="flex items-center gap-3">
-        <div className="shrink-0 rounded-2xl bg-white/10 p-1.5">
-          <Plant level={level.index} size={84} />
+        <div className="shrink-0 rounded-2xl bg-white/10 p-1">
+          <Plant level={level.index} size={60} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold tracking-wider uppercase opacity-90">Tes pousses</p>
-          <p className="font-display text-5xl leading-none font-bold">
-            <PousseCounter total={total} storageKey="pousse.accueil.total" onDelta={onDelta} />
+          <p className="flex items-baseline gap-2">
+            <span className="font-display text-4xl leading-none font-bold">
+              <PousseCounter total={total} storageKey="pousse.accueil.total" onDelta={onDelta} />
+            </span>
+            <span className="text-sm font-semibold">pousses</span>
           </p>
-          <p className="mt-1.5 text-sm font-semibold">
-            Niveau {level.name}
-            {week > 0 ? <span className="font-normal opacity-90"> · +{week} cette semaine</span> : null}
+          <p className="mt-1 text-sm">
+            <strong>{level.name}</strong>
+            {week > 0 ? <span className="opacity-90"> · +{week} cette semaine</span> : null}
           </p>
         </div>
+        <p
+          className="flex shrink-0 flex-col items-center rounded-xl bg-white/10 px-2.5 py-1.5 text-center"
+          title={nextMilestone ? `Bonus de +${nextMilestone.pousses} pousses à ${nextMilestone.days} jours` : undefined}
+        >
+          <span className="flex items-center gap-1 font-display text-xl leading-none font-bold">
+            <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill={streak > 0 ? "#f0a97b" : "none"} stroke="#f0a97b" strokeWidth="2">
+              <path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-10Z" />
+            </svg>
+            {streak}
+          </span>
+          <span className="text-[10px] font-semibold uppercase">{streak > 1 ? "jours" : "jour"} d&apos;affilée</span>
+        </p>
       </div>
 
       {levelUp ? (
-        <p role="status" className="animate-pousse-pop mt-3 rounded-xl bg-abricot px-3 py-2 text-center text-sm font-bold text-[#402a16]">
+        <p role="status" className="animate-pousse-pop mt-2.5 rounded-xl bg-abricot px-3 py-2 text-center text-sm font-bold text-[#402a16]">
           Nouveau niveau : {levelUp} !
         </p>
       ) : null}
 
-      <div className="mt-3">
-        <div className="h-2.5 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-label="Vers le niveau suivant" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level.progress * 100)}>
-          <div className="h-2.5 rounded-full bg-abricot transition-[width] duration-1000" style={{ width: `${Math.max(3, level.progress * 100)}%` }} />
+      <div className="mt-2.5">
+        <div className="h-2 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-label="Vers le niveau suivant" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level.progress * 100)}>
+          <div className="h-2 rounded-full bg-abricot transition-[width] duration-1000" style={{ width: `${Math.max(3, level.progress * 100)}%` }} />
         </div>
-        <p className="mt-1 text-xs opacity-90">
-          {level.next ? `Encore ${level.next.missing} pousses pour devenir ${level.next.name}` : "Niveau maximum : tu es une forêt !"}
+        <p className="mt-1 flex justify-between gap-2 text-xs opacity-90">
+          <span>{level.next ? `Encore ${level.next.missing} pour devenir ${level.next.name}` : "Niveau maximum : tu es une forêt !"}</span>
+          {nextMilestone && streak > 0 ? <span className="shrink-0">+{nextMilestone.pousses} à {nextMilestone.days} j</span> : null}
         </p>
       </div>
 
-      <div className="mt-3 flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2">
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill={streak > 0 ? "#f0a97b" : "none"} stroke="#f0a97b" strokeWidth="2">
-          <path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-10Z" />
-        </svg>
-        <p className="text-sm">
-          {streak > 0 ? (
-            <>
-              <strong>{streak} jour{streak > 1 ? "s" : ""} d&apos;affilée</strong>
-              {nextMilestone ? ` · bonus de +${nextMilestone.pousses} à ${nextMilestone.days} jours` : " · série légendaire"}
-            </>
-          ) : (
-            <>Lance ta série aujourd&apos;hui : +10 pousses au 3e jour d&apos;affilée</>
-          )}
-        </p>
-      </div>
+      {last ? (
+        <Link href="/profil#pousses" className="mt-2 flex items-center gap-2 border-t border-white/15 pt-2 text-xs">
+          <span className="rounded-full bg-abricot px-1.5 py-0.5 font-bold text-[#402a16]">+{last.points}</span>
+          <span className="min-w-0 flex-1 truncate">{last.label}</span>
+          <span className="shrink-0 opacity-80">{last.when} ›</span>
+        </Link>
+      ) : (
+        <p className="mt-2 border-t border-white/15 pt-2 text-xs opacity-90">Lance ta série aujourd&apos;hui : +10 pousses au 3e jour d&apos;affilée.</p>
+      )}
     </section>
   );
 }
