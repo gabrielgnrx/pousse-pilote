@@ -133,6 +133,8 @@ const POSITIVE = [
   "biodiversite", "foret", "haie", "abeille", "pollinis", "cooperative", "citoyen", "regener",
   "economie d'energie", "renov", "isolation", "pompe a chaleur", "zero dechet", "interdit les",
   "interdiction des", "bonne nouvelle", "espoir", "progres", " encourage", " accord", " engage",
+  // Conseils pratiques : utiles au quotidien, ils ont leur place dans le fil.
+  " quel ", " quelle ", " comment ", "astuce", "conseil", " guide ", " choisir", "alternative",
 ];
 
 /** Racines qui signalent une mauvaise nouvelle : l'article est écarté s'il en contient trop. */

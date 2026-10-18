@@ -11,8 +11,6 @@ export const NEWS_SOURCES: NewsSource[] = [
   { id: "socialter", name: "Socialter", url: "https://www.socialter.fr/rss" },
   { id: "releve", name: "La Relève et La Peste", url: "https://lareleveetlapeste.fr/feed/" },
   { id: "reporterre", name: "Reporterre", url: "https://reporterre.net/spip.php?page=backend" },
-  { id: "wedemain", name: "We Demain", url: "https://www.wedemain.fr/feed/", solutions: true },
-  { id: "positivr", name: "Positivr", url: "https://positivr.fr/feed/", solutions: true },
 ];
 
 // Les flux sont relus toutes les 3 heures : les nouveautés du matin arrivent dans la journée.

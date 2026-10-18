@@ -74,3 +74,8 @@ test("un article du jour passe devant un meilleur article de la semaine dernièr
   const picked = pickGoodNews(items, [{ id: "m", name: "M", url: "" }], now, { limit: 1 });
   assert.equal(picked[0].link, "frais");
 });
+
+test("un conseil pratique compte comme bonne nouvelle, sauf s'il annonce un problème", () => {
+  assert.ok(positivityScore("DuckDuckGo, Qwant, Ecosia… Quel moteur de recherche choisir pour sortir de Google ?", "") >= 2);
+  assert.ok(positivityScore("Comment la sécheresse menace les récoltes", "") < 2);
+});
