@@ -175,9 +175,20 @@ export function positivityScore(title: string, excerpt: string, solutions = fals
   return pos - neg + (solutions ? 2 : 0);
 }
 
+/** Bonus de fraîcheur : un article du jour passe devant un « meilleur » article de la semaine dernière. */
+export function freshnessBonus(publishedAt: string, now: Date): number {
+  const hours = (now.getTime() - new Date(publishedAt).getTime()) / 3_600_000;
+  if (hours < 24) return 4;
+  if (hours < 48) return 3;
+  if (hours < 72) return 2;
+  if (hours < 96) return 1;
+  return 0;
+}
+
 /**
  * Choisit les bonnes nouvelles : récentes (moins de `maxAgeDays` jours), notées positivement,
  * sans doublon de titre, au plus `perSource` par média pour garder de la diversité.
+ * Le classement mêle positivité et fraîcheur, pour que le fil change chaque jour.
  */
 export function pickGoodNews(
   items: Omit<NewsItem, "score">[],
@@ -202,8 +213,12 @@ export function pickGoodNews(
       seen.add(key);
       return true;
     })
-    // Les mieux notées d'abord, puis les plus récentes.
-    .sort((a, b) => b.score - a.score || b.publishedAt.localeCompare(a.publishedAt));
+    // Positivité + fraîcheur d'abord, puis les plus récentes.
+    .sort(
+      (a, b) =>
+        b.score + freshnessBonus(b.publishedAt, now) - (a.score + freshnessBonus(a.publishedAt, now)) ||
+        b.publishedAt.localeCompare(a.publishedAt),
+    );
 
   const perCount = new Map<string, number>();
   const picked: NewsItem[] = [];

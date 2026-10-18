@@ -12,29 +12,29 @@ export const NEWS_SOURCES: NewsSource[] = [
   { id: "releve", name: "La Relève et La Peste", url: "https://lareleveetlapeste.fr/feed/" },
 ];
 
-const DAY = 24 * 60 * 60;
+// Les flux sont relus toutes les 3 heures : les nouveautés du matin arrivent dans la journée.
+const REFRESH = 3 * 60 * 60;
 
 async function fetchSource(source: NewsSource) {
   const res = await fetch(source.url, {
-    headers: { "user-agent": "Pousse/1.0 (+https://pousse-rho.vercel.app)", accept: "application/rss+xml, application/atom+xml, application/xml, text/xml" },
+    headers: { "user-agent": "Pousse/1.1 (+https://pousse-pilote.vercel.app)", accept: "application/rss+xml, application/atom+xml, application/xml, text/xml" },
     signal: AbortSignal.timeout(6000),
-    // Cache Next.js : un flux est relu au plus une fois par jour.
-    next: { revalidate: DAY, tags: ["news"] },
+    next: { revalidate: REFRESH, tags: ["news"] },
   });
   if (!res.ok) throw new Error(`${source.name}: HTTP ${res.status}`);
   return parseFeed(await res.text(), source.name, source.url);
 }
 
-// Cache mémoire du serveur, en plus du cache Next : une seule sélection par jour et par instance.
-let cache: { day: string; items: NewsItem[] } | null = null;
+// Cache mémoire du serveur, en plus du cache Next : une sélection par tranche de 3 heures.
+let cache: { slot: string; items: NewsItem[] } | null = null;
 
 /**
  * Bonnes nouvelles écologiques du jour, tirées des vrais médias.
  * Ne lève jamais d'erreur : un média injoignable est simplement ignoré.
  */
 export async function getDailyGoodNews(): Promise<NewsItem[]> {
-  const day = todayParis(); // la sélection change chaque jour (heure de Paris)
-  if (cache?.day === day && cache.items.length > 0) return cache.items;
+  const slot = `${todayParis()}-${Math.floor(Date.now() / (REFRESH * 1000))}`;
+  if (cache?.slot === slot && cache.items.length > 0) return cache.items;
 
   const results = await Promise.allSettled(NEWS_SOURCES.map(fetchSource));
   const all = results.flatMap((r, i) => {
@@ -43,7 +43,7 @@ export async function getDailyGoodNews(): Promise<NewsItem[]> {
     return [];
   });
 
-  const items = pickGoodNews(all, NEWS_SOURCES, new Date(), { limit: 6, perSource: 2, maxAgeDays: 10 });
-  cache = { day, items };
+  const items = pickGoodNews(all, NEWS_SOURCES, new Date(), { limit: 6, perSource: 2, maxAgeDays: 6 });
+  cache = { slot, items };
   return items;
 }

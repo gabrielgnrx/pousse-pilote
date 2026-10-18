@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseFeed, pickGoodNews, positivityScore, toText, type NewsSource } from "./rss.ts";
+import { freshnessBonus, parseFeed, pickGoodNews, positivityScore, toText, type NewsSource } from "./rss.ts";
 
 const RSS = `<?xml version="1.0"?><rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Média</title>
 <item><title><![CDATA[Le solaire bat un record de production en France]]></title>
@@ -60,4 +60,17 @@ test("sélection : seulement les bonnes nouvelles récentes, diversité des méd
 
 test("toText retire les balises", () => {
   assert.equal(toText("<p>Bonjour <b>le</b>&amp; monde</p>"), "Bonjour le & monde");
+});
+
+test("un article du jour passe devant un meilleur article de la semaine dernière", () => {
+  const now = new Date("2026-10-18T10:00:00Z");
+  assert.equal(freshnessBonus("2026-10-18T06:00:00Z", now), 4);
+  assert.equal(freshnessBonus("2026-10-12T06:00:00Z", now), 0);
+  const base = { link: "", excerpt: "", image: null, source: "M" };
+  const items = [
+    { ...base, link: "vieux", title: "Une forêt restaurée, la biodiversité revient, succès pour la haie", publishedAt: "2026-10-12T08:00:00.000Z" },
+    { ...base, link: "frais", title: "Une coopérative citoyenne lance un parc solaire", publishedAt: "2026-10-18T07:00:00.000Z" },
+  ];
+  const picked = pickGoodNews(items, [{ id: "m", name: "M", url: "" }], now, { limit: 1 });
+  assert.equal(picked[0].link, "frais");
 });

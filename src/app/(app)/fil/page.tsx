@@ -242,7 +242,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       </Link>
       <p className="text-center text-xs text-terre">
         <Link href="/regles" className="font-bold underline underline-offset-2">Comment marchent les pousses ?</Link>{" "}
-        Seuls tes collègues voient tes publications. Les bonnes nouvelles viennent de {news.length > 0 ? [...new Set(news.map((n) => n.source))].join(", ") : "médias écologiques"} et sont mises à jour chaque jour.
+        Seuls tes collègues voient tes publications. Les bonnes nouvelles viennent de {news.length > 0 ? [...new Set(news.map((n) => n.source))].join(", ") : "médias écologiques"} et sont mises à jour plusieurs fois par jour.
       </p>
     </>
   );
