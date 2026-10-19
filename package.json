@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/lib/co2/co2.test.ts src/lib/co2/engagement.test.ts src/lib/off/off.test.ts src/lib/news/news.test.ts src/lib/push/push.test.ts"
+    "test": "node --test src/lib/co2/co2.test.ts src/lib/co2/engagement.test.ts src/lib/off/off.test.ts src/lib/news/news.test.ts src/lib/push/push.test.ts src/lib/game/game.test.ts"
   },
   "engines": {
     "node": ">=22.18"

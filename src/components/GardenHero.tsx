@@ -58,9 +58,9 @@ export function GardenHero({
       ) : null}
 
       <div className="flex items-center gap-3">
-        <div className="shrink-0 rounded-2xl bg-white/10 p-1">
+        <Link href="/jardin" aria-label="Voir mon jardin" className="shrink-0 rounded-2xl bg-white/10 p-1">
           <Plant level={level.index} size={60} />
-        </div>
+        </Link>
         <div className="min-w-0 flex-1">
           <p className="flex items-baseline gap-2">
             <span className="font-display text-4xl leading-none font-bold">

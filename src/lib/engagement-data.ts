@@ -17,6 +17,8 @@ export interface Engagement {
     bonus: number;
     /** Meilleurs choix au scanner. */
     scan: number;
+    /** Quiz, graines mystère, défis collectifs et duels. */
+    jeu: number;
   };
   /** Cette semaine (depuis lundi) : points et kg. */
   week: { points: number; kg: number };
@@ -54,6 +56,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
   const temoin = byKind("temoin");
   const bonus = byKind("quete") + byKind("serie");
   const scan = byKind("scan");
+  const jeu = byKind("quiz") + byKind("graine") + byKind("collectif") + byKind("duel");
   const LEDGER_LABEL: Record<string, string> = {
     maintien: "Cap gardé",
     influence: "Un collègue a relevé ton défi",
@@ -61,6 +64,10 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
     quete: "Quêtes du jour réussies",
     serie: "Bonus de série",
     scan: "Meilleur choix au scanner",
+    quiz: "Bonne réponse au quiz",
+    graine: "Graine mystère",
+    collectif: "Défi collectif réussi",
+    duel: "Duel réussi",
   };
   const recent = [
     ...(validations ?? [])
@@ -82,13 +89,14 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
   return {
     kgAvoided: (validations ?? []).reduce((s, v) => s + Number(v.kg), 0),
     points: {
-      total: defis + maintien + influencePts + temoin + bonus + scan,
+      total: defis + maintien + influencePts + temoin + bonus + scan + jeu,
       defis,
       maintien,
       influence: influencePts,
       temoin,
       bonus,
       scan,
+      jeu,
     },
     week: {
       points:
@@ -143,7 +151,10 @@ export async function getTeamRanking(supabase: SupabaseClient, since: string | n
   return { teams, mine: mineIndex >= 0 ? { rank: mineIndex + 1, row: teams[mineIndex] } : null };
 }
 
-export type QuestKey = "preuve" | "defi" | "expert" | "lancer" | "scan" | "meilleur_choix" | "bravo" | "cap";
+export type QuestKey = "preuve" | "defi" | "expert" | "lancer" | "scan" | "meilleur_choix" | "bravo" | "cap" | "quiz";
+
+/** La graine mystère du jour : à ouvrir, ou déjà ouverte (avec ce qu'elle a donné). */
+export type SeedState = { state: "ready" } | { state: "opened"; plant: string | null; points: number } | null;
 
 export interface DailyState {
   /** Les 3 quêtes du jour, dans l'ordre. */
@@ -154,12 +165,20 @@ export interface DailyState {
   streak: number;
   /** Pousses de bonus créditées à l'instant. */
   gained: number;
+  seed: SeedState;
 }
 
 /** Relève les quêtes du jour et la série ; la base crédite les bonus dus, une seule fois. */
 export async function claimDailyRewards(supabase: SupabaseClient): Promise<DailyState | null> {
   const { data, error } = await supabase.rpc("claim_daily_rewards");
   if (error || !data) return null;
-  const d = data as { order: QuestKey[]; quests: DailyState["quests"]; quest_done: boolean; streak: number; gained: number };
-  return { order: d.order ?? [], quests: d.quests, questDone: d.quest_done, streak: d.streak, gained: d.gained };
+  const d = data as {
+    order: QuestKey[];
+    quests: DailyState["quests"];
+    quest_done: boolean;
+    streak: number;
+    gained: number;
+    seed: SeedState;
+  };
+  return { order: d.order ?? [], quests: d.quests, questDone: d.quest_done, streak: d.streak, gained: d.gained, seed: d.seed ?? null };
 }

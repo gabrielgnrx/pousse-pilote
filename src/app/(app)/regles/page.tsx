@@ -36,6 +36,25 @@ export default function ReglesPage() {
 
       <section className="card flex flex-col gap-2">
         <div className="flex items-center gap-2">
+          <span className="chip bg-abricot">Pour pimenter</span>
+          <h2 className="font-display text-lg font-bold">Les à-côtés du jeu</h2>
+        </div>
+        <ul className="flex flex-col gap-2 text-sm leading-relaxed">
+          <li><strong>Défi collectif de la semaine.</strong> Chaque lundi, un objectif commun à toute l&apos;entreprise
+            (repas végé, trajets, scanner, quiz…). S&apos;il est atteint, +30 pour chaque personne qui y a contribué.</li>
+          <li><strong>Duels.</strong> Défie un collègue sur 7 jours. Seules les actions avec preuve comptent. Les deux
+            réussissent : +25 chacun ; un seul : +40. Personne ne perd de pousses.</li>
+          <li><strong>Quiz du jour.</strong> Une question, la même pour toute l&apos;entreprise : +5 si c&apos;est juste,
+            et ça compte pour ta série.</li>
+          <li><strong>Graine mystère.</strong> Quand tes 3 quêtes du jour sont faites : +5, +10, +20 pousses ou une
+            plante rare pour ton jardin.</li>
+          <li><strong>Jardin.</strong> Chaque type d&apos;action fait pousser une espèce (4 stades), les exploits
+            débloquent des plantes rares. Tes collègues peuvent le voir.</li>
+        </ul>
+      </section>
+
+      <section className="card flex flex-col gap-2">
+        <div className="flex items-center gap-2">
           <span className="chip bg-sauge">Gagner ensemble</span>
           <h2 className="font-display text-lg font-bold">Le classement des équipes</h2>
         </div>

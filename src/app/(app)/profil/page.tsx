@@ -51,6 +51,7 @@ export default async function ProfilPage() {
             { l: "Témoin pour un collègue", v: e.points.temoin },
             { l: "Quêtes du jour et séries", v: e.points.bonus },
             { l: "Meilleurs choix au scanner", v: e.points.scan },
+            { l: "Quiz, graines, défis collectifs et duels", v: e.points.jeu },
           ].map((r) => (
             <li key={r.l} className="flex justify-between border-t border-encre/10 py-1.5">
               <span>{r.l}</span>
@@ -59,6 +60,17 @@ export default async function ProfilPage() {
           ))}
         </ul>
       </section>
+
+      <div className="grid grid-cols-2 gap-2.5">
+        <Link href="/jardin" className="flex items-center gap-2 rounded-[18px] border border-encre/10 bg-papier px-3.5 py-3">
+          <span aria-hidden="true" className="text-xl">🌻</span>
+          <span className="text-sm font-bold">Mon jardin</span>
+        </Link>
+        <Link href="/duels" className="flex items-center gap-2 rounded-[18px] border border-encre/10 bg-papier px-3.5 py-3">
+          <span aria-hidden="true" className="text-xl">⚔</span>
+          <span className="text-sm font-bold">Mes duels</span>
+        </Link>
+      </div>
 
       <RecentGains items={e.recent.slice(0, 8)} />
 

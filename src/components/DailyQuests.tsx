@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { DailyState, QuestKey } from "@/lib/engagement-data";
 import { POINTS } from "@/lib/co2/engagement.ts";
+import { SeedButton } from "./SeedButton";
 
 const QUESTS: Record<QuestKey, { label: string; href: string }> = {
   preuve: { label: "Valide un défi avec une preuve", href: "/defis" },
@@ -11,6 +12,7 @@ const QUESTS: Record<QuestKey, { label: string; href: string }> = {
   meilleur_choix: { label: "Choisis un produit mieux noté au scanner", href: "/scanner" },
   bravo: { label: "Encourage un collègue dans le fil", href: "/fil#publications" },
   cap: { label: "Garde le cap sur une habitude", href: "/defis" },
+  quiz: { label: "Réponds au quiz du jour", href: "/fil#quiz" },
 };
 
 /** Les trois quêtes du jour, tirées chaque matin selon ton profil : +15 pousses quand tout est fait. */
@@ -18,8 +20,23 @@ export function DailyQuests({ daily }: { daily: DailyState }) {
   const order = daily.order.filter((k) => k in QUESTS);
   const done = order.filter((k) => daily.quests[k]).length;
   if (daily.questDone) {
-    // Tout est fait : une seule ligne, pour laisser la place au fil.
+    // Tout est fait : une ligne, et la graine mystère à ouvrir.
     return (
+      <section className="flex flex-col gap-2 rounded-[18px] bg-sauge px-4 py-3" aria-labelledby="quetes">
+        <div className="flex items-center gap-3">
+          <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sapin text-sapin-clair">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="M5 12l5 5 9-10" /></svg>
+          </span>
+          <p className="flex-1 text-sm text-[#2e3a22]">
+            <strong id="quetes">Quêtes du jour faites</strong> · +{POINTS.quete} pousses. Rendez-vous demain !
+          </p>
+        </div>
+        {daily.seed?.state === "ready" ? <SeedButton /> : null}
+        {daily.seed?.state === "opened" ? <SeedButton opened={{ plant: daily.seed.plant, points: daily.seed.points }} /> : null}
+      </section>
+    );
+  }
+  return (
       <section className="flex items-center gap-3 rounded-[18px] bg-sauge px-4 py-3" aria-labelledby="quetes">
         <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sapin text-sapin-clair">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="M5 12l5 5 9-10" /></svg>
@@ -64,8 +81,11 @@ export function DailyQuests({ daily }: { daily: DailyState }) {
           );
         })}
       </ul>
+      {daily.seed?.state === "ready" ? <SeedButton /> : null}
       <p className={`text-xs ${done === order.length - 1 ? "font-semibold text-argile-fonce" : "text-terre"}`}>
-        {done === order.length - 1 ? "Plus qu'une pour le bonus du jour !" : "Nouvelles quêtes chaque matin."}
+        {done === order.length - 1
+          ? "Plus qu'une pour le bonus du jour et ta graine mystère !"
+          : "Les trois : +15 pousses et une graine mystère."}
       </p>
     </section>
   );

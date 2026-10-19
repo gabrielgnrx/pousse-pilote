@@ -14,6 +14,11 @@ import { IntroCard } from "@/components/IntroCard";
 import { GardenHero } from "@/components/GardenHero";
 import { DailyQuests } from "@/components/DailyQuests";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { WeeklyGoalCard } from "@/components/WeeklyGoalCard";
+import { QuizCard } from "@/components/QuizCard";
+import { DuelStrip } from "@/components/DuelStrip";
+import { getDuels, getQuiz, getWeeklyGoal } from "@/lib/game/data.ts";
+import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { reportPost, toggleCheer } from "./actions";
 import { NewsCard } from "./NewsCard";
 import { Fragment } from "react";
@@ -46,9 +51,10 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
   const { publie } = await searchParams;
   const { supabase, user, profile } = await requireHabits();
   // D'abord les bonus du jour (quêtes, série), pour qu'ils apparaissent dans le total affiché.
-  const daily = await claimDailyRewards(supabase);
+  // (et le défi collectif, et les duels terminés : tout ce qui crédite des pousses passe avant le total).
+  const [daily, weekly, duels] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
 
-  const [{ data: posts }, ranking, me, { data: myReports }, news, goal, cookieStore] = await Promise.all([
+  const [{ data: posts }, ranking, me, { data: myReports }, news, goal, cookieStore, quiz] = await Promise.all([
     supabase
       .from("validations")
       .select(
@@ -66,6 +72,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
     getDailyGoodNews(),
     getCollectiveGoal(supabase),
     cookies(),
+    getQuiz(supabase),
   ]);
   const showIntro = !cookieStore.get(INTRO_COOKIE);
   // Une bonne nouvelle toutes les 2 publications ; le reste en fin de fil.
@@ -100,6 +107,11 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
           Bonus débloqué : +{daily.gained} pousses{daily.questDone ? " pour tes quêtes du jour" : ""} !
         </p>
       ) : null}
+      {weekly && weekly.gained > 0 ? (
+        <p role="status" className="animate-pousse-pop rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#402a16]">
+          Défi collectif réussi : +{weekly.gained} pousses pour toi !
+        </p>
+      ) : null}
 
       <GardenHero
         total={me.points.total}
@@ -110,6 +122,12 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       />
 
       {daily ? <DailyQuests daily={daily} /> : null}
+
+      <DuelStrip duels={duels} />
+
+      {weekly ? <WeeklyGoalCard goal={weekly} /> : null}
+
+      {quiz ? <QuizCard initial={quiz} /> : null}
 
       <InstallPrompt />
 
@@ -151,7 +169,9 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                   {name.charAt(0).toUpperCase()}
                 </span>
                 <div className="flex-1">
-                  <p className="text-sm font-bold">{p.user_id === user.id ? "Toi" : name}</p>
+                  <Link href={p.user_id === user.id ? "/jardin" : `/jardin/${p.user_id}`} className="text-sm font-bold hover:underline">
+                    {p.user_id === user.id ? "Toi" : name}
+                  </Link>
                   <p className="text-xs text-terre">
                     {p.team?.name ? `Équipe ${p.team.name} · ` : ""}
                     {relativeTime(p.created_at)}
@@ -197,7 +217,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                 <p className="text-xs font-semibold text-argile-fonce">Signalé, l&apos;équipe Pousse va vérifier.</p>
               ) : null}
 
-              <div className="mt-1 flex items-center gap-2">
+              <div className="mt-1 flex flex-wrap items-center gap-2">
                 <form action={toggleCheer}>
                   <input type="hidden" name="validation" value={p.id} />
                   <button
@@ -212,6 +232,15 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                 {p.user_id !== user.id && t ? (
                   <Link href={`/defis/nouveau/${t.id}?variante=${p.variant}&via=${p.id}`} className="flex h-10 items-center rounded-full bg-sable px-3.5 text-sm font-bold">
                     Relever aussi
+                  </Link>
+                ) : null}
+                {p.user_id !== user.id && t ? (
+                  <Link
+                    href={`/duels?avec=${p.user_id}&type=${duelKindForTemplate(t.id)}`}
+                    className="flex h-10 items-center gap-1 rounded-full px-3 text-sm font-bold text-argile-fonce"
+                    aria-label={`Défier ${name} en duel`}
+                  >
+                    <span aria-hidden="true">⚔</span> Défier
                   </Link>
                 ) : null}
               </div>
