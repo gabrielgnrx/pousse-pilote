@@ -37,17 +37,6 @@ export function DailyQuests({ daily }: { daily: DailyState }) {
     );
   }
   return (
-      <section className="flex items-center gap-3 rounded-[18px] bg-sauge px-4 py-3" aria-labelledby="quetes">
-        <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sapin text-sapin-clair">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="M5 12l5 5 9-10" /></svg>
-        </span>
-        <p className="flex-1 text-sm text-[#2e3a22]">
-          <strong id="quetes">Quêtes du jour faites</strong> · +{POINTS.quete} pousses. Rendez-vous demain !
-        </p>
-      </section>
-    );
-  }
-  return (
     <section className="card flex flex-col gap-2 py-3.5" aria-labelledby="quetes">
       <div className="flex items-center justify-between">
         <h2 id="quetes" className="font-display text-base font-bold">Quêtes du jour</h2>
