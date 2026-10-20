@@ -132,7 +132,9 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
           </div>
         ) : (
           <p className="rounded-2xl bg-sable px-3 py-2 text-xs leading-snug text-brun">
-            Pas de CO₂ mesurable pour toi sur ce geste (il ne remplace rien dans ton bilan), mais il compte pour tes pousses et ta série.
+            {action.theme === "bureau"
+              ? "Pas de CO₂ mesurable sur ce petit geste, mais il compte pour tes pousses et ta série."
+              : "Pas de CO₂ pour toi sur ce geste (il ne remplace rien dans ton bilan), mais il compte pour tes pousses et ta série."}
           </p>
         )}
 
