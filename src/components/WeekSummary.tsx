@@ -27,7 +27,7 @@ export function WeekSummary({
               <span className="font-display text-2xl font-bold">{ordinal(team.rank)}</span>
               <span className="ml-1 text-sm font-semibold">sur {teamsCount}</span>
             </span>
-            <span className="text-xs text-terre">{team.row.points_per_person.toLocaleString("fr-FR")} pousses / pers.</span>
+            <span className="text-xs text-terre">{team.row.points.toLocaleString("fr-FR")} pousses</span>
           </>
         ) : (
           <span className="text-xs leading-snug text-brun">Classement dès 5 participants dans ton équipe</span>

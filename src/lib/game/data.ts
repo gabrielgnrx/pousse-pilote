@@ -39,8 +39,17 @@ export interface Duel {
   role: "challenger" | "opponent";
   other_id: string;
   other_name: string;
+  other_team: string | null;
   mine: number;
   theirs: number;
+  /** Duel sur une action précise (lancé avec un défi). */
+  template_id: string | null;
+  variant: string | null;
+  challenge_id: string | null;
+  /** Avec enjeu : refuser ou échouer coûte des pousses. */
+  stakes: boolean;
+  /** L'action remplace une habitude de mon bilan (sinon refuser est gratuit). */
+  feasible: boolean;
 }
 
 /** Mes duels (la base clôt au passage ceux qui sont terminés et crédite les gagnants). */

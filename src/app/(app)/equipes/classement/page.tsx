@@ -34,7 +34,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">Classement des équipes</h1>
-          <p className="mt-1 text-sm text-terre">En pousses par participant : une petite équipe a autant de chances qu&apos;une grande.</p>
+          <p className="mt-1 text-sm text-terre">Le total des pousses de tous les membres de chaque équipe.</p>
         </div>
         <Link href="/regles" className="mt-1 shrink-0 text-xs font-bold underline underline-offset-2">Comment ça marche ?</Link>
       </div>
@@ -75,8 +75,8 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-display text-xl font-bold">{t.points_per_person.toLocaleString("fr-FR")}</p>
-                <p className="text-[11px] text-terre">pousses / participant</p>
+                <p className="font-display text-xl font-bold">{t.points.toLocaleString("fr-FR")}</p>
+                <p className="text-[11px] text-terre">pousses au total</p>
               </div>
             </li>
           ))}
@@ -103,7 +103,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
         <span aria-hidden="true" className="font-display text-xl">⚔</span>
         <span className="flex-1">
           <span className="block text-sm font-bold">Défier un collègue</span>
-          <span className="block text-xs text-terre">Même action, 7 jours, personne ne perd de pousses</span>
+          <span className="block text-xs text-terre">Une autre équipe, 7 jours, des pousses à gagner… ou à perdre</span>
         </span>
         <span className="text-sm font-bold">›</span>
       </Link>

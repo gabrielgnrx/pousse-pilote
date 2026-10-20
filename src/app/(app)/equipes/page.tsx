@@ -41,8 +41,8 @@ export default async function QGPage() {
   const podium = teams.slice(0, 3).map((t, i) => ({ ...t, rank: i + 1 }));
   if (mineIndex >= 3) podium[2] = { ...teams[mineIndex], rank: mineIndex + 1 };
   let gap: string | null = null;
-  if (mineIndex === 0 && teams[1]) gap = `${fr(teams[0].points_per_person - teams[1].points_per_person)} d'avance`;
-  else if (mineIndex > 0) gap = `à ${fr(teams[mineIndex - 1].points_per_person - teams[mineIndex].points_per_person)} du ${ordinal(mineIndex)}`;
+  if (mineIndex === 0 && teams[1]) gap = `${fr(teams[0].points - teams[1].points)} d'avance`;
+  else if (mineIndex > 0) gap = `à ${fr(teams[mineIndex - 1].points - teams[mineIndex].points)} du ${ordinal(mineIndex)}`;
 
   const rows = messagesRes.data;
   // Les prénoms des auteurs, lus à part (les profils des collègues sont lisibles dans l'entreprise).
@@ -102,7 +102,7 @@ export default async function QGPage() {
                 </span>
                 <span className="truncate text-sm font-bold">{t.team_name}</span>
                 <span className={`text-xs ${t.is_mine && gap ? "font-bold text-abricot" : t.is_mine ? "text-[#ddebd3]" : "text-terre"}`}>
-                  {t.is_mine && gap ? gap : `${fr(t.points_per_person)} pousses/pers.`}
+                  {t.is_mine && gap ? gap : `${fr(t.points)} pousses`}
                 </span>
               </span>
             ))}

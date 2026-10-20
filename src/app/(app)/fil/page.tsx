@@ -13,7 +13,10 @@ import { parisOffset } from "@/lib/dates";
 import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
-import { reportPost, toggleCheer } from "./actions";
+import { cancelChallenge, reportPost, toggleCheer } from "./actions";
+import { ActiveChallenges } from "@/components/ActiveChallenges";
+import { DuelStrip } from "@/components/DuelStrip";
+import { formatDay, todayParis } from "@/lib/dates";
 
 interface Post {
   id: string;
@@ -33,11 +36,11 @@ interface Post {
 const AVATAR = ["#b9d3e8", "#f0a97b", "#d7e3c8", "#f6d9a8", "#e3c9e8", "#ecddbb"];
 const avatarColor = (id: string) => AVATAR[parseInt(id.replace(/-/g, "").slice(-2), 16) % AVATAR.length];
 
-export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string; vue?: string }> }) {
-  const { publie, vue } = await searchParams;
+export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string; vue?: string; defi?: string }> }) {
+  const { publie, vue, defi } = await searchParams;
   const { supabase, user, profile } = await requireHabits();
   // Tout ce qui crédite des pousses passe avant le total affiché : bonus du jour, défi collectif, duels terminés.
-  const [daily, weekly] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
+  const [daily, weekly, duels] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
 
   const teamOnly = vue === "equipe" && !!profile.team_id;
   let postsQuery = supabase
@@ -50,14 +53,40 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
     .eq("status", "valid");
   if (teamOnly) postsQuery = postsQuery.eq("team_id", profile.team_id as string);
 
-  const [{ data: posts }, me, { data: myReports }, { data: pulse }, cookieStore, { data: teamWeek }] = await Promise.all([
+  const today = todayParis();
+  const [{ data: posts }, me, { data: myReports }, { data: pulse }, cookieStore, { data: teamWeek }, { data: mine }] = await Promise.all([
     postsQuery.order("created_at", { ascending: false }).limit(30).returns<Post[]>(),
     getEngagement(supabase, user.id),
     supabase.from("reports").select("validation_id").eq("user_id", user.id),
     supabase.rpc("company_pulse"),
     cookies(),
     profile.team_id ? supabase.rpc("my_team_week") : Promise.resolve({ data: null }),
+    supabase
+      .from("user_challenges")
+      .select("id, template_id, variant, target, ends_on")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .gte("ends_on", today)
+      .order("ends_on"),
   ]);
+  // Mes défis en cours, avec leur avancée et le duel qui leur est lié.
+  const challengeIds = (mine ?? []).map((c) => c.id as string);
+  const { data: progress } = challengeIds.length
+    ? await supabase.from("validations").select("challenge_id, units").in("challenge_id", challengeIds).eq("status", "valid")
+    : { data: [] as { challenge_id: string; units: number }[] };
+  const activeChallenges = (mine ?? []).map((c) => {
+    const t = TEMPLATE_BY_ID[c.template_id as string];
+    const duel = duels.find((d) => d.challenge_id === c.id && ["pending", "active"].includes(d.status));
+    return {
+      id: c.id as string,
+      title: t ? actionTitle(t.id, c.variant as string) : "Défi",
+      unit: t?.unit ?? { one: "fois", many: "fois" },
+      done: (progress ?? []).filter((p) => p.challenge_id === c.id).reduce((s, p) => s + Number(p.units), 0),
+      target: Number(c.target),
+      endsOn: formatDay(c.ends_on as string, "short"),
+      duel: duel ? { other: duel.other_name, theirs: duel.theirs, status: duel.status } : null,
+    };
+  });
   const week = teamWeek as TeamWeek | null;
   const at = (local: string) => new Date(`${local}${parisOffset(new Date(`${local}Z`))}`).getTime();
   const voteOpen = !!week && week.phase === "open" && Date.now() < at(week.closes_at);
@@ -76,6 +105,11 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
 
   return (
     <>
+      {defi ? (
+        <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
+          Défi lancé ! Il est juste en dessous : enregistre chaque fois que tu le fais avec le bouton +.
+        </p>
+      ) : null}
       {publie ? (
         <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
           Publié ! Tes collègues peuvent maintenant t&apos;encourager.
@@ -96,6 +130,10 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       {pulse ? <CompanyPulse pulse={pulse as Pulse} total={me.points.total} today={me.today} /> : null}
 
       {week ? <TeamWeekCard week={week} voteOpen={voteOpen} /> : null}
+
+      <DuelStrip duels={duels.filter((d) => d.status === "pending" && d.role === "opponent")} />
+
+      <ActiveChallenges items={activeChallenges} cancel={cancelChallenge} />
 
       <div id="publications" className="mt-0.5 flex scroll-mt-4 items-center justify-between gap-2">
         <h2 className="font-display text-xl font-bold">Fil d&apos;actu</h2>

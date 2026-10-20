@@ -32,6 +32,8 @@ const DUEL_ERRORS: Record<string, string> = {
   invalid_duel: "Ce duel n'est pas valide.",
   too_many_duels: "3 duels à la fois au maximum : termine-en un d'abord.",
   duel_exists: "Vous avez déjà un duel en cours tous les deux.",
+  same_team: "Un duel se joue contre quelqu'un d'une autre équipe.",
+  opponent_busy: "Cette personne a déjà 2 invitations en attente : choisis quelqu'un d'autre.",
 };
 
 export async function challengeDuel(_prev: { error?: string }, form: FormData): Promise<{ error?: string }> {

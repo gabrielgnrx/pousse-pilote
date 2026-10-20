@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/session";
 import { duelOutcome, getDuels, type Duel } from "@/lib/game/data.ts";
-import { DUEL_KINDS } from "@/lib/game/labels.ts";
+import { DUEL_KINDS, DUEL_STAKES, duelUnits } from "@/lib/game/labels.ts";
+import { actionTitle } from "@/lib/actions-catalog";
 import { formatDay } from "@/lib/dates";
 import { answerDuel } from "@/lib/game/actions";
 import { DuelForm } from "./DuelForm";
@@ -17,9 +18,16 @@ export default async function DuelsPage({
   const { supabase, user } = await requireProfile();
   const [duels, { data: people }] = await Promise.all([
     getDuels(supabase),
-    supabase.from("profiles").select("id, display_name").neq("id", user.id).order("display_name"),
+    supabase.from("profiles").select("id, display_name, team_id, team:teams(name)").neq("id", user.id).not("team_id", "is", null).order("display_name"),
   ]);
-  const colleagues = (people ?? []).map((p) => ({ id: p.id as string, name: p.display_name as string }));
+  const { data: me } = await supabase.from("profiles").select("team_id").eq("id", user.id).single();
+  // Un duel se joue contre quelqu'un d'une autre équipe.
+  const colleagues = (people ?? [])
+    .filter((p) => p.team_id !== me?.team_id)
+    .map((p) => {
+      const team = p.team as unknown as { name: string } | null;
+      return { id: p.id as string, name: `${p.display_name as string}${team?.name ? ` · ${team.name}` : ""}` };
+    });
   const invites = duels.filter((d) => d.status === "pending" && d.role === "opponent");
   const sent = duels.filter((d) => d.status === "pending" && d.role === "challenger");
   const active = duels.filter((d) => d.status === "active");
@@ -29,7 +37,7 @@ export default async function DuelsPage({
     <>
       <div>
         <h1 className="font-display text-2xl font-bold">Duels</h1>
-        <p className="mt-1 text-sm text-terre">Un collègue, une action, 7 jours. Le meilleur moyen de s&apos;y mettre à deux.</p>
+        <p className="mt-1 text-sm text-terre">Quelqu&apos;un d&apos;une autre équipe, une action, 7 jours. {DUEL_STAKES}</p>
       </div>
       {sp.lance ? <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">Défi envoyé ! Il a 3 jours pour l&apos;accepter.</p> : null}
       {sp.accepte ? <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">C&apos;est parti pour 7 jours !</p> : null}
@@ -38,8 +46,15 @@ export default async function DuelsPage({
       {invites.map((d) => (
         <section key={d.id} className="flex flex-col gap-3 rounded-[20px] bg-abricot p-4 text-[#402a16]">
           <p className="text-sm">
-            <strong>{d.other_name}</strong> te défie : <strong>{d.target} {DUEL_KINDS[d.kind]?.units}</strong> en 7 jours.
+            <strong>{d.other_name}</strong>{d.other_team ? ` (${d.other_team})` : ""} te défie : <strong>{d.target} × {duelUnits(d, actionTitle)}</strong> en 7 jours.
           </p>
+          {d.stakes ? (
+            <p className="-mt-1 text-xs font-semibold">
+              {d.feasible
+                ? "Refuser, ou ne pas répondre en 3 jours, coûte 10 pousses. Accepter puis échouer : −20."
+                : "Cette action ne remplace rien dans ton bilan : refuser ne te coûte rien."}
+            </p>
+          ) : null}
           <div className="flex gap-2">
             <form action={answerDuel} className="flex-1">
               <input type="hidden" name="duel" value={d.id} />
@@ -67,7 +82,7 @@ export default async function DuelsPage({
           <h2 id="envoyes" className="label">En attente de réponse</h2>
           {sent.map((d) => (
             <p key={d.id} className="text-sm">
-              {d.other_name} · {d.target} {DUEL_KINDS[d.kind]?.units}
+              {d.other_name} · {d.target} × {duelUnits(d, actionTitle)}
             </p>
           ))}
         </section>
@@ -81,11 +96,13 @@ export default async function DuelsPage({
           {past.map((d) => {
             const o = duelOutcome(d);
             const txt =
-              d.status === "declined" ? "refusé" : d.status === "expired" ? "sans réponse" :
-              o === "gagne" ? "gagné · +40" : o === "partage" ? "réussi à deux · +25" : o === "perdu" ? `gagné par ${d.other_name}` : "personne n'a atteint l'objectif";
+              d.status === "declined" ? (d.stakes && d.role === "opponent" && d.feasible ? "refusé · −10" : "refusé") :
+              d.status === "expired" ? (d.stakes && d.role === "opponent" && d.feasible ? "sans réponse · −10" : "sans réponse") :
+              o === "gagne" ? "gagné · +40" : o === "partage" ? "réussi à deux · +25" :
+              o === "perdu" ? `gagné par ${d.other_name}${d.stakes ? " · −20" : ""}` : `personne n'a atteint l'objectif${d.stakes ? " · −20" : ""}`;
             return (
               <p key={d.id} className="flex justify-between gap-2 border-t border-encre/10 py-1.5 text-sm first-of-type:border-0">
-                <span>{d.other_name} · {DUEL_KINDS[d.kind]?.label}</span>
+                <span>{d.other_name} · {d.kind === "action" ? duelUnits(d, actionTitle) : DUEL_KINDS[d.kind]?.label}</span>
                 <span className={`shrink-0 font-semibold ${o === "gagne" || o === "partage" ? "text-sapin" : "text-terre"}`}>{txt}</span>
               </p>
             );
@@ -104,7 +121,7 @@ function ActiveDuel({ d }: { d: Duel }) {
   return (
     <article className="card flex flex-col gap-2.5">
       <p className="text-sm">
-        <strong>Toi contre {d.other_name}</strong> · {d.target} {k?.units} · jusqu&apos;au {d.ends_on ? formatDay(d.ends_on) : ""}
+        <strong>Toi contre {d.other_name}</strong> · {d.target} × {duelUnits(d, actionTitle)} · jusqu&apos;au {d.ends_on ? formatDay(d.ends_on) : ""}
       </p>
       {[
         { who: "Toi", n: d.mine, cls: "bg-sapin" },
@@ -119,7 +136,7 @@ function ActiveDuel({ d }: { d: Duel }) {
         </div>
       ))}
       <Link href={d.kind === "scan" ? "/scanner" : "/agir"} className="text-xs font-bold underline underline-offset-2">
-        {d.mine >= d.target ? "Objectif atteint, bravo !" : `Ajouter un ${k?.unit}`}
+        {d.mine >= d.target ? "Objectif atteint, bravo !" : d.stakes ? `Encore ${d.target - d.mine} pour éviter les −20 pousses` : `Ajouter un ${k?.unit ?? "action"}`}
       </Link>
     </article>
   );

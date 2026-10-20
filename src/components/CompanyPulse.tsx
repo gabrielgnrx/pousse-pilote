@@ -120,7 +120,7 @@ export function CompanyPulse({ pulse, total, today }: { pulse: Pulse; total: num
           </span>
         </span>
         <span className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="text-[15px] font-bold text-[#cfe3c4]">+{today}</span>
+          <span className="text-[15px] font-bold text-[#cfe3c4]">{today >= 0 ? `+${today}` : today}</span>
           <span className="text-[11px] text-[#ddebd3]">aujourd&apos;hui</span>
         </span>
       </Link>

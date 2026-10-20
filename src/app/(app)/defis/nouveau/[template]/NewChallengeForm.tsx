@@ -3,6 +3,7 @@ import { useActionState, useState } from "react";
 import { createChallenge } from "./actions";
 import { FormError, SubmitButton } from "@/components/ui";
 import { carKmEquivalent, formatKg, impactLevel } from "@/lib/co2/challenges.ts";
+import { DUEL_STAKES } from "@/lib/game/labels.ts";
 
 interface VariantView {
   key: string;
@@ -24,6 +25,7 @@ export function NewChallengeForm({
   variants,
   initialVariant,
   inspiredBy,
+  rivals,
 }: {
   template: {
     id: string;
@@ -38,11 +40,23 @@ export function NewChallengeForm({
   initialVariant: string;
   /** Publication d'un collègue à l'origine du défi (« Relever aussi »). */
   inspiredBy?: { id: string; name: string };
+  /** Collègues des autres équipes, pour lancer le défi en duel. */
+  rivals: { id: string; name: string; team: string }[];
 }) {
   const [state, action] = useActionState(createChallenge, {});
   const [variant, setVariant] = useState(initialVariant);
   const [target, setTarget] = useState(template.defaultTarget);
   const [days, setDays] = useState(30);
+  const [duel, setDuel] = useState(false);
+  const [rival, setRival] = useState("");
+  const teams = [...new Set(rivals.map((r) => r.team))];
+  const chooseDuel = (on: boolean) => {
+    setDuel(on);
+    if (on) {
+      setDays(7);
+      setTarget((n) => Math.min(n, 10));
+    }
+  };
   const current = variants.find((v) => v.key === variant)!;
   const total = current.kg * target;
   const level = impactLevel(total);
@@ -53,6 +67,7 @@ export function NewChallengeForm({
       <input type="hidden" name="variant" value={variant} />
       <input type="hidden" name="target" value={target} />
       <input type="hidden" name="days" value={days} />
+      <input type="hidden" name="opponent" value={duel ? rival : ""} />
       {inspiredBy ? (
         <>
           <input type="hidden" name="via" value={inspiredBy.id} />
@@ -95,10 +110,10 @@ export function NewChallengeForm({
             <div className="font-display text-3xl font-bold">{target}</div>
             <div className="text-xs text-terre">{target > 1 ? template.unit.many : template.unit.one}</div>
           </div>
-          <button type="button" aria-label="Augmenter l'objectif" onClick={() => setTarget((n) => Math.min(100, n + 1))} className="flex size-11 items-center justify-center rounded-full bg-creme text-2xl font-bold">+</button>
+          <button type="button" aria-label="Augmenter l'objectif" onClick={() => setTarget((n) => Math.min(duel ? 10 : 100, n + 1))} className="flex size-11 items-center justify-center rounded-full bg-creme text-2xl font-bold">+</button>
         </div>
         <div className="flex gap-2">
-          {DURATIONS.map((d) => (
+          {(duel ? DURATIONS.slice(0, 1) : DURATIONS).map((d) => (
             <button
               key={d.days}
               type="button"
@@ -110,6 +125,51 @@ export function NewChallengeForm({
             </button>
           ))}
         </div>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="label mb-2">Seul ou en duel ?</legend>
+        <div className="flex gap-2">
+          {[
+            { on: false, label: "Seul" },
+            { on: true, label: "En duel" },
+          ].map((o) => (
+            <button
+              key={o.label}
+              type="button"
+              aria-pressed={duel === o.on}
+              onClick={() => chooseDuel(o.on)}
+              disabled={o.on && rivals.length === 0}
+              className={`h-11 flex-1 rounded-full text-sm font-bold disabled:opacity-50 ${duel === o.on ? "bg-sapin text-sapin-clair" : "bg-sable"}`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+        {rivals.length === 0 ? (
+          <p className="text-xs text-terre">Aucun collègue d&apos;une autre équipe n&apos;est encore inscrit.</p>
+        ) : null}
+        {duel ? (
+          <div className="flex flex-col gap-2 rounded-2xl border-2 border-argile bg-peche p-3">
+            <label className="flex flex-col gap-1 text-sm font-bold">
+              Contre qui, dans une autre équipe ?
+              <select value={rival} onChange={(e) => setRival(e.target.value)} required className="input">
+                <option value="" disabled>Choisis un adversaire</option>
+                {teams.map((t) => (
+                  <optgroup key={t} label={`Équipe ${t}`}>
+                    {rivals.filter((r) => r.team === t).map((r) => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+            <p className="text-xs leading-relaxed text-[#5a4324]">
+              Vous avez 7 jours pour faire {target} {target > 1 ? template.unit.many : template.unit.one} chacun. {DUEL_STAKES} Les
+              pénalités valent aussi pour toi.
+            </p>
+          </div>
+        ) : null}
       </fieldset>
 
       <section className="rounded-2xl bg-sapin p-4 text-sapin-clair" aria-live="polite">
@@ -134,7 +194,7 @@ export function NewChallengeForm({
       </section>
 
       <FormError message={state.error} />
-      <SubmitButton pendingLabel="Création…">Lancer le défi</SubmitButton>
+      <SubmitButton pendingLabel="Création…">{duel ? "Lancer le défi en duel" : "Lancer le défi"}</SubmitButton>
     </form>
   );
 }

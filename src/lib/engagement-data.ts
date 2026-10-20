@@ -19,6 +19,8 @@ export interface Engagement {
     scan: number;
     /** Quiz, graines mystère, défis collectifs et duels. */
     jeu: number;
+    /** Pousses perdues (duels refusés ou ratés), en négatif. */
+    penalite: number;
   };
   /** Cette semaine (depuis lundi) : points et kg. */
   week: { points: number; kg: number };
@@ -59,6 +61,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
   const bonus = byKind("quete") + byKind("serie");
   const scan = byKind("scan");
   const jeu = byKind("quiz") + byKind("graine") + byKind("collectif") + byKind("duel") + byKind("equipe");
+  const penalite = byKind("penalite");
   const LEDGER_LABEL: Record<string, string> = {
     maintien: "Cap gardé",
     influence: "Un collègue a relevé ton défi",
@@ -71,6 +74,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
     collectif: "Défi collectif réussi",
     duel: "Duel réussi",
     equipe: "Défi d'équipe réussi",
+    penalite: "Duel refusé ou raté",
   };
   const recent = [
     ...(validations ?? [])
@@ -92,7 +96,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
   return {
     kgAvoided: (validations ?? []).reduce((s, v) => s + Number(v.kg), 0),
     points: {
-      total: defis + maintien + influencePts + temoin + bonus + scan + jeu,
+      total: defis + maintien + influencePts + temoin + bonus + scan + jeu + penalite,
       defis,
       maintien,
       influence: influencePts,
@@ -100,6 +104,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
       bonus,
       scan,
       jeu,
+      penalite,
     },
     week: {
       points:
@@ -145,11 +150,12 @@ export interface TeamRow {
   is_mine: boolean;
 }
 
-/** Classement des équipes en points par participant (depuis une date, ou depuis le début). */
+/** Classement des équipes en pousses au total (depuis une date, ou depuis le début). */
 export async function getTeamRanking(supabase: SupabaseClient, since: string | null) {
   const { data } = await supabase.rpc("team_stats", { p_since: since });
   const teams = ((data ?? []) as TeamRow[]).map((t) => ({
     ...t,
+    points: Number(t.points),
     points_per_person: Number(t.points_per_person),
     kg: Number(t.kg),
   }));

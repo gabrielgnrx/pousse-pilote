@@ -195,6 +195,7 @@ psql -d pousse_test -f supabase/tests/scenario_qg.sql
 # puis le quiz quotidien (0014 et 0015) et son scénario
 for f in $(ls supabase/migrations/*.sql | awk -F/ '$3 >= "0014"'); do psql -d pousse_test -v ON_ERROR_STOP=1 -f "$f"; done
 psql -d pousse_test -f supabase/tests/scenario_quiz.sql
+psql -d pousse_test -f supabase/tests/scenario_duels.sql
 ```
 
 La banque du quiz (`0015_quiz_banque.sql`) est générée : `node scripts/generate-quiz.ts > supabase/migrations/0015_quiz_banque.sql`.

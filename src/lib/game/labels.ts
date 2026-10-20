@@ -16,6 +16,16 @@ export const DUEL_KINDS: Record<string, { label: string; unit: string; units: st
   defis: { label: "Défis avec preuve", unit: "défi avec preuve", units: "défis avec preuve" },
 };
 
+/** Ce qu'on compte dans un duel, au pluriel (« repas végé », « Venu au bureau à vélo »). */
+export function duelUnits(d: { kind: string; template_id?: string | null; variant?: string | null }, titleOf?: (t: string, v: string) => string): string {
+  if (d.kind === "action" && d.template_id && titleOf) return titleOf(d.template_id, d.variant ?? "base").toLowerCase();
+  return DUEL_KINDS[d.kind]?.units ?? "actions";
+}
+
+/** Les enjeux d'un duel, en une phrase. */
+export const DUEL_STAKES =
+  "Refuser ou laisser passer 3 jours : −10 pousses. Ne pas atteindre l'objectif en 7 jours : −20. Réussir : +25 chacun, ou +40 si tu es seul à réussir.";
+
 /** Type de duel naturel à partir d'une publication du fil. */
 export function duelKindForTemplate(templateId: string): string {
   if (["velo", "transports", "covoiturage"].includes(templateId)) return "trajets";

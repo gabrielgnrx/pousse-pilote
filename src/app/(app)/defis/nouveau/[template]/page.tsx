@@ -15,7 +15,17 @@ export default async function NewChallengePage({
   const { variante, via } = await searchParams;
   const t = TEMPLATE_BY_ID[template];
   if (!t) notFound();
-  const { supabase, user, habits } = await requireHabits();
+  const { supabase, user, profile, habits } = await requireHabits();
+
+  // Adversaires possibles pour un duel : les collègues des autres équipes.
+  let others = supabase
+    .from("profiles")
+    .select("id, display_name, team:teams(name)")
+    .not("team_id", "is", null)
+    .neq("id", user.id)
+    .order("display_name");
+  if (profile.team_id) others = others.neq("team_id", profile.team_id);
+  const { data: rivals } = await others.returns<{ id: string; display_name: string; team: { name: string } | null }[]>();
 
   // « Relever aussi » : la publication doit être visible dans le fil et venir d'un collègue.
   let inspiredBy: { id: string; name: string } | undefined;
@@ -47,6 +57,7 @@ export default async function NewChallengePage({
           variants={variants.map((v) => ({ key: v.key, label: v.label, kg: v.impact.kg, eligible: v.impact.eligible, reason: v.impact.reason, formula: v.impact.formula }))}
           initialVariant={firstEligible.key}
           inspiredBy={inspiredBy}
+          rivals={(rivals ?? []).map((r) => ({ id: r.id, name: r.display_name, team: r.team?.name ?? "" }))}
         />
       ) : (
         <p className="card text-sm">{variants[0]?.impact.reason ?? "Ce défi n'est pas disponible pour toi."}</p>

@@ -34,8 +34,12 @@ export async function createChallenge(_prev: { error?: string }, form: FormData)
     if (src && src.user_id !== user.id) inspiredBy = src.id;
   }
 
+  const opponent = String(form.get("opponent") ?? "");
+  const withDuel = /^[0-9a-f-]{36}$/i.test(opponent);
+  if (withDuel && (days !== 7 || target > 10)) return { error: "Un duel dure 1 semaine, avec 10 au plus." };
+
   const start = todayParis();
-  const { error } = await supabase.from("user_challenges").insert({
+  const { data: created, error } = await supabase.from("user_challenges").insert({
     user_id: user.id,
     company_id: profile.company_id,
     template_id: t.id,
@@ -44,8 +48,28 @@ export async function createChallenge(_prev: { error?: string }, form: FormData)
     starts_on: start,
     ends_on: addDays(start, days - 1),
     inspired_by: inspiredBy,
-  });
-  if (error) return { error: "Impossible de créer le défi. Réessaie." };
+  }).select("id").single();
+  if (error || !created) return { error: "Impossible de créer le défi. Réessaie." };
 
-  redirect("/defis?cree=1");
+  if (withDuel) {
+    const { error: duelError } = await supabase.rpc("challenge_duel_action", { p_challenge: created.id, p_opponent: opponent });
+    if (duelError) {
+      // Pas de défi à moitié lancé : on l'annule et on explique pourquoi.
+      await supabase.from("user_challenges").update({ status: "abandoned" }).eq("id", created.id);
+      const m = duelError.message;
+      return {
+        error: m.includes("same_team")
+          ? "Choisis quelqu'un d'une autre équipe."
+          : m.includes("opponent_busy")
+            ? "Cette personne a déjà 2 invitations en attente : choisis quelqu'un d'autre."
+            : m.includes("duel_exists")
+              ? "Vous avez déjà un duel en cours tous les deux."
+              : m.includes("too_many_duels")
+                ? "3 duels à la fois au maximum : termine-en un d'abord."
+                : "Le duel n'a pas pu être lancé.",
+      };
+    }
+    redirect("/duels?lance=1");
+  }
+  redirect("/fil?defi=1");
 }

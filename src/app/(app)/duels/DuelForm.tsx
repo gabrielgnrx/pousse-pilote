@@ -1,7 +1,7 @@
 "use client";
 import { useActionState } from "react";
 import { challengeDuel } from "@/lib/game/actions";
-import { DUEL_KINDS } from "@/lib/game/labels.ts";
+import { DUEL_KINDS, DUEL_STAKES } from "@/lib/game/labels.ts";
 
 /** Lancer un duel : un collègue, un type d'action, un objectif sur 7 jours. */
 export function DuelForm({
@@ -20,7 +20,7 @@ export function DuelForm({
       <label className="flex flex-col gap-1 text-sm font-semibold">
         Qui ?
         <select name="opponent" required defaultValue={defaultOpponent ?? ""} className="input">
-          <option value="" disabled>Choisis un collègue</option>
+          <option value="" disabled>Choisis quelqu&apos;un d&apos;une autre équipe</option>
           {colleagues.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
@@ -46,8 +46,7 @@ export function DuelForm({
         </select>
       </label>
       <p className="text-xs leading-relaxed text-terre">
-        Seules les actions avec preuve comptent (ou les meilleurs choix au scanner). Vous réussissez tous les deux :
-        +25 chacun. Un seul y arrive : +40 pour lui. Personne ne perd de pousses.
+        Seules les actions avec preuve comptent (ou les meilleurs choix au scanner). {DUEL_STAKES}
       </p>
       {state.error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{state.error}</p> : null}
       <button type="submit" disabled={pending} className="btn-primary">{pending ? "Envoi…" : "Envoyer le défi"}</button>

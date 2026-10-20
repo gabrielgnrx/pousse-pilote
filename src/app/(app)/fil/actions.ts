@@ -27,3 +27,17 @@ export async function reportPost(form: FormData) {
     .upsert({ validation_id: id, user_id: user.id }, { onConflict: "validation_id,user_id", ignoreDuplicates: true });
   revalidatePath("/fil");
 }
+
+/** Annuler un défi en cours (il disparaît de l'accueil ; ce qui a été validé reste compté). */
+export async function cancelChallenge(form: FormData) {
+  const { supabase, user } = await requireProfile();
+  const id = String(form.get("challenge") ?? "");
+  await supabase
+    .from("user_challenges")
+    .update({ status: "abandoned" })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .eq("status", "active");
+  revalidatePath("/fil");
+  revalidatePath("/defis");
+}
