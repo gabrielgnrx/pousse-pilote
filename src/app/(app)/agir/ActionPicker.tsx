@@ -1,8 +1,11 @@
 "use client";
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { formatKg } from "@/lib/co2/challenges.ts";
 import { THEMES, type ActionItem, type Theme } from "@/lib/actions-catalog";
-import { logAction, type LoggedAction } from "./actions";
+import { logAction, logActionWithReceipt, type LoggedAction } from "./actions";
+import { boostedPoints, fmtMult, type Boost } from "@/lib/boosts";
+import { TEMPLATE_BY_ID } from "@/lib/co2/challenges.ts";
 import { ActionDone } from "./ActionDone";
 import { ThemeIcon } from "./ThemeIcon";
 
@@ -15,12 +18,16 @@ export function ActionPicker({
   counts,
   doneToday,
   inChallenge,
+  boosts,
+  openReceipt,
 }: {
   items: ActionItem[];
   favorites: string[];
   counts: Record<string, number>;
   doneToday: Record<string, boolean>;
   inChallenge: string[];
+  boosts: Record<string, Boost>;
+  openReceipt: string | null;
 }) {
   const [query, setQuery] = useState("");
   const [theme, setTheme] = useState<Theme | null>(null);
@@ -28,6 +35,7 @@ export function ActionPicker({
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<LoggedAction | null>(null);
+  const [receiptFor, setReceiptFor] = useState<string | null>(openReceipt);
 
   const byKey = useMemo(() => Object.fromEntries(items.map((i) => [i.key, i])), [items]);
   const list = useMemo(() => {
@@ -38,6 +46,11 @@ export function ActionPicker({
   }, [items, query, theme]);
 
   const record = (item: ActionItem) => {
+    if (item.requiresReceipt) {
+      setError(null);
+      setReceiptFor(item.key);
+      return;
+    }
     setError(null);
     setBusyKey(item.key);
     startTransition(async () => {
@@ -48,10 +61,22 @@ export function ActionPicker({
     });
   };
 
+  const sendReceipt = (form: FormData) => {
+    setError(null);
+    startTransition(async () => {
+      const res = await logActionWithReceipt(form);
+      if (res.ok) {
+        setReceiptFor(null);
+        setDone(res.action);
+      } else setError(res.error);
+    });
+  };
+
   const row = (item: ActionItem) => {
     const count = counts[item.key] ?? 0;
     const challenge = inChallenge.includes(item.key);
     const busy = pending && busyKey === item.key;
+    const boost = boosts[item.key];
     return (
       <li key={item.key}>
         <button
@@ -65,10 +90,17 @@ export function ActionPicker({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] leading-snug font-bold">{item.title}</span>
+            {boost ? (
+              <span className={`mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${boost.kind === "equipe" ? "bg-abricot text-[#402a16]" : "bg-sapin text-sapin-clair"}`}>
+                {boost.label} · {fmtMult(boost.mult)}
+              </span>
+            ) : null}
             <span className="block text-xs text-terre">
               {busy
                 ? "Enregistrement…"
-                : challenge
+                : item.requiresReceipt
+                  ? "Reçu obligatoire · gardé privé"
+                  : challenge
                   ? "Compte pour ton défi en cours"
                   : count > 0
                     ? `Fait ${count} fois ce mois-ci${doneToday[item.key] ? ", dont aujourd'hui" : ""}`
@@ -81,7 +113,7 @@ export function ActionPicker({
             <span className={`text-sm font-bold ${item.kg > 0 ? "text-sapin" : "text-terre"}`}>
               {item.kg > 0 ? `−${formatKg(item.kg)}` : "≈ 0 kg"}
             </span>
-            <span className="text-xs font-semibold text-argile-fonce">+{item.points}</span>
+            <span className="text-xs font-semibold text-argile-fonce">+{boostedPoints(item.points, boost)}</span>
           </span>
         </button>
       </li>
@@ -91,8 +123,9 @@ export function ActionPicker({
   return (
     <>
       <div className="flex flex-col gap-1">
+        <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">Une action, aujourd&apos;hui</p>
         <h1 className="font-display text-2xl font-bold">Qu&apos;as-tu fait de bien ?</h1>
-        <p className="text-sm text-terre">Un tap suffit. Le CO₂ vient de ton bilan, les pousses arrivent tout de suite.</p>
+        <p className="text-sm text-terre">Un geste perso, un tap, des pousses tout de suite. Le CO₂ vient de ton bilan.</p>
       </div>
 
       <label className="flex h-12 items-center gap-2 rounded-2xl border-[1.5px] border-[#c7b78c] bg-papier px-4">
@@ -127,6 +160,18 @@ export function ActionPicker({
             <h2 className="label">Tes habitudes · un tap suffit</h2>
             <ul className="flex flex-col gap-2">{favorites.map((k) => byKey[k]).filter(Boolean).map(row)}</ul>
           </section>
+          <section className="flex flex-col gap-2" aria-labelledby="applis">
+            <div>
+              <h2 id="applis" className="label">Achats via une appli durable · +30</h2>
+              <p className="text-xs text-terre">Vinted, Leboncoin, Back Market, Too Good To Go… Avec ton reçu, gardé privé.</p>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {[...new Set(items.filter((i) => i.requiresReceipt).map((i) => i.templateId))]
+                .map((id) => items.find((i) => i.templateId === id)!)
+                .map((i) => ({ ...i, title: TEMPLATE_BY_ID[i.templateId]?.title ?? i.title }))
+                .map(row)}
+            </ul>
+          </section>
           <section className="flex flex-col gap-2">
             <h2 className="label">Ou par thème</h2>
             <div className="flex flex-wrap gap-2">
@@ -146,12 +191,98 @@ export function ActionPicker({
         </>
       )}
 
+      <Link href="/defis?onglet=catalogue" className="flex items-center gap-3 rounded-2xl border-[1.5px] border-dashed border-[#c7b78c] px-4 py-3">
+        <span className="flex-1 text-sm text-brun">Envie d&apos;un objectif sur plusieurs jours, seul ou à plusieurs ?</span>
+        <span className="text-sm font-bold text-sapin">Lancer un défi ›</span>
+      </Link>
+
       <p className="text-center text-xs text-terre">
-        Pas de preuve demandée. Un plafond par jour s&apos;applique (2 trajets, 2 repas…) pour que le compteur de
+        Pas de preuve demandée, sauf le reçu pour les achats via une appli. Un plafond par jour s&apos;applique (2 trajets, 2 repas…) pour que le compteur de
         l&apos;entreprise reste juste. Les gestes à 0 kg rapportent 5 pousses par jour au plus, tous confondus.
       </p>
 
+      {receiptFor && byKey[receiptFor] ? (
+        <ReceiptSheet
+          item={byKey[receiptFor]}
+          boost={boosts[receiptFor]}
+          pending={pending}
+          error={error}
+          onSubmit={sendReceipt}
+          onClose={() => {
+            setReceiptFor(null);
+            setError(null);
+          }}
+        />
+      ) : null}
+
       {done ? <ActionDone action={done} onClose={() => setDone(null)} /> : null}
     </>
+  );
+}
+
+/** Un achat via une appli : choisir ce qu'on a acheté et joindre le reçu (ou une capture de la confirmation). */
+function ReceiptSheet({
+  item,
+  boost,
+  pending,
+  error,
+  onSubmit,
+  onClose,
+}: {
+  item: ActionItem;
+  boost: Boost | undefined;
+  pending: boolean;
+  error: string | null;
+  onSubmit: (form: FormData) => void;
+  onClose: () => void;
+}) {
+  const t = TEMPLATE_BY_ID[item.templateId];
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center bg-encre/60 sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="recu-titre"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+    >
+      <form
+        action={onSubmit}
+        className="flex max-h-[90dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-creme p-5 sm:rounded-[28px]"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">Achat via une appli · reçu obligatoire</p>
+            <h2 id="recu-titre" className="font-display text-xl leading-tight font-bold">{t?.title ?? item.title}</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Fermer" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sable">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
+        <input type="hidden" name="template" value={item.templateId} />
+        {t && t.variants.length > 1 ? (
+          <label className="flex flex-col gap-1 text-sm font-bold">
+            {t.variantQuestion ?? "Quoi ?"}
+            <select name="variant" defaultValue={item.variant} className="input">
+              {t.variants.map((v) => (
+                <option key={v.key} value={v.key}>{v.label}</option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <input type="hidden" name="variant" value={item.variant} />
+        )}
+        <label className="flex flex-col gap-1 text-sm font-bold">
+          Ton reçu ou ta confirmation de commande
+          <span className="text-xs font-normal text-terre">Une photo ou une capture d&apos;écran. Il reste privé : personne d&apos;autre ne le voit, et il est effacé après 90 jours.</span>
+          <input name="receipt" type="file" accept="image/jpeg,image/png,image/webp" required className="text-sm font-normal" />
+        </label>
+        {error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{error}</p> : null}
+        <button type="submit" disabled={pending} className="btn-dark">
+          {pending ? "Envoi…" : `Valider avec le reçu · +${boostedPoints(item.points, boost)}`}
+        </button>
+      </form>
+    </div>
   );
 }

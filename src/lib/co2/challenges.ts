@@ -45,6 +45,8 @@ export interface ChallengeTemplate {
   level?: "standard" | "expert";
   /** Explication courte affichée dans le catalogue pour les défis expert. */
   pitch?: string;
+  /** Achat via une appli durable : reçu ou confirmation de commande obligatoire (gardé privé). */
+  requiresReceipt?: boolean;
 }
 
 export const CATEGORY_LABEL: Record<Category, string> = {
@@ -319,6 +321,49 @@ GESTES.push(
   nature("plantation", "Plantation, nichoir ou coin de nature aménagé", 5),
 );
 
+/**
+ * Achats via une appli de consommation durable : 30 pousses, mais seulement avec le reçu ou la
+ * confirmation de commande en photo (gardée privée). Mêmes valeurs que 0021_defis_a_plusieurs.sql.
+ */
+export const APP_TEMPLATES: ChallengeTemplate[] = [
+  {
+    id: "appli_occasion",
+    category: "consommation",
+    title: "Achat d'occasion sur une appli (Vinted, Leboncoin, Back Market…)",
+    unit: { one: "achat", many: "achats" },
+    variantQuestion: "Qu'as-tu acheté ?",
+    variants: [
+      { key: "tshirt", label: "T-shirt" },
+      { key: "chemise", label: "Chemise" },
+      { key: "chaussures", label: "Chaussures en cuir" },
+      { key: "jean", label: "Jean" },
+      { key: "pull", label: "Pull en laine" },
+      { key: "manteau", label: "Manteau" },
+      { key: "smartphone", label: "Smartphone reconditionné" },
+      { key: "ordinateur", label: "Ordinateur, tablette ou console reconditionné" },
+    ],
+    proofHint: "Reçu ou confirmation de commande de l'appli",
+    pointsPerUnit: 30,
+    dailyCap: 2,
+    defaultTarget: 2,
+    source: SOURCES.habillement,
+    requiresReceipt: true,
+  },
+  {
+    id: "appli_antigaspi",
+    category: "alimentation",
+    title: "Panier anti-gaspi via une appli (Too Good To Go, Phenix…)",
+    unit: { one: "panier", many: "paniers" },
+    variants: [{ key: "base", label: "Un panier d'invendus récupéré" }],
+    proofHint: "Reçu ou confirmation de commande de l'appli",
+    pointsPerUnit: 30,
+    dailyCap: 1,
+    defaultTarget: 4,
+    source: SOURCES.alimentation,
+    requiresReceipt: true,
+  },
+];
+
 /** Remplacer une habitude, ou la réduire : la façon dont le geste est présenté dans « Mon plan ». */
 export function verbOf(templateId: string): "Remplacer" | "Réduire" | "Au quotidien" {
   if (["moins_boeuf", "chauffage"].includes(templateId)) return "Réduire";
@@ -326,7 +371,7 @@ export function verbOf(templateId: string): "Remplacer" | "Réduire" | "Au quoti
   return "Remplacer";
 }
 
-export const TEMPLATE_BY_ID = Object.fromEntries([...TEMPLATES, ...GESTES].map((t) => [t.id, t])) as Record<
+export const TEMPLATE_BY_ID = Object.fromEntries([...TEMPLATES, ...GESTES, ...APP_TEMPLATES].map((t) => [t.id, t])) as Record<
   string,
   ChallengeTemplate
 >;
@@ -487,6 +532,10 @@ export function unitImpact(templateId: string, variantKey: string, h: Habits): U
         formula: `${fmt(litres, 1)} L × ${fmt(DRINK_KG_PER_L.eau_bouteille)} kg/L d'eau en bouteille`,
       };
     }
+    case "appli_occasion":
+      return unitImpact(["smartphone", "ordinateur"].includes(variantKey) ? "reparation" : "occasion", variantKey, h);
+    case "appli_antigaspi":
+      return no("Pas de CO₂ compté sur un panier, mais 30 pousses avec le reçu.");
     case "escaliers":
     case "gourde":
     case "ecran":

@@ -45,7 +45,12 @@ export const POINT_RULES: { label: string; points: string }[] = [
   { label: "Quiz du jour à 8/10 ou plus", points: "+5" },
   { label: "Graine mystère (après les 3 quêtes du jour) : au hasard, ou une plante rare", points: "+5 à +20" },
   { label: "Défi collectif de la semaine atteint, si tu y as contribué", points: "+30" },
-  { label: "Duel réussi : seul gagnant / tous les deux", points: "+40 / +25" },
+  { label: "Achat via une appli durable (occasion, anti-gaspi), avec le reçu", points: "+30" },
+  { label: "Action qui compte dans un duel en cours / dans le défi d'équipe de la semaine", points: "×1,5 / ×2" },
+  { label: "Défi perso réussi, seul", points: "+20" },
+  { label: "Duel réussi : seul gagnant / tous les deux", points: "+40 / +30" },
+  { label: "Défi d'équipe de la semaine atteint, si tu y as contribué", points: "+50" },
+  { label: "Duel échoué (ta mise)", points: "−10" },
 ];
 
 /** Les niveaux : ta plante grandit avec tes pousses. */

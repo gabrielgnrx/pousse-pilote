@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GESTES, TEMPLATES, unitImpact } from "./co2/challenges.ts";
+import { APP_TEMPLATES, GESTES, TEMPLATES, unitImpact } from "./co2/challenges.ts";
 import { actionItems } from "./actions-catalog.ts";
 import { DUOS, FICHES, RECETTES, recettesOfWeek } from "./informer.ts";
 import { gesteOfWeek } from "./geste-semaine.ts";
@@ -24,8 +24,10 @@ const h: Habits = {
 
 test("bouton + : une ligne par variante, le CO₂ vient du bilan", () => {
   const items = actionItems(h);
-  const n = [...TEMPLATES, ...GESTES].reduce((s, t) => s + t.variants.length, 0);
+  const n = [...TEMPLATES, ...GESTES, ...APP_TEMPLATES].reduce((s, t) => s + t.variants.length, 0);
   assert.equal(items.length, n);
+  assert.ok(items.filter((i) => i.requiresReceipt).every((i) => i.points === 30), "achats via appli : 30 pousses, avec reçu");
+  assert.equal(items.find((i) => i.key === "appli_occasion:jean")?.kg, unitImpact("occasion", "jean", h).kg, "même CO₂ que l'occasion");
   assert.equal(items.find((i) => i.key === "velo:base")?.kg, 10 * 0.1106);
   assert.equal(items.find((i) => i.key === "train:500")?.kg, 0, "aucun vol déclaré : 0 kg");
   for (const g of GESTES) assert.equal(unitImpact(g.id, "base", h).kg, 0, `${g.id} : pas de CO₂ mesurable`);

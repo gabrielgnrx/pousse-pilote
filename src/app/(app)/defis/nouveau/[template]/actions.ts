@@ -12,7 +12,15 @@ export async function createChallenge(_prev: { error?: string }, form: FormData)
   if (!t) return { error: "Défi inconnu." };
   const variant = String(form.get("variant") ?? "");
   if (!t.variants.some((v) => v.key === variant)) return { error: "Choisis une option." };
-  if (!unitImpact(t.id, variant, habits).eligible) {
+  // Défi d'équipe : il ne crée pas de défi perso, il propose le défi au vote de lundi prochain.
+  if (String(form.get("mode")) === "equipe") {
+    const kind = String(form.get("team_kind") ?? "");
+    if (!kind) return { error: "Ce geste ne peut pas être fait par toute l'équipe." };
+    const { error } = await supabase.rpc("propose_team_challenge", { p_kind: kind });
+    if (error) return { error: error.message.includes("no_team") ? "Rejoins d'abord une équipe." : "La proposition n'a pas pu être envoyée." };
+    redirect("/equipes?propose=1");
+  }
+  if (!t.requiresReceipt && !unitImpact(t.id, variant, habits).eligible) {
     return { error: "Ce choix ne remplace aucune de tes habitudes déclarées." };
   }
   const target = Number(form.get("target"));

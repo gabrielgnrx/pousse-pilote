@@ -43,8 +43,16 @@ export default function ReglesPage() {
         <ul className="flex flex-col gap-2 text-sm leading-relaxed">
           <li><strong>Défi collectif de la semaine.</strong> Chaque lundi, un objectif commun à toute l&apos;entreprise
             (repas végé, trajets, scanner, quiz…). S&apos;il est atteint, +30 pour chaque personne qui y a contribué.</li>
+          <li><strong>Actions et défis.</strong> Une action, c&apos;est un geste perso enregistré avec le bouton + :
+            ses pousses arrivent tout de suite. Un défi, c&apos;est un objectif sur plusieurs jours, seul, en duel ou en
+            équipe. À plusieurs, ça rapporte plus : chaque action qui compte dans un duel vaut ×1,5, dans le défi
+            d&apos;équipe de la semaine ×2. Défi réussi seul : +20 ; défi d&apos;équipe atteint : +50 pour chaque
+            contributeur.</li>
+          <li><strong>Achats via une appli durable.</strong> Occasion (Vinted, Leboncoin, Back Market…) ou panier
+            anti-gaspi (Too Good To Go, Phenix…) : +30, seulement avec le reçu ou la confirmation de commande en photo.
+            Le reçu reste privé et il est effacé après 90 jours.</li>
           <li><strong>Duels.</strong> Défie quelqu&apos;un d&apos;une autre équipe sur 7 jours, par exemple en lançant un
-            défi. Les deux réussissent : +25 chacun ; un seul : +40. Chacun mise 10 pousses : ne pas atteindre
+            défi. Les deux réussissent : +30 chacun ; un seul : +40. Chacun mise 10 pousses : ne pas atteindre
             l&apos;objectif te coûte ta mise. Refuser, ou ne pas répondre en 3 jours, ne coûte rien. Une mise perdue
             ne fait jamais passer ton total sous zéro.</li>
           <li><strong>Quiz du jour.</strong> 10 questions difficiles, les mêmes pour toute l&apos;entreprise, jamais

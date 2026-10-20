@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireHabits } from "@/lib/session";
 import {
+  APP_TEMPLATES,
   CATEGORY_LABEL,
   TEMPLATE_BY_ID,
   TEMPLATES,
@@ -16,7 +17,9 @@ import { keepHabit } from "./actions";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { DailyQuests } from "@/components/DailyQuests";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { getQuiz } from "@/lib/game/data.ts";
+import { getDuels, getQuiz } from "@/lib/game/data.ts";
+import { BONUS, MODES, fmtMult } from "@/lib/boosts";
+import { TEAM_KINDS, type TeamWeek } from "@/lib/team";
 
 interface ChallengeRow {
   id: string;
@@ -42,7 +45,7 @@ export default async function DefisPage({
 }) {
   const { onglet, garde, erreur, valide, cree } = await searchParams;
   const tab = onglet === "catalogue" ? "catalogue" : "en-cours";
-  const { supabase, user, habits } = await requireHabits();
+  const { supabase, user, profile, habits } = await requireHabits();
   const today = todayParis();
 
   const [{ data: challenges }, { data: validations }, engagement, { data: fp }, daily, quiz] = await Promise.all([
@@ -69,6 +72,13 @@ export default async function DefisPage({
     claimDailyRewards(supabase),
     getQuiz(supabase),
   ]);
+  const [duels, { data: teamWeekData }] = await Promise.all([
+    getDuels(supabase),
+    profile.team_id ? supabase.rpc("my_team_week") : Promise.resolve({ data: null }),
+  ]);
+  const teamWeek = teamWeekData as TeamWeek | null;
+  const duelOf = (challengeId: string) =>
+    duels.find((d) => d.challenge_id === challengeId && (d.status === "active" || d.status === "pending"));
   const kept = keptHabits(habits);
   // Garder le cap : 2 habitudes récompensées par semaine (keep_habit, 0009_equilibrage.sql).
   const MAX_REWARDED = 2;
@@ -252,6 +262,39 @@ export default async function DefisPage({
             <p className="text-[11px] text-terre">Au-delà, rien n&apos;est compté. Un trajet ne compte que pour un défi.</p>
           </section>
 
+          <div className="grid grid-cols-3 gap-1.5 text-center" aria-label="Ce que rapporte chaque mode">
+            {(
+              [
+                { id: "seul", bg: "bg-papier", fg: "", bonus: `+${BONUS.seul}` },
+                { id: "duel", bg: "bg-sauge", fg: "text-sapin", bonus: `+${BONUS.duelSeul}` },
+                { id: "equipe", bg: "bg-peche", fg: "text-argile-fonce", bonus: `+${BONUS.equipe}` },
+              ] as const
+            ).map((m) => (
+              <div key={m.id} className={`flex flex-col rounded-2xl px-1 py-2 ${m.bg}`}>
+                <span className={`text-xs ${m.fg || "text-terre"}`}>{MODES[m.id].label}</span>
+                <span className={`text-sm font-bold ${m.fg}`}>{fmtMult(MODES[m.id].mult)} · {m.bonus}</span>
+              </div>
+            ))}
+          </div>
+
+          {teamWeek?.chosen ? (
+            <Link href="/equipes" className="flex flex-col gap-2 rounded-[20px] bg-peche p-4 text-[#402a16]">
+              <span className="flex items-center justify-between">
+                <span className="rounded-full bg-argile px-2.5 py-0.5 text-[11px] font-bold text-white uppercase">Équipe · {fmtMult(MODES.equipe.mult)}</span>
+                <span className="text-xs">jusqu&apos;à dimanche</span>
+              </span>
+              <span className="font-bold">
+                {teamWeek.target} {TEAM_KINDS[teamWeek.chosen].unit} pour l&apos;équipe
+              </span>
+              <span className="h-2.5 overflow-hidden rounded-full bg-[#ecd3b4]">
+                <span className="block h-full rounded-full bg-argile" style={{ width: `${Math.min(100, ((teamWeek.progress ?? 0) / Math.max(1, teamWeek.target ?? 1)) * 100)}%` }} />
+              </span>
+              <span className="text-xs">
+                {teamWeek.progress ?? 0}/{teamWeek.target} · toi : {teamWeek.mine ?? 0}. Objectif atteint = +{BONUS.equipe} pour chaque contributeur.
+              </span>
+            </Link>
+          ) : null}
+
           {(challenges ?? []).length === 0 ? (
             <div className="card flex flex-col gap-3 text-center">
               <p className="font-display text-lg font-bold">Aucun défi en cours</p>
@@ -266,11 +309,15 @@ export default async function DefisPage({
             const p = progress.get(c.id) ?? { units: 0, kg: 0 };
             const variant = t.variants.find((v) => v.key === c.variant);
             const done = c.status === "done";
+            const d = duelOf(c.id);
             return (
-              <article key={c.id} className="card flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="label">
-                    {CATEGORY_LABEL[t.category]} · {done ? "réussi" : `jusqu'au ${formatDay(c.ends_on, "short")}`}
+              <article key={c.id} className={`flex flex-col gap-2 rounded-[20px] p-4 ${d ? "bg-sauge" : "card"}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${d ? "bg-sapin text-sapin-clair" : "bg-sable text-brun"}`}>
+                      {d ? `Duel · ${fmtMult(MODES.duel.mult)}` : `Seul · ${fmtMult(MODES.seul.mult)}`}
+                    </span>
+                    <span className="label">{done ? "réussi" : `jusqu'au ${formatDay(c.ends_on, "short")}`}</span>
                   </span>
                   <span className="text-xs font-bold text-argile-fonce">
                     {p.units}/{c.target} {c.target > 1 ? t.unit.many : t.unit.one}
@@ -278,17 +325,31 @@ export default async function DefisPage({
                 </div>
                 <h2 className="font-display text-lg font-bold">{t.title}</h2>
                 {t.variants.length > 1 && variant ? <p className="-mt-1 text-sm text-terre">{variant.label}</p> : null}
+                {d ? (
+                  <p className="-mt-1 text-sm text-sapin">
+                    {d.status === "pending"
+                      ? `Contre ${d.other_name} : en attente de sa réponse`
+                      : `Contre ${d.other_name} : toi ${Math.min(d.mine, d.target)}/${d.target}, ${d.other_name} ${Math.min(d.theirs, d.target)}/${d.target}`}
+                  </p>
+                ) : null}
                 <div className="h-2 rounded-full bg-trait">
                   <div className="h-2 rounded-full bg-sapin" style={{ width: `${Math.min(100, (p.units / c.target) * 100)}%` }} />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="chip bg-sauge">{formatKg(p.kg)} évités</span>
                   {done ? (
-                    <span className="chip bg-peche">Défi réussi</span>
+                    <span className="chip bg-peche">Défi réussi{d ? "" : ` · +${BONUS.seul}`}</span>
+                  ) : t.requiresReceipt ? (
+                    <Link href={`/agir?ajout=${t.id}:${c.variant}`} className="btn-primary min-h-10 px-4 text-sm">Ajouter avec le reçu</Link>
                   ) : (
                     <Link href={`/defis/${c.id}/valider`} className="btn-primary min-h-10 px-4 text-sm">Valider</Link>
                   )}
                 </div>
+                {!done && !d ? (
+                  <Link href={`/defis/${c.id}/duel`} className="self-end text-xs font-bold text-sapin underline underline-offset-2">
+                    Passer en duel · {fmtMult(MODES.duel.mult)} ›
+                  </Link>
+                ) : null}
               </article>
             );
           })}
@@ -332,6 +393,27 @@ export default async function DefisPage({
               </article>
             );
           })}
+
+          <section className="flex flex-col gap-3">
+            <div className="mt-2">
+              <h2 className="font-display text-lg font-bold">Achats via une appli durable</h2>
+              <p className="text-xs text-terre">30 pousses l&apos;achat, avec ton reçu ou ta confirmation de commande (gardé privé).</p>
+            </div>
+            {APP_TEMPLATES.map((t) => (
+              <article key={t.id} className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
+                <div className="flex-1">
+                  <span className="label">{CATEGORY_LABEL[t.category]} · reçu obligatoire</span>
+                  <h3 className="mt-1 font-bold">{t.title}</h3>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    <span className="chip bg-creme">+{t.pointsPerUnit} pousses par achat</span>
+                  </div>
+                </div>
+                <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-argile text-white">
+                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                </Link>
+              </article>
+            ))}
+          </section>
 
           {expert.length ? (
             <section className="flex flex-col gap-3">

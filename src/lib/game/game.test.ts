@@ -33,3 +33,15 @@ test("libellés alignés avec la base (types de duel et de défi collectif)", ()
   assert.equal(duelKindForTemplate("vegetalien"), "repas");
   assert.equal(duelKindForTemplate("chauffage"), "defis");
 });
+
+test("à plusieurs, ça rapporte plus : ×2 équipe, ×1,5 duel", async () => {
+  const { boostedPoints, countsForTeam, teamKindFor } = await import("../boosts.ts");
+  assert.equal(boostedPoints(10, { kind: "duel", mult: 1.5, label: "" }), 15);
+  assert.equal(boostedPoints(10, { kind: "equipe", mult: 2, label: "" }), 20);
+  assert.equal(boostedPoints(0, { kind: "equipe", mult: 2, label: "" }), 0);
+  assert.ok(countsForTeam("repas", { templateId: "vege", category: "alimentation" }));
+  assert.ok(!countsForTeam("repas", { templateId: "velo", category: "transport" }));
+  assert.ok(countsForTeam("preuve", { templateId: "appli_antigaspi", category: "alimentation", requiresReceipt: true }));
+  assert.equal(teamKindFor("velo", "transport"), null, "pas faisable par toute l'équipe");
+  assert.equal(teamKindFor("compost", "nature"), "nature");
+});

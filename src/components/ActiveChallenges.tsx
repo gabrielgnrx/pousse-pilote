@@ -29,6 +29,9 @@ export function ActiveChallenges({ items, cancel }: { items: ActiveChallenge[]; 
           <article key={c.id} className="flex flex-col gap-2 rounded-[18px] bg-papier p-3.5">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
+                <span className={`mb-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${c.duel ? "bg-sapin text-sapin-clair" : "bg-sable text-brun"}`}>
+                  {c.duel ? "Duel · ×1,5" : "Seul · ×1"}
+                </span>
                 <p className="text-[15px] leading-snug font-bold">{c.title}</p>
                 <p className="text-xs text-[#5e5240]">
                   {c.done}/{c.target} {c.target > 1 ? c.unit.many : c.unit.one} · jusqu&apos;au {c.endsOn}

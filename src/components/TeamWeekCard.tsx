@@ -36,7 +36,7 @@ export function TeamWeekCard({ week, voteOpen }: { week: TeamWeek; voteOpen: boo
         <span className="block h-2.5 rounded-full bg-[#2f6b3a] transition-[width] duration-1000" style={{ width: `${Math.max(pct, progress > 0 ? 3 : 0)}%` }} />
       </span>
       <span className="flex items-baseline justify-between gap-2 text-xs text-[#5e5240]">
-        <span>{reached ? "Objectif atteint : +30 pousses pour chaque contributeur !" : `Toi : ${week.mine ?? 0} · ${k.hint}`}</span>
+        <span>{reached ? "Objectif atteint : +50 pousses pour chaque contributeur !" : `Toi : ${week.mine ?? 0} · ${k.hint}`}</span>
         <span className="shrink-0 font-bold text-encre">QG ›</span>
       </span>
     </Link>

@@ -163,7 +163,7 @@ export function TeamChat({
             <span className="block h-2 rounded-full bg-abricot transition-[width] duration-1000" style={{ width: `${Math.max(pct, (week.progress ?? 0) > 0 ? 3 : 0)}%` }} />
           </span>
           <span className="text-[11px] opacity-90">
-            {pct >= 100 ? "Objectif atteint : +30 pousses pour chaque contributeur !" : `${chosen.hint} Objectif atteint = +30 pousses pour chaque contributeur.`}
+            {pct >= 100 ? "Objectif atteint : +50 pousses pour chaque contributeur !" : `${chosen.hint} Chaque action qui y compte rapporte double, et +50 pour chaque contributeur.`}
           </span>
         </Link>
       ) : null}

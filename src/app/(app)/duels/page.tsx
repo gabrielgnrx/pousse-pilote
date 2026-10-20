@@ -101,7 +101,7 @@ export default async function DuelsPage({
             const txt =
               d.status === "declined" ? (d.stakes && d.role === "opponent" && d.feasible && new Date(d.created_at) < OLD_RULES ? "refusé · −10" : "refusé") :
               d.status === "expired" ? (d.stakes && d.role === "opponent" && d.feasible && new Date(d.created_at) < OLD_RULES ? "sans réponse · −10" : "sans réponse") :
-              o === "gagne" ? "gagné · +40" : o === "partage" ? "réussi à deux · +25" :
+              o === "gagne" ? "gagné · +40" : o === "partage" ? "réussi à deux" :
               o === "perdu" ? `gagné par ${d.other_name}${d.stakes ? " · −10" : ""}` : `personne n'a atteint l'objectif${d.stakes ? " · −10" : ""}`;
             return (
               <p key={d.id} className="flex justify-between gap-2 border-t border-encre/10 py-1.5 text-sm first-of-type:border-0">

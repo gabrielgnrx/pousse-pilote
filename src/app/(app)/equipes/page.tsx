@@ -19,7 +19,8 @@ const ecart = (n: number) => {
 /** Instant réel d'une heure de Paris écrite sans fuseau (« 2026-10-19T14:00:00 »). */
 const parisInstant = (local: string) => new Date(`${local}${parisOffset(new Date(`${local}Z`))}`);
 
-export default async function QGPage() {
+export default async function QGPage({ searchParams }: { searchParams: Promise<{ propose?: string }> }) {
+  const { propose } = await searchParams;
   const { supabase, user, profile } = await requireProfile();
 
   const [{ data: team }, ranking, { data: week }, messagesRes, { data: myReports }, { count: members }] = await Promise.all([
@@ -77,6 +78,11 @@ export default async function QGPage() {
 
   return (
     <>
+      {propose ? (
+        <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
+          Proposé ! Ton défi sera en tête du vote de lundi prochain, de 9 h à 14 h, ici dans le chat.
+        </p>
+      ) : null}
       <section className="-mt-1 flex flex-col gap-2.5">
         <div className="flex items-center justify-between gap-2">
           <div>

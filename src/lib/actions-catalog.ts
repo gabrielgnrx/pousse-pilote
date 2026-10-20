@@ -3,7 +3,7 @@
  * Le CO₂ affiché est celui du bilan de la personne (0 kg si rien n'est remplacé) ;
  * la base refait le calcul (log_action, 0012_actions_libres.sql).
  */
-import { GESTES, TEMPLATE_BY_ID, TEMPLATES, unitImpact } from "./co2/challenges.ts";
+import { APP_TEMPLATES, GESTES, TEMPLATE_BY_ID, TEMPLATES, unitImpact } from "./co2/challenges.ts";
 import type { Habits } from "./co2/footprint.ts";
 
 export type Theme = "trajets" | "repas" | "achats" | "maison" | "voyages" | "bureau" | "nature";
@@ -29,6 +29,9 @@ export interface ActionItem {
   points: number;
   /** Pourquoi 0 kg, le cas échéant. */
   note?: string;
+  /** Achat via une appli : il faut joindre le reçu. */
+  requiresReceipt?: boolean;
+  category: string;
 }
 
 const THEME_OF: Record<string, Theme> = {
@@ -49,6 +52,8 @@ const THEME_OF: Record<string, Theme> = {
   vegetalien: "repas",
   occasion: "achats",
   reparation: "achats",
+  appli_occasion: "achats",
+  appli_antigaspi: "repas",
   chauffage: "maison",
   escaliers: "bureau",
   gourde: "bureau",
@@ -80,6 +85,10 @@ export function actionTitle(templateId: string, variant: string): string {
       return `Réparé au lieu de racheter : ${(v?.label ?? variant).toLowerCase()}`;
     case "chauffage":
       return "Chauffage baissé de 1 °C cette semaine";
+    case "appli_occasion":
+      return `Acheté d'occasion sur une appli : ${(v?.label ?? variant).toLowerCase()}`;
+    case "appli_antigaspi":
+      return "Panier anti-gaspi via une appli";
     default:
       return t?.title ?? "Action";
   }
@@ -91,7 +100,7 @@ export function themeOf(templateId: string): Theme {
 
 /** Toutes les actions possibles, avec leur gain pour cette personne. */
 export function actionItems(h: Habits): ActionItem[] {
-  return [...TEMPLATES, ...GESTES].flatMap((t) =>
+  return [...TEMPLATES, ...GESTES, ...APP_TEMPLATES].flatMap((t) =>
     t.variants.map((v) => {
       const impact = unitImpact(t.id, v.key, h);
       return {
@@ -103,6 +112,8 @@ export function actionItems(h: Habits): ActionItem[] {
         kg: impact.eligible ? impact.kg : 0,
         points: t.pointsPerUnit,
         note: impact.eligible ? undefined : impact.reason,
+        requiresReceipt: t.requiresReceipt,
+        category: t.category,
       };
     }),
   );

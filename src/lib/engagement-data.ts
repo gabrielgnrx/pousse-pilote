@@ -60,7 +60,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
   const temoin = byKind("temoin");
   const bonus = byKind("quete") + byKind("serie");
   const scan = byKind("scan");
-  const jeu = byKind("quiz") + byKind("graine") + byKind("collectif") + byKind("duel") + byKind("equipe");
+  const jeu = byKind("quiz") + byKind("graine") + byKind("collectif") + byKind("duel") + byKind("equipe") + byKind("defi");
   const penalite = byKind("penalite");
   const LEDGER_LABEL: Record<string, string> = {
     maintien: "Cap gardé",
@@ -74,6 +74,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
     collectif: "Défi collectif réussi",
     duel: "Duel réussi",
     equipe: "Défi d'équipe réussi",
+    defi: "Défi réussi",
     penalite: "Duel refusé ou raté",
   };
   const recent = [

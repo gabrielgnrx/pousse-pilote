@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireHabits } from "@/lib/session";
 import { TEMPLATE_BY_ID, unitImpact } from "@/lib/co2/challenges.ts";
 import { NewChallengeForm } from "./NewChallengeForm";
+import { teamKindFor } from "@/lib/boosts";
 
 export default async function NewChallengePage({
   params,
@@ -40,7 +41,11 @@ export default async function NewChallengePage({
     if (src && src.user_id !== user.id) inspiredBy = { id: src.id, name: src.author?.display_name ?? "un collègue" };
   }
 
-  const variants = t.variants.map((v) => ({ ...v, impact: unitImpact(t.id, v.key, habits) }));
+  // Un achat avec reçu se lance même sans CO₂ compté : ce sont les pousses qui comptent.
+  const variants = t.variants.map((v) => {
+    const impact = unitImpact(t.id, v.key, habits);
+    return { ...v, impact: t.requiresReceipt ? { ...impact, eligible: true } : impact };
+  });
   const firstEligible =
     variants.find((v) => v.key === variante && v.impact.eligible) ?? variants.find((v) => v.impact.eligible);
 
@@ -58,6 +63,7 @@ export default async function NewChallengePage({
           initialVariant={firstEligible.key}
           inspiredBy={inspiredBy}
           rivals={(rivals ?? []).map((r) => ({ id: r.id, name: r.display_name, team: r.team?.name ?? "" }))}
+          teamKind={profile.team_id ? teamKindFor(t.id, t.category) : null}
         />
       ) : (
         <p className="card text-sm">{variants[0]?.impact.reason ?? "Ce défi n'est pas disponible pour toi."}</p>

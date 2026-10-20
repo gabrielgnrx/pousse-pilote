@@ -24,6 +24,14 @@ export interface LoggedAction {
   unit: { one: string; many: string };
   /** Le défi en cours dans lequel l'action compte. */
   challenge: { target: number; done: number; startsOn: string; endsOn: string; days: string[] } | null;
+  /** Pousses sans multiplicateur, et le multiplicateur appliqué (duel ×1,5, équipe ×2). */
+  basePoints: number;
+  multiplier: number;
+  boost: "duel" | "equipe" | null;
+  /** Le duel en cours sur ce geste. */
+  duel: { otherName: string; mine: number; theirs: number; target: number; endsOn: string; stakes: boolean } | null;
+  /** Achat validé avec un reçu (privé, jamais publié). */
+  receipt: boolean;
 }
 
 export type LogResult = { ok: true; action: LoggedAction } | { ok: false; error: string };
@@ -32,6 +40,8 @@ const ERRORS: Record<string, string> = {
   cap_reached: "Déjà compté aujourd'hui : au-delà du plafond du jour, rien n'est compté. Reviens demain !",
   unknown_action: "Cette action n'existe pas.",
   teletravail_conflict: "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.",
+  receipt_required: "Joins ton reçu ou ta confirmation de commande pour valider cet achat.",
+  invalid_photo: "Ce reçu n'a pas pu être enregistré. Réessaie.",
 };
 
 /** Enregistre une action en un tap, sans preuve. Le CO₂ et les pousses sont calculés par la base. */
@@ -42,6 +52,41 @@ export async function logAction(templateId: string, variant: string): Promise<Lo
     const code = error?.message ?? "";
     return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
   }
+  return describe(supabase, user.id, profile.display_name, data);
+}
+
+const RECEIPT_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+/** Un achat via une appli durable : le reçu est envoyé (privé), puis l'action est enregistrée. */
+export async function logActionWithReceipt(form: FormData): Promise<LogResult> {
+  const { supabase, user, profile } = await requireProfile();
+  const templateId = String(form.get("template") ?? "");
+  const variant = String(form.get("variant") ?? "base");
+  const file = form.get("receipt");
+  if (!(file instanceof File) || file.size === 0) return { ok: false, error: ERRORS.receipt_required };
+  const ext = RECEIPT_TYPES[file.type];
+  if (!ext) return { ok: false, error: "Reçu en photo : JPEG, PNG ou WebP (une capture d'écran convient)." };
+  if (file.size > 5 * 1024 * 1024) return { ok: false, error: "Photo trop lourde (5 Mo maximum)." };
+
+  const path = `${user.id}/recu-${crypto.randomUUID()}.${ext}`;
+  const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
+  if (upload) return { ok: false, error: "Envoi du reçu impossible. Réessaie." };
+
+  const { data, error } = await supabase.rpc("log_action", { p_template: templateId, p_variant: variant, p_receipt: path });
+  if (error || !data) {
+    await supabase.storage.from(PROOF_BUCKET).remove([path]);
+    const code = error?.message ?? "";
+    return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
+  }
+  return describe(supabase, user.id, profile.display_name, data);
+}
+
+async function describe(
+  supabase: Awaited<ReturnType<typeof requireProfile>>["supabase"],
+  userId: string,
+  firstName: string,
+  data: unknown,
+): Promise<LogResult> {
   const r = data as {
     id: string;
     template_id: string;
@@ -51,10 +96,15 @@ export async function logAction(templateId: string, variant: string): Promise<Lo
     month_count: number;
     month_kg: number;
     challenge: { target: number; done: number; starts_on: string; ends_on: string; days: string[] } | null;
+    base_points: number;
+    multiplier: number;
+    boost: "duel" | "equipe" | null;
+    duel: { other_name: string; mine: number; theirs: number; target: number; ends_on: string; stakes: boolean } | null;
+    receipt: boolean;
   };
 
   const [me, { data: pulse }] = await Promise.all([
-    getEngagement(supabase, user.id),
+    getEngagement(supabase, userId),
     supabase.rpc("company_pulse"),
   ]);
   const t = TEMPLATE_BY_ID[r.template_id];
@@ -72,7 +122,7 @@ export async function logAction(templateId: string, variant: string): Promise<Lo
       streak: me.streak,
       total: me.points.total,
       companyKg: pulse ? Number((pulse as { kg: number }).kg) : null,
-      firstName: profile.display_name,
+      firstName,
       unit: t?.unit ?? { one: "fois", many: "fois" },
       challenge: r.challenge
         ? {
@@ -83,6 +133,20 @@ export async function logAction(templateId: string, variant: string): Promise<Lo
             days: r.challenge.days ?? [],
           }
         : null,
+      basePoints: Number(r.base_points ?? r.points),
+      multiplier: Number(r.multiplier ?? 1),
+      boost: r.boost ?? null,
+      duel: r.duel
+        ? {
+            otherName: r.duel.other_name,
+            mine: Number(r.duel.mine),
+            theirs: Number(r.duel.theirs),
+            target: Number(r.duel.target),
+            endsOn: r.duel.ends_on,
+            stakes: !!r.duel.stakes,
+          }
+        : null,
+      receipt: !!r.receipt,
     },
   };
 }

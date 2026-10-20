@@ -24,7 +24,7 @@ export function duelUnits(d: { kind: string; template_id?: string | null; varian
 
 /** Les enjeux d'un duel, en une phrase. */
 export const DUEL_STAKES =
-  "Réussir : +25 chacun, ou +40 si tu es seul à réussir. Échouer : tu perds ta mise, 10 pousses. Refuser ne coûte rien.";
+  "Réussir : +30 chacun, ou +40 si tu es seul à réussir. Échouer : tu perds ta mise, 10 pousses. Refuser ne coûte rien.";
 
 /** Type de duel naturel à partir d'une publication du fil. */
 export function duelKindForTemplate(templateId: string): string {

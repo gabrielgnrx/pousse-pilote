@@ -6,6 +6,8 @@ import { levelFor, weekStart } from "@/lib/co2/engagement.ts";
 import { addDays, todayParis } from "@/lib/dates";
 import { publishAction, type LoggedAction } from "./actions";
 import { ThemeIcon } from "./ThemeIcon";
+import { BONUS, fmtMult } from "@/lib/boosts";
+import { formatDay } from "@/lib/dates";
 
 const LEAVES = [
   { left: "8%", top: "6%", fill: "#dce6c4", rot: -20 },
@@ -87,7 +89,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
             </h2>
             <p className="text-sm text-brun">
               {c.done} sur {c.target} {c.target > 1 ? action.unit.many : action.unit.one}
-              {challengeDone ? ". Bravo, tu es allé au bout." : ". Tu tiens bon."}
+              {challengeDone ? (action.duel ? ". Bravo, tu es allé au bout." : `. Bravo, tu es allé au bout : +${BONUS.seul} pousses.`) : ". Tu tiens bon."}
             </p>
             <ol className="grid w-full grid-cols-7 gap-1.5" aria-label="Ta semaine">
               {week.map((d) => (
@@ -146,6 +148,11 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
           <span className="animate-pousse-pop flex h-10 items-center gap-1.5 rounded-full bg-sauge px-3.5 font-bold text-sapin">
             <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 21v-9" /><path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" /><path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" /></svg>
             +{action.points} pousses
+            {action.multiplier > 1 ? (
+              <span className="ml-1 rounded-full bg-abricot px-2 py-0.5 text-xs text-[#402a16]">
+                {fmtMult(action.multiplier)} {action.boost === "equipe" ? "équipe" : "duel"}
+              </span>
+            ) : null}
           </span>
           ) : null}
           <span className="flex h-10 items-center gap-1.5 rounded-full bg-sable px-3.5 font-bold text-brun">
@@ -153,6 +160,40 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
             {action.streak} {action.streak > 1 ? "jours" : "jour"}
           </span>
         </div>
+
+        {action.multiplier > 1 && action.points > 0 ? (
+          <p className="-mt-1 text-xs text-terre">
+            {action.basePoints} seul, {action.points} parce que tu joues {action.boost === "equipe" ? "en équipe" : "en duel"}
+          </p>
+        ) : null}
+
+        {action.duel ? (
+          <section aria-labelledby="duel-titre" className="flex w-full flex-col gap-2 rounded-2xl bg-papier px-4 py-3 text-left">
+            <div className="flex items-baseline justify-between">
+              <h3 id="duel-titre" className="text-sm font-bold">Ton duel contre {action.duel.otherName}</h3>
+              <span className="text-xs text-terre">jusqu&apos;au {formatDay(action.duel.endsOn, "short")}</span>
+            </div>
+            {[
+              { who: "Toi", n: action.duel.mine, color: "bg-sapin" },
+              { who: action.duel.otherName, n: action.duel.theirs, color: "bg-argile" },
+            ].map((r) => (
+              <div key={r.who} className="flex items-center gap-2 text-xs">
+                <span className="w-16 truncate font-bold">{r.who}</span>
+                <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-trait">
+                  <span className={`block h-full rounded-full ${r.color}`} style={{ width: `${Math.min(100, (r.n / action.duel!.target) * 100)}%` }} />
+                </span>
+                <span className="w-9 text-right font-bold">{Math.min(r.n, action.duel!.target)}/{action.duel!.target}</span>
+              </div>
+            ))}
+            <p className="text-xs text-brun">
+              {action.duel.mine >= action.duel.target
+                ? action.duel.theirs >= action.duel.target
+                  ? `Vous avez réussi tous les deux : +${BONUS.duelDeux} chacun à la fin du duel.`
+                  : `Objectif atteint ! Si ${action.duel.otherName} n'y arrive pas, les +${BONUS.duelSeul} sont pour toi.`
+                : `${action.duel.mine >= action.duel.theirs ? "Tu mènes !" : "Accroche-toi !"} Encore ${action.duel.target - action.duel.mine} et les +${BONUS.duelSeul} sont pour toi.`}
+            </p>
+          </section>
+        ) : null}
 
         {c && !challengeDone ? (
           <p className="w-full rounded-2xl bg-papier px-4 py-3 text-left text-sm text-brun">
@@ -181,7 +222,12 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
           {action.companyKg !== null ? ` L'entreprise en est à ${formatKg(action.companyKg)}.` : ""}
         </p>
 
-        {publishing ? (
+        {action.receipt ? (
+          <div className="flex w-full flex-col gap-2">
+            <p className="rounded-2xl bg-sable px-3 py-2 text-xs text-brun">Ton reçu reste privé : il ne part pas dans le fil et il est effacé après 90 jours.</p>
+            <button ref={primary} type="button" onClick={finish} className="btn-dark min-h-12 px-3">Super !</button>
+          </div>
+        ) : publishing ? (
           <form action={publish} className="flex w-full flex-col gap-2 text-left">
             <input type="hidden" name="validation" value={action.id} />
             <label className="text-sm font-bold" htmlFor="photo">Ta photo</label>
