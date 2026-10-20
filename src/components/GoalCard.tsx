@@ -11,7 +11,7 @@ export function GoalCard({ goal, compact = false }: { goal: CollectiveGoal; comp
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
         <p className={`font-bold ${compact ? "text-sm" : "text-base"}`}>
-          {formatKg(goal.kg)} <span className="font-normal text-terre">sur {formatKg(goal.goal_kg)} de CO₂ évités</span>
+          {formatKg(goal.kg)} <span className="font-normal text-terre">sur {formatKg(goal.goal_kg)} de CO₂ évités (déclaré)</span>
         </p>
         <p className="shrink-0 text-xs text-terre">{daysLeft > 0 ? `encore ${daysLeft} j` : "terminé"}</p>
       </div>

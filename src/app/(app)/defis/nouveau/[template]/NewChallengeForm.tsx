@@ -165,8 +165,8 @@ export function NewChallengeForm({
               </select>
             </label>
             <p className="text-xs leading-relaxed text-[#5a4324]">
-              Vous avez 7 jours pour faire {target} {target > 1 ? template.unit.many : template.unit.one} chacun. {DUEL_STAKES} Les
-              pénalités valent aussi pour toi.
+              Vous avez 7 jours pour faire {target} {target > 1 ? template.unit.many : template.unit.one} chacun. {DUEL_STAKES} La mise vaut
+              aussi pour toi.
             </p>
           </div>
         ) : null}
@@ -181,7 +181,7 @@ export function NewChallengeForm({
           </div>
           <div className="flex-1">
             <p className="font-display text-2xl font-bold">{formatKg(total)}</p>
-            <p className="text-xs">de CO₂ évités pour l&apos;entreprise</p>
+            <p className="text-xs">de CO₂ évités pour l&apos;entreprise (déclaré)</p>
           </div>
         </div>
         <p className="mt-2 text-xs">

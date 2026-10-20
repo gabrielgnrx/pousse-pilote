@@ -133,16 +133,21 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
         ) : (
           <p className="rounded-2xl bg-sable px-3 py-2 text-xs leading-snug text-brun">
             {action.theme === "bureau"
-              ? "Pas de CO₂ mesurable sur ce petit geste, mais il compte pour tes pousses et ta série."
-              : "Pas de CO₂ pour toi sur ce geste (il ne remplace rien dans ton bilan), mais il compte pour tes pousses et ta série."}
+              ? "Pas de CO₂ mesurable sur ce petit geste, mais il compte pour ta série."
+              : "Pas de CO₂ pour toi sur ce geste (il ne remplace rien dans ton bilan), mais il compte pour ta série."}
+            {action.points === 0
+              ? " Tu as déjà tes 5 pousses du jour pour les gestes à 0 kg : celui-ci ne t'en rapporte pas."
+              : " Les gestes à 0 kg rapportent 5 pousses par jour au plus."}
           </p>
         )}
 
         <div className="flex flex-wrap justify-center gap-2">
+{action.points > 0 ? (
           <span className="animate-pousse-pop flex h-10 items-center gap-1.5 rounded-full bg-sauge px-3.5 font-bold text-sapin">
             <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 21v-9" /><path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" /><path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" /></svg>
             +{action.points} pousses
           </span>
+          ) : null}
           <span className="flex h-10 items-center gap-1.5 rounded-full bg-sable px-3.5 font-bold text-brun">
             <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="#f0a97b" stroke="#c15f2c" strokeWidth="2"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-10Z" /></svg>
             {action.streak} {action.streak > 1 ? "jours" : "jour"}

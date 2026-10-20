@@ -56,7 +56,7 @@ export default async function ProfilPage() {
             { l: "Quêtes du jour et séries", v: e.points.bonus },
             { l: "Meilleurs choix au scanner", v: e.points.scan },
             { l: "Quiz, graines, défis d'équipe et duels", v: e.points.jeu },
-            ...(e.points.penalite < 0 ? [{ l: "Duels refusés ou ratés", v: e.points.penalite }] : []),
+            ...(e.points.penalite < 0 ? [{ l: "Mises perdues en duel", v: e.points.penalite }] : []),
           ].map((r) => (
             <li key={r.l} className="flex justify-between border-t border-encre/10 py-1.5">
               <span>{r.l}</span>

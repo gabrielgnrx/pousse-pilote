@@ -10,6 +10,11 @@ export const metadata = { title: "QG de l'équipe · Pousse" };
 
 const ordinal = (n: number) => (n === 1 ? "1er" : `${n}e`);
 const fr = (n: number) => Math.round(n).toLocaleString("fr-FR");
+/** Écart de pousses par personne, arrondi à l'unité supérieure (« 1 » plutôt que « 0 »). */
+const ecart = (n: number) => {
+  const v = Math.max(1, Math.ceil(n));
+  return `${v.toLocaleString("fr-FR")} pousse${v > 1 ? "s" : ""}/pers.`;
+};
 
 /** Instant réel d'une heure de Paris écrite sans fuseau (« 2026-10-19T14:00:00 »). */
 const parisInstant = (local: string) => new Date(`${local}${parisOffset(new Date(`${local}Z`))}`);
@@ -41,8 +46,9 @@ export default async function QGPage() {
   const podium = teams.slice(0, 3).map((t, i) => ({ ...t, rank: i + 1 }));
   if (mineIndex >= 3) podium[2] = { ...teams[mineIndex], rank: mineIndex + 1 };
   let gap: string | null = null;
-  if (mineIndex === 0 && teams[1]) gap = `${fr(teams[0].points - teams[1].points)} d'avance`;
-  else if (mineIndex > 0) gap = `à ${fr(teams[mineIndex - 1].points - teams[mineIndex].points)} du ${ordinal(mineIndex)}`;
+  const pp = (i: number) => Number(teams[i].points_per_person);
+  if (mineIndex === 0 && teams[1]) gap = `${ecart(pp(0) - pp(1))} d'avance`;
+  else if (mineIndex > 0) gap = `à ${ecart(pp(mineIndex - 1) - pp(mineIndex))} du ${ordinal(mineIndex)}`;
 
   const rows = messagesRes.data;
   // Les prénoms des auteurs, lus à part (les profils des collègues sont lisibles dans l'entreprise).
@@ -102,7 +108,7 @@ export default async function QGPage() {
                 </span>
                 <span className="truncate text-sm font-bold">{t.team_name}</span>
                 <span className={`text-xs ${t.is_mine && gap ? "font-bold text-abricot" : t.is_mine ? "text-[#ddebd3]" : "text-terre"}`}>
-                  {t.is_mine && gap ? gap : `${fr(t.points)} pousses`}
+                  {t.is_mine && gap ? gap : `${fr(Number(t.points_per_person))} /pers.`}
                 </span>
               </span>
             ))}

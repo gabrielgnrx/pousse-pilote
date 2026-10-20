@@ -20,7 +20,8 @@ export default function ReglesPage() {
           C&apos;est le seul chiffre qui compte pour le classement. On en gagne avec ce qui se vérifie : un défi
           validé avec une preuve, les quêtes du jour, une série de jours actifs, un meilleur choix au scanner,
           les habitudes déjà acquises. Quelqu&apos;un de très sobre gagne autant de pousses que quelqu&apos;un
-          qui part de loin.
+          qui part de loin. Les gestes qui ne réduisent pas ton empreinte d&apos;après ton bilan (0 kg) rapportent
+          5 pousses par jour au plus, tous confondus : ils comptent quand même pour ta série et tes quêtes.
         </p>
         <table className="w-full text-left text-sm">
           <tbody>
@@ -43,9 +44,9 @@ export default function ReglesPage() {
           <li><strong>Défi collectif de la semaine.</strong> Chaque lundi, un objectif commun à toute l&apos;entreprise
             (repas végé, trajets, scanner, quiz…). S&apos;il est atteint, +30 pour chaque personne qui y a contribué.</li>
           <li><strong>Duels.</strong> Défie quelqu&apos;un d&apos;une autre équipe sur 7 jours, par exemple en lançant un
-            défi. Les deux réussissent : +25 chacun ; un seul : +40. Refuser ou ne pas répondre en 3 jours : −10 (sauf
-            si l&apos;action ne remplace rien dans ton bilan). Ne pas atteindre l&apos;objectif : −20. Une pénalité ne
-            fait jamais passer ton total sous zéro.</li>
+            défi. Les deux réussissent : +25 chacun ; un seul : +40. Chacun mise 10 pousses : ne pas atteindre
+            l&apos;objectif te coûte ta mise. Refuser, ou ne pas répondre en 3 jours, ne coûte rien. Une mise perdue
+            ne fait jamais passer ton total sous zéro.</li>
           <li><strong>Quiz du jour.</strong> 10 questions difficiles, les mêmes pour toute l&apos;entreprise, jamais
             déjà posées : +1 par bonne réponse, +5 de bonus à 8/10 ou plus. 7/10 ou plus compte comme un quiz réussi
             pour les défis d&apos;équipe.</li>
@@ -74,8 +75,9 @@ export default function ReglesPage() {
           <h2 className="font-display text-lg font-bold">Les kg de CO₂ évités</h2>
         </div>
         <p className="text-sm leading-relaxed">
-          C&apos;est l&apos;impact réel, calculé avec les facteurs de l&apos;ADEME : un défi ne compte que
-          s&apos;il remplace une habitude déclarée dans ton bilan. Ce chiffre ne sert pas à gagner. Il fait
+          C&apos;est une estimation, calculée avec les facteurs de l&apos;ADEME à partir de ce que chacun
+          déclare, sans vérification : une action ne compte que si elle remplace une habitude déclarée dans ton
+          bilan. C&apos;est pourquoi l&apos;appli parle de CO₂ « déclaré ». Ce chiffre ne sert pas à gagner. Il fait
           avancer l&apos;objectif commun de l&apos;entreprise, et c&apos;est lui que voit ton employeur, en
           total par équipe uniquement.
         </p>

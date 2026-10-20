@@ -148,7 +148,7 @@ export function ActionPicker({
 
       <p className="text-center text-xs text-terre">
         Pas de preuve demandée. Un plafond par jour s&apos;applique (2 trajets, 2 repas…) pour que le compteur de
-        l&apos;entreprise reste juste.
+        l&apos;entreprise reste juste. Les gestes à 0 kg rapportent 5 pousses par jour au plus, tous confondus.
       </p>
 
       {done ? <ActionDone action={done} onClose={() => setDone(null)} /> : null}

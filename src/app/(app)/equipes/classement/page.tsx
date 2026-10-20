@@ -34,7 +34,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">Classement des équipes</h1>
-          <p className="mt-1 text-sm text-terre">Le total des pousses de tous les membres de chaque équipe.</p>
+          <p className="mt-1 text-sm text-terre">Les pousses par personne : une petite équipe peut battre une grande.</p>
         </div>
         <Link href="/regles" className="mt-1 shrink-0 text-xs font-bold underline underline-offset-2">Comment ça marche ?</Link>
       </div>
@@ -71,12 +71,12 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
                   {t.is_mine ? <span className="ml-2 text-xs font-semibold text-argile-fonce">ton équipe</span> : null}
                 </p>
                 <p className="text-xs text-terre">
-                  {t.active}/{t.participants} actifs · {formatKg(t.kg)} de CO₂ évités
+                  {t.active}/{t.participants} actifs · {t.points.toLocaleString("fr-FR")} pousses au total · {formatKg(t.kg)} de CO₂ déclarés
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-display text-xl font-bold">{t.points.toLocaleString("fr-FR")}</p>
-                <p className="text-[11px] text-terre">pousses au total</p>
+                <p className="font-display text-xl font-bold">{Number(t.points_per_person).toLocaleString("fr-FR")}</p>
+                <p className="text-[11px] text-terre">par personne</p>
               </div>
             </li>
           ))}
@@ -91,7 +91,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
             <span className="ml-1 text-sm font-semibold">pousses</span>
           </p>
           <p className="text-xs opacity-90">
-            et {formatKg(week ? me.week.kg : me.kgAvoided)} de CO₂ évités
+            et {formatKg(week ? me.week.kg : me.kgAvoided)} de CO₂ évités (déclaré)
           </p>
         </div>
         <Link href="/agir" className="btn-primary min-h-11 shrink-0 px-4 text-sm">Gagner des pousses</Link>

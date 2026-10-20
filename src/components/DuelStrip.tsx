@@ -18,7 +18,7 @@ export function DuelStrip({ duels }: { duels: Duel[] }) {
             {d.other_team ? ` (${d.other_team})` : ""} te défie : {d.target} × {duelUnits(d, actionTitle)} en 7 jours
             {d.stakes ? (
               <span className="block text-xs font-semibold">
-                {d.feasible ? "Refuser ou ne pas répondre en 3 jours : −10 pousses" : "Refuser ne te coûte rien : cette action ne remplace rien dans ton bilan"}
+                Mise : 10 pousses si tu acceptes. Refuser ne coûte rien.
               </span>
             ) : null}
           </span>

@@ -7,6 +7,9 @@ import { formatDay } from "@/lib/dates";
 import { answerDuel } from "@/lib/game/actions";
 import { DuelForm } from "./DuelForm";
 
+
+/** Avant cette date, refuser ou laisser expirer un duel avec enjeu coûtait 10 pousses (historique exact). */
+const OLD_RULES = new Date("2026-10-20T16:30:00Z");
 export const metadata = { title: "Duels · Pousse" };
 
 export default async function DuelsPage({
@@ -51,8 +54,8 @@ export default async function DuelsPage({
           {d.stakes ? (
             <p className="-mt-1 text-xs font-semibold">
               {d.feasible
-                ? "Refuser, ou ne pas répondre en 3 jours, coûte 10 pousses. Accepter puis échouer : −20."
-                : "Cette action ne remplace rien dans ton bilan : refuser ne te coûte rien."}
+                ? "Mise : 10 pousses, perdues seulement si tu acceptes et échoues. Refuser ne coûte rien."
+                : "Mise : 10 pousses si tu acceptes. Refuser ne coûte rien."}
             </p>
           ) : null}
           <div className="flex gap-2">
@@ -96,10 +99,10 @@ export default async function DuelsPage({
           {past.map((d) => {
             const o = duelOutcome(d);
             const txt =
-              d.status === "declined" ? (d.stakes && d.role === "opponent" && d.feasible ? "refusé · −10" : "refusé") :
-              d.status === "expired" ? (d.stakes && d.role === "opponent" && d.feasible ? "sans réponse · −10" : "sans réponse") :
+              d.status === "declined" ? (d.stakes && d.role === "opponent" && d.feasible && new Date(d.created_at) < OLD_RULES ? "refusé · −10" : "refusé") :
+              d.status === "expired" ? (d.stakes && d.role === "opponent" && d.feasible && new Date(d.created_at) < OLD_RULES ? "sans réponse · −10" : "sans réponse") :
               o === "gagne" ? "gagné · +40" : o === "partage" ? "réussi à deux · +25" :
-              o === "perdu" ? `gagné par ${d.other_name}${d.stakes ? " · −20" : ""}` : `personne n'a atteint l'objectif${d.stakes ? " · −20" : ""}`;
+              o === "perdu" ? `gagné par ${d.other_name}${d.stakes ? " · −10" : ""}` : `personne n'a atteint l'objectif${d.stakes ? " · −10" : ""}`;
             return (
               <p key={d.id} className="flex justify-between gap-2 border-t border-encre/10 py-1.5 text-sm first-of-type:border-0">
                 <span>{d.other_name} · {d.kind === "action" ? duelUnits(d, actionTitle) : DUEL_KINDS[d.kind]?.label}</span>
@@ -136,7 +139,7 @@ function ActiveDuel({ d }: { d: Duel }) {
         </div>
       ))}
       <Link href={d.kind === "scan" ? "/scanner" : "/agir"} className="text-xs font-bold underline underline-offset-2">
-        {d.mine >= d.target ? "Objectif atteint, bravo !" : d.stakes ? `Encore ${d.target - d.mine} pour éviter les −20 pousses` : `Ajouter un ${k?.unit ?? "action"}`}
+        {d.mine >= d.target ? "Objectif atteint, bravo !" : d.stakes ? `Encore ${d.target - d.mine} pour garder ta mise` : `Ajouter un ${k?.unit ?? "action"}`}
       </Link>
     </article>
   );

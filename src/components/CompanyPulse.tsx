@@ -21,8 +21,8 @@ const ordinal = (n: number) => (n === 1 ? "1re" : `${n}e`);
 
 function bigKg(kg: number) {
   return kg >= 1000
-    ? { value: `${(kg / 1000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} t`, unit: "de CO₂ évitées" }
-    : { value: `${Math.round(kg).toLocaleString("fr-FR")} kg`, unit: "de CO₂ évités" };
+    ? { value: `${(kg / 1000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} t`, unit: "de CO₂ évitées (déclaré)" }
+    : { value: `${Math.round(kg).toLocaleString("fr-FR")} kg`, unit: "de CO₂ évités (déclaré)" };
 }
 
 /** Fait défiler un nombre depuis la dernière valeur vue sur cet appareil. */

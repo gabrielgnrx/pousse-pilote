@@ -24,7 +24,7 @@ export function duelUnits(d: { kind: string; template_id?: string | null; varian
 
 /** Les enjeux d'un duel, en une phrase. */
 export const DUEL_STAKES =
-  "Refuser ou laisser passer 3 jours : −10 pousses. Ne pas atteindre l'objectif en 7 jours : −20. Réussir : +25 chacun, ou +40 si tu es seul à réussir.";
+  "Réussir : +25 chacun, ou +40 si tu es seul à réussir. Échouer : tu perds ta mise, 10 pousses. Refuser ne coûte rien.";
 
 /** Type de duel naturel à partir d'une publication du fil. */
 export function duelKindForTemplate(templateId: string): string {

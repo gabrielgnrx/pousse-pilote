@@ -82,7 +82,8 @@ export default function MethodologiePage() {
           défi depuis ta publication : 15 ; confirmer le défi d&apos;un collègue : 3.
         </p>
         <p>
-          <strong>Les kg de CO₂ évités mesurent l&apos;impact.</strong> Ils restent stricts (seulement ce que
+          <strong>Les kg de CO₂ évités mesurent l&apos;impact déclaré.</strong> Les actions sont déclarées par
+          chacun sans vérification ; ils restent stricts (seulement ce que
           tes défis changent par rapport à ton bilan) et ne servent pas à gagner : ils alimentent
           l&apos;objectif commun de l&apos;entreprise, par défaut 30 kg par participant sur la durée du pilote.
         </p>

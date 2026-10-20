@@ -48,7 +48,7 @@ export function ActiveChallenges({ items, cancel }: { items: ActiveChallenge[]; 
                 <p className="text-sm font-semibold text-[#5a4324]">
                   Annuler ce défi ?{" "}
                   {c.duel
-                    ? "Le duel, lui, continue : pour éviter les −20 pousses, il faudra quand même atteindre l'objectif."
+                    ? "Le duel, lui, continue : pour garder ta mise de 10 pousses, il faudra quand même atteindre l'objectif."
                     : "Ce que tu as déjà fait reste compté."}
                 </p>
                 <div className="flex gap-2">
