@@ -17,17 +17,17 @@ const parisInstant = (local: string) => new Date(`${local}${parisOffset(new Date
 export default async function QGPage() {
   const { supabase, user, profile } = await requireProfile();
 
-  const [{ data: team }, ranking, { data: week }, { data: rows }, { data: myReports }, { count: members }] = await Promise.all([
+  const [{ data: team }, ranking, { data: week }, messagesRes, { data: myReports }, { count: members }] = await Promise.all([
     profile.team_id ? supabase.from("teams").select("name").eq("id", profile.team_id).single() : Promise.resolve({ data: null }),
     getTeamRanking(supabase, weekStart(todayParis())),
     supabase.rpc("my_team_week"),
     profile.team_id
       ? supabase
           .from("team_messages")
-          .select("id, user_id, body, created_at, author:profiles!team_messages_user_id_fkey(display_name)")
+          .select("id, user_id, body, created_at")
           .order("created_at", { ascending: false })
           .limit(80)
-          .returns<{ id: string; user_id: string | null; body: string; created_at: string; author: { display_name: string } | null }[]>()
+          .returns<{ id: string; user_id: string | null; body: string; created_at: string }[]>()
       : Promise.resolve({ data: [] }),
     supabase.from("team_message_reports").select("message_id").eq("user_id", user.id),
     profile.team_id
@@ -44,6 +44,15 @@ export default async function QGPage() {
   if (mineIndex === 0 && teams[1]) gap = `${fr(teams[0].points_per_person - teams[1].points_per_person)} d'avance`;
   else if (mineIndex > 0) gap = `à ${fr(teams[mineIndex - 1].points_per_person - teams[mineIndex].points_per_person)} du ${ordinal(mineIndex)}`;
 
+  const rows = messagesRes.data;
+  const chatError = "error" in messagesRes && messagesRes.error ? messagesRes.error.message : null;
+  // Les prénoms des auteurs, lus à part (les profils des collègues sont lisibles dans l'entreprise).
+  const authorIds = [...new Set((rows ?? []).flatMap((m) => (m.user_id ? [m.user_id] : [])))];
+  const { data: authors } = authorIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", authorIds)
+    : { data: [] as { id: string; display_name: string }[] };
+  const nameOf = new Map((authors ?? []).map((a) => [a.id, a.display_name]));
+
   const w = week as TeamWeek | null;
   const reported = new Set((myReports ?? []).map((r) => r.message_id));
   const messages: ChatMessage[] = (rows ?? [])
@@ -53,7 +62,7 @@ export default async function QGPage() {
       id: m.id,
       mine: m.user_id === user.id,
       fromPousse: m.user_id === null,
-      author: m.author?.display_name ?? "Pousse",
+      author: m.user_id ? (nameOf.get(m.user_id) ?? "Un collègue") : "Pousse",
       body: m.body,
       at: m.created_at,
     }));
@@ -106,6 +115,7 @@ export default async function QGPage() {
         )}
       </section>
 
+      {chatError ? <p hidden data-chat-error={chatError} /> : null}
       {profile.team_id && w ? (
         <TeamChat
           week={w}
