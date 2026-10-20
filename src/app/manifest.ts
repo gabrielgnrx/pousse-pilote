@@ -20,7 +20,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "Scanner un produit", url: "/scanner", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
-      { name: "Mes défis", url: "/defis", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
+      { name: "Enregistrer une action", url: "/agir", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
     ],
   };
 }

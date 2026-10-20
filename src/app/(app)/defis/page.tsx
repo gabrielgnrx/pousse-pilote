@@ -6,7 +6,9 @@ import {
   TEMPLATES,
   formatKg,
   templateEligibility,
+  verbOf,
 } from "@/lib/co2/challenges.ts";
+import type { Footprint } from "@/lib/co2/footprint.ts";
 import { formatDay, todayParis } from "@/lib/dates";
 import { POINTS, keptHabits } from "@/lib/co2/engagement.ts";
 import { getEngagement } from "@/lib/engagement-data";
@@ -21,6 +23,14 @@ interface ChallengeRow {
   status: string;
 }
 
+const FP_PARTS: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
+  { key: "transport", label: "Transports", color: "#f0a97b" },
+  { key: "alimentation", label: "Alimentation", color: "#b5c890" },
+  { key: "logement", label: "Chauffage", color: "#e9c9a3" },
+  { key: "consommation", label: "Achats", color: "#8fa06a" },
+  { key: "services", label: "Services publics", color: "#6f7d52" },
+];
+
 export default async function DefisPage({
   searchParams,
 }: {
@@ -31,7 +41,7 @@ export default async function DefisPage({
   const { supabase, user, habits } = await requireHabits();
   const today = todayParis();
 
-  const [{ data: challenges }, { data: validations }, engagement] = await Promise.all([
+  const [{ data: challenges }, { data: validations }, engagement, { data: fp }] = await Promise.all([
     supabase
       .from("user_challenges")
       .select("id, template_id, variant, target, ends_on, status")
@@ -45,6 +55,13 @@ export default async function DefisPage({
       .eq("user_id", user.id)
       .eq("status", "valid"),
     getEngagement(supabase, user.id),
+    supabase
+      .from("footprints")
+      .select("total_kg, by_category")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ total_kg: number; by_category: Footprint["byCategory"] }>(),
   ]);
   const kept = keptHabits(habits);
   // Garder le cap : 2 habitudes récompensées par semaine (keep_habit, 0009_equilibrage.sql).
@@ -71,14 +88,40 @@ export default async function DefisPage({
   return (
     <>
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Défis</h1>
-        <Link href="/defis?onglet=catalogue" className="btn-primary min-h-11 px-4 text-sm">+ Nouveau</Link>
+        <h1 className="font-display text-2xl font-bold">Mon plan</h1>
+        <Link href="/defis?onglet=catalogue" className="btn-primary min-h-11 px-4 text-sm">+ Défi</Link>
       </div>
+
+      {fp ? (
+        <Link href="/bilan" className="card flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-sm text-terre">Mon empreinte</span>
+            <span className="text-sm font-bold">
+              {(Number(fp.total_kg) / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} t/an
+              {engagement.kgAvoided > 0 ? <span className="text-sapin"> · −{formatKg(engagement.kgAvoided)} évités</span> : null}
+            </span>
+          </div>
+          <div className="flex h-3 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
+            {FP_PARTS.map((c) => (
+              <div key={c.key} style={{ width: `${(Number(fp.by_category[c.key]) / Number(fp.total_kg)) * 100}%`, background: c.color }} />
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-brun">
+            {FP_PARTS.filter((c) => c.key !== "services").map((c) => (
+              <span key={c.key} className="flex items-center gap-1">
+                <span className="size-2.5 rounded-sm" style={{ background: c.color }} aria-hidden="true" />
+                {c.label} {Math.round((Number(fp.by_category[c.key]) / Number(fp.total_kg)) * 100)} %
+              </span>
+            ))}
+            <span className="font-bold underline underline-offset-2">Détail ›</span>
+          </div>
+        </Link>
+      ) : null}
 
       <nav aria-label="Onglets des défis" className="flex rounded-full bg-sable p-1">
         {[
-          { id: "en-cours", label: "En cours", href: "/defis" },
-          { id: "catalogue", label: "Catalogue", href: "/defis?onglet=catalogue" },
+          { id: "en-cours", label: "Mes défis", href: "/defis" },
+          { id: "catalogue", label: "Gestes à essayer", href: "/defis?onglet=catalogue" },
         ].map((t) => (
           <Link
             key={t.id}
@@ -187,8 +230,8 @@ export default async function DefisPage({
           {(challenges ?? []).length === 0 ? (
             <div className="card flex flex-col gap-3 text-center">
               <p className="font-display text-lg font-bold">Aucun défi en cours</p>
-              <p className="text-sm text-brun">Choisis un défi adapté à tes habitudes dans le catalogue.</p>
-              <Link href="/defis?onglet=catalogue" className="btn-primary">Voir le catalogue</Link>
+              <p className="text-sm text-brun">Choisis un geste adapté à ton bilan et essaie-le quelques semaines.</p>
+              <Link href="/defis?onglet=catalogue" className="btn-primary">Voir les gestes à essayer</Link>
             </div>
           ) : null}
 
@@ -227,14 +270,20 @@ export default async function DefisPage({
         </>
       ) : (
         <>
-          {eligible.map(({ t, e }) => {
+          <p className="text-sm text-brun">
+            Triés par impact pour toi. Lance un défi sur plusieurs jours, ou enregistre simplement le geste avec le
+            bouton + quand tu le fais.
+          </p>
+          {[...eligible].sort((a, b) => b.e.maxKg - a.e.maxKg).map(({ t, e }) => {
             return (
               <article key={t.id} className="card flex items-center gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="label">{CATEGORY_LABEL[t.category]}</span>
+                    <span className="text-xs font-bold tracking-wider text-argile-fonce uppercase">{verbOf(t.id)}</span>
+                    <span className="label">· {CATEGORY_LABEL[t.category]}</span>
                   </div>
                   <h2 className="mt-1 font-bold">{t.title}</h2>
+                  <Link href={`/informer/geste/${t.id}`} className="text-xs font-bold underline underline-offset-2">Pourquoi et comment</Link>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     <span className="chip bg-peche">+{t.pointsPerUnit} pousses avec preuve</span>
                     <span className="chip bg-sauge">

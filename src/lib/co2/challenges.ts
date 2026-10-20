@@ -19,7 +19,7 @@ import {
 } from "./factors.ts";
 import { LONG_FLIGHT_KM_ROUND_TRIP, MEALS_PER_WEEK, OTHER_MEAT_MEAL_KG, type Habits } from "./footprint.ts";
 
-export type Category = "transport" | "alimentation" | "consommation" | "logement";
+export type Category = "transport" | "alimentation" | "consommation" | "logement" | "quotidien";
 
 export interface Variant {
   key: string;
@@ -51,6 +51,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   alimentation: "Alimentation",
   consommation: "Consommation",
   logement: "Logement",
+  quotidien: "Au quotidien",
 };
 
 export const TEMPLATES: ChallengeTemplate[] = [
@@ -216,7 +217,58 @@ export const TEMPLATES: ChallengeTemplate[] = [
   },
 ];
 
-export const TEMPLATE_BY_ID = Object.fromEntries(TEMPLATES.map((t) => [t.id, t])) as Record<
+/**
+ * Petits gestes du quotidien : ils s'enregistrent avec le bouton +, sans défi.
+ * Aucun gain de CO₂ mesurable (ordre de grandeur trop faible), mais ils comptent pour la série.
+ * Mêmes valeurs que supabase/migrations/0012_actions_libres.sql.
+ */
+export const GESTES: ChallengeTemplate[] = [
+  {
+    id: "escaliers",
+    category: "quotidien",
+    title: "Escaliers plutôt que l'ascenseur",
+    unit: { one: "fois", many: "fois" },
+    variants: [{ key: "base", label: "Aujourd'hui" }],
+    proofHint: "Aucune preuve demandée",
+    pointsPerUnit: 2,
+    dailyCap: 1,
+    defaultTarget: 5,
+    source: SOURCES.transport,
+  },
+  {
+    id: "gourde",
+    category: "quotidien",
+    title: "Gourde ou tasse au lieu d'un gobelet jetable",
+    unit: { one: "fois", many: "fois" },
+    variants: [{ key: "base", label: "Aujourd'hui" }],
+    proofHint: "Aucune preuve demandée",
+    pointsPerUnit: 2,
+    dailyCap: 1,
+    defaultTarget: 5,
+    source: SOURCES.alimentation,
+  },
+  {
+    id: "ecran",
+    category: "quotidien",
+    title: "Ordinateur éteint en partant le soir",
+    unit: { one: "fois", many: "fois" },
+    variants: [{ key: "base", label: "Aujourd'hui" }],
+    proofHint: "Aucune preuve demandée",
+    pointsPerUnit: 2,
+    dailyCap: 1,
+    defaultTarget: 5,
+    source: SOURCES.numerique,
+  },
+];
+
+/** Remplacer une habitude, ou la réduire : la façon dont le geste est présenté dans « Mon plan ». */
+export function verbOf(templateId: string): "Remplacer" | "Réduire" | "Au quotidien" {
+  if (["moins_boeuf", "chauffage"].includes(templateId)) return "Réduire";
+  if (GESTES.some((g) => g.id === templateId)) return "Au quotidien";
+  return "Remplacer";
+}
+
+export const TEMPLATE_BY_ID = Object.fromEntries([...TEMPLATES, ...GESTES].map((t) => [t.id, t])) as Record<
   string,
   ChallengeTemplate
 >;
@@ -362,6 +414,10 @@ export function unitImpact(templateId: string, variantKey: string, h: Habits): U
       }
       return no("Appareil inconnu.");
     }
+    case "escaliers":
+    case "gourde":
+    case "ecran":
+      return no("Pas de CO₂ mesurable, mais ça compte pour ta série.");
     default:
       return no("Défi inconnu.");
   }

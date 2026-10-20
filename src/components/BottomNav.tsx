@@ -2,10 +2,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const TABS = [
+type Tab = { href: string; label: string; also?: string[]; icon: React.ReactNode };
+
+const LEFT: Tab[] = [
   {
     href: "/fil",
-    label: "Fil",
+    label: "Accueil",
     icon: (
       <>
         <path d="M3 11l9-8 9 8" />
@@ -14,39 +16,35 @@ const TABS = [
     ),
   },
   {
-    href: "/bilan",
-    label: "Bilan",
-    icon: (
-      <>
-        <path d="M12 2v10l7 7" />
-        <circle cx="12" cy="12" r="10" />
-      </>
-    ),
-  },
-  {
     href: "/defis",
-    label: "Défis",
+    label: "Mon plan",
+    also: ["/bilan"],
     icon: (
       <>
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="12" r="5" />
-        <circle cx="12" cy="12" r="1" />
+        <path d="M12 21v-9" />
+        <path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" />
+        <path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" />
       </>
     ),
   },
+];
+
+const RIGHT: Tab[] = [
   {
-    href: "/scanner",
-    label: "Scanner",
+    href: "/informer",
+    label: "S'informer",
+    also: ["/scanner"],
     icon: (
       <>
-        <path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2" />
-        <path d="M8 8v8M11 8v8M14 8v8M17 8v8" />
+        <path d="M9 18h6M10 21h4" />
+        <path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3Z" />
       </>
     ),
   },
   {
     href: "/equipes",
-    label: "Équipes",
+    label: "Équipe",
+    also: ["/duels"],
     icon: (
       <>
         <circle cx="9" cy="8" r="3.5" />
@@ -57,31 +55,51 @@ const TABS = [
   },
 ];
 
+function TabLink({ t, path }: { t: Tab; path: string }) {
+  const active = [t.href, ...(t.also ?? [])].some((h) => path === h || path.startsWith(`${h}/`));
+  return (
+    <li className="flex flex-1 justify-center">
+      <Link
+        href={t.href}
+        aria-current={active ? "page" : undefined}
+        className={`flex min-w-14 flex-col items-center gap-1 py-1 ${active ? "text-sapin" : "text-terre"}`}
+      >
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+          {t.icon}
+        </svg>
+        <span className={`text-[11px] ${active ? "font-bold" : "font-semibold"}`}>{t.label}</span>
+      </Link>
+    </li>
+  );
+}
+
 export function BottomNav() {
   const path = usePathname();
+  const recording = path === "/agir" || path.startsWith("/agir/");
   return (
     <nav
       aria-label="Navigation principale"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-encre/10 bg-sable pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-encre/10 bg-papier pb-[env(safe-area-inset-bottom)]"
     >
-      <ul className="mx-auto flex h-[72px] max-w-md items-center justify-around">
-        {TABS.map((t) => {
-          const active = path === t.href || path.startsWith(`${t.href}/`);
-          return (
-            <li key={t.href}>
-              <Link
-                href={t.href}
-                aria-current={active ? "page" : undefined}
-                className={`flex min-w-14 flex-col items-center gap-1 py-1 ${active ? "text-argile" : "text-terre"}`}
-              >
-                <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-                  {t.icon}
-                </svg>
-                <span className={`text-[11px] ${active ? "font-bold" : "font-semibold"}`}>{t.label}</span>
-              </Link>
-            </li>
-          );
-        })}
+      <ul className="mx-auto flex h-[72px] max-w-md items-center px-1">
+        {LEFT.map((t) => (
+          <TabLink key={t.href} t={t} path={path} />
+        ))}
+        <li className="flex flex-1 justify-center">
+          <Link
+            href="/agir"
+            aria-label="Enregistrer une action"
+            aria-current={recording ? "page" : undefined}
+            className="-mt-7 flex size-[60px] items-center justify-center rounded-full border-4 border-papier bg-sapin text-sapin-clair shadow-lg shadow-sapin/25 transition active:scale-95"
+          >
+            <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </Link>
+        </li>
+        {RIGHT.map((t) => (
+          <TabLink key={t.href} t={t} path={path} />
+        ))}
       </ul>
     </nav>
   );

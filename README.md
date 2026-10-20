@@ -188,7 +188,13 @@ for f in supabase/tests/supabase_stub.sql supabase/migrations/*.sql; do psql -d 
 psql -d pousse_test -f supabase/tests/scenario.sql
 psql -d pousse_test -f supabase/tests/scenario_engagement.sql
 psql -d pousse_test -f supabase/tests/scenario_rappels.sql
+psql -d pousse_test -f supabase/tests/scenario_jeu.sql
+psql -d pousse_test -f supabase/tests/scenario_actions.sql
 ```
+
+`scenario_actions.sql` (migration `0012_actions_libres.sql`) vérifie le bouton + : action enregistrée sans
+preuve, CO₂ tiré du bilan (0 kg si rien n'est remplacé), plafonds du jour, action comptée dans le défi en
+cours, publication avec photo par l'auteur seulement, compteur commun de l'entreprise.
 
 Le premier scénario vérifie 22 points : code d'entreprise, domaine e-mail, calculs identiques au TypeScript,
 plafond partagé, refus d'une insertion directe, photo hors de son dossier, témoin qui refuse,

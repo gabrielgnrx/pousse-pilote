@@ -5,6 +5,9 @@ import { todayParis } from "@/lib/dates";
 import { weekStart } from "@/lib/co2/engagement.ts";
 import { getCollectiveGoal, getEngagement, getTeamRanking } from "@/lib/engagement-data";
 import { GoalCard } from "@/components/GoalCard";
+import { WeeklyGoalCard } from "@/components/WeeklyGoalCard";
+import { DuelStrip } from "@/components/DuelStrip";
+import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
 
 export default async function EquipesPage({ searchParams }: { searchParams: Promise<{ periode?: string }> }) {
   const { periode } = await searchParams;
@@ -12,22 +15,37 @@ export default async function EquipesPage({ searchParams }: { searchParams: Prom
   const since = week ? weekStart(todayParis()) : null;
   const { supabase, user } = await requireProfile();
 
-  const [{ teams }, goal, me] = await Promise.all([
+  const [{ teams }, goal, me, weekly, duels] = await Promise.all([
     getTeamRanking(supabase, since),
     getCollectiveGoal(supabase),
     getEngagement(supabase, user.id),
+    getWeeklyGoal(supabase),
+    getDuels(supabase),
   ]);
 
   return (
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold">Équipes</h1>
-          <p className="mt-1 text-sm text-terre">Classement en pousses par participant.</p>
+          <h1 className="font-display text-2xl font-bold">Équipe</h1>
+          <p className="mt-1 text-sm text-terre">Défi de la semaine, duels et classement des équipes.</p>
         </div>
         <Link href="/regles" className="mt-1 shrink-0 text-xs font-bold underline underline-offset-2">Comment ça marche ?</Link>
       </div>
 
+      {weekly ? <WeeklyGoalCard goal={weekly} /> : null}
+
+      <DuelStrip duels={duels} />
+      <Link href="/duels" className="flex items-center gap-3 rounded-[18px] border border-encre/10 bg-papier px-4 py-3">
+        <span aria-hidden="true" className="font-display text-xl">⚔</span>
+        <span className="flex-1">
+          <span className="block text-sm font-bold">Défier un collègue</span>
+          <span className="block text-xs text-terre">Même action, 7 jours, personne ne perd de pousses</span>
+        </span>
+        <span className="text-sm font-bold">›</span>
+      </Link>
+
+      <h2 className="mt-1 font-display text-xl font-bold">Classement des équipes</h2>
       <nav aria-label="Période" className="flex rounded-full bg-sable p-1">
         {[
           { id: "semaine", label: "Cette semaine", on: week },
@@ -83,7 +101,7 @@ export default async function EquipesPage({ searchParams }: { searchParams: Prom
             et {formatKg(week ? me.week.kg : me.kgAvoided)} de CO₂ évités
           </p>
         </div>
-        <Link href="/defis" className="btn-primary min-h-11 shrink-0 px-4 text-sm">Gagner des pousses</Link>
+        <Link href="/agir" className="btn-primary min-h-11 shrink-0 px-4 text-sm">Gagner des pousses</Link>
       </section>
 
       {goal ? (

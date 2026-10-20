@@ -3,25 +3,20 @@ import { requireHabits } from "@/lib/session";
 import { TEMPLATE_BY_ID, CATEGORY_LABEL, formatKg } from "@/lib/co2/challenges.ts";
 import { relativeTime } from "@/lib/dates";
 import { PROOF_BUCKET } from "@/lib/constants";
-import { getDailyGoodNews } from "@/lib/news";
 import { cookies } from "next/headers";
-import { claimDailyRewards, getCollectiveGoal, getEngagement, getTeamRanking } from "@/lib/engagement-data";
-import { nextStreakMilestone, weekStart } from "@/lib/co2/engagement.ts";
-import { todayParis } from "@/lib/dates";
+import { claimDailyRewards, getEngagement } from "@/lib/engagement-data";
+import { nextStreakMilestone } from "@/lib/co2/engagement.ts";
 import { INTRO_COOKIE } from "@/lib/constants";
-import { WeekSummary } from "@/components/WeekSummary";
+import { CompanyPulse, type Pulse } from "@/components/CompanyPulse";
 import { IntroCard } from "@/components/IntroCard";
 import { GardenHero } from "@/components/GardenHero";
 import { DailyQuests } from "@/components/DailyQuests";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { WeeklyGoalCard } from "@/components/WeeklyGoalCard";
-import { QuizCard } from "@/components/QuizCard";
 import { DuelStrip } from "@/components/DuelStrip";
-import { getDuels, getQuiz, getWeeklyGoal } from "@/lib/game/data.ts";
+import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { reportPost, toggleCheer } from "./actions";
-import { NewsCard } from "./NewsCard";
-import { Fragment } from "react";
+import { actionTitle } from "@/lib/actions-catalog";
 
 interface Post {
   id: string;
@@ -45,40 +40,35 @@ const CATEGORY_TINT: Record<string, string> = {
   alimentation: "bg-argile",
   consommation: "bg-[#e9c9a3]",
   logement: "bg-abricot",
+  quotidien: "bg-sauge",
 };
 
-export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string }> }) {
-  const { publie } = await searchParams;
+export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string; vue?: string }> }) {
+  const { publie, vue } = await searchParams;
   const { supabase, user, profile } = await requireHabits();
   // D'abord les bonus du jour (quêtes, série), pour qu'ils apparaissent dans le total affiché.
   // (et le défi collectif, et les duels terminés : tout ce qui crédite des pousses passe avant le total).
   const [daily, weekly, duels] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
 
-  const [{ data: posts }, ranking, me, { data: myReports }, news, goal, cookieStore, quiz] = await Promise.all([
-    supabase
-      .from("validations")
-      .select(
-        "id, user_id, template_id, variant, units, kg, points, caption, proof_photo_path, witness_status, created_at, author:profiles!validations_user_id_fkey(display_name), witness:profiles!validations_witness_id_fkey(display_name), team:teams(name)",
-      )
-      .eq("company_id", profile.company_id)
-      .eq("visibility", "company")
-      .eq("status", "valid")
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .returns<Post[]>(),
-    getTeamRanking(supabase, weekStart(todayParis())),
+  const teamOnly = vue === "equipe" && !!profile.team_id;
+  let postsQuery = supabase
+    .from("validations")
+    .select(
+      "id, user_id, template_id, variant, units, kg, points, caption, proof_photo_path, witness_status, created_at, author:profiles!validations_user_id_fkey(display_name), witness:profiles!validations_witness_id_fkey(display_name), team:teams(name)",
+    )
+    .eq("company_id", profile.company_id)
+    .eq("visibility", "company")
+    .eq("status", "valid");
+  if (teamOnly) postsQuery = postsQuery.eq("team_id", profile.team_id as string);
+
+  const [{ data: posts }, me, { data: myReports }, { data: pulse }, cookieStore] = await Promise.all([
+    postsQuery.order("created_at", { ascending: false }).limit(30).returns<Post[]>(),
     getEngagement(supabase, user.id),
     supabase.from("reports").select("validation_id").eq("user_id", user.id),
-    getDailyGoodNews(),
-    getCollectiveGoal(supabase),
+    supabase.rpc("company_pulse"),
     cookies(),
-    getQuiz(supabase),
   ]);
   const showIntro = !cookieStore.get(INTRO_COOKIE);
-  // Une bonne nouvelle toutes les 2 publications ; le reste en fin de fil.
-  const NEWS_EVERY = 2;
-  const postCount = (posts ?? []).length;
-  const leftoverNews = news.slice(Math.floor(postCount / NEWS_EVERY));
 
   const ids = (posts ?? []).map((p) => p.id);
   const { data: cheers } = ids.length
@@ -113,6 +103,8 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         </p>
       ) : null}
 
+      {pulse ? <CompanyPulse pulse={pulse as Pulse} /> : null}
+
       <GardenHero
         total={me.points.total}
         week={me.week.points}
@@ -125,30 +117,41 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
 
       <DuelStrip duels={duels} />
 
-      {weekly ? <WeeklyGoalCard goal={weekly} /> : null}
-
-      {quiz ? <QuizCard initial={quiz} /> : null}
-
       <InstallPrompt />
 
-      <WeekSummary team={ranking.mine} teamsCount={ranking.teams.length} goal={goal} />
-
-      <div id="publications" className="-mb-2 flex scroll-mt-4 items-baseline justify-between pt-1">
-        <h2 className="font-display text-lg font-bold">Dans ton entreprise</h2>
-        <Link href="/defis?onglet=catalogue" className="text-xs font-bold underline underline-offset-2">Relever un défi</Link>
+      <div id="publications" className="-mb-1 flex scroll-mt-4 items-center justify-between gap-2 pt-1">
+        <h2 className="font-display text-xl font-bold">Fil d&apos;actu</h2>
+        {profile.team_id ? (
+          <nav aria-label="Filtrer le fil" className="flex gap-1.5">
+            {[
+              { id: "entreprise", label: "Entreprise", href: "/fil", on: !teamOnly },
+              { id: "equipe", label: "Mon équipe", href: "/fil?vue=equipe", on: teamOnly },
+            ].map((f) => (
+              <Link
+                key={f.id}
+                href={f.href}
+                aria-current={f.on ? "page" : undefined}
+                className={`flex h-9 items-center rounded-full px-3 text-xs font-bold ${f.on ? "bg-encre text-creme" : "border-[1.5px] border-[#c7b78c] text-encre"}`}
+              >
+                {f.label}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
       </div>
 
       {(posts ?? []).length === 0 ? (
         <section className="card flex flex-col gap-3 text-center">
           <p className="font-display text-lg font-bold">Le fil est encore calme</p>
-          <p className="text-sm text-brun">Relève un premier défi et partage-le : tes collègues suivront.</p>
-          <Link href="/defis?onglet=catalogue" className="btn-primary">Choisir un défi</Link>
+          <p className="text-sm text-brun">
+            Enregistre une action avec le bouton + puis publie-la avec une photo : tes collègues suivront.
+          </p>
+          <Link href="/agir" className="btn-primary">Enregistrer une action</Link>
         </section>
       ) : null}
 
-      {(posts ?? []).map((p, i) => {
+      {(posts ?? []).map((p) => {
         const t = TEMPLATE_BY_ID[p.template_id];
-        const variant = t?.variants.find((v) => v.key === p.variant);
         const postCheers = (cheers ?? []).filter((c) => c.validation_id === p.id);
         const cheered = postCheers.some((c) => c.user_id === user.id);
         const url = p.proof_photo_path ? photoUrl.get(p.proof_photo_path) : undefined;
@@ -158,10 +161,8 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
           p.witness_status === "confirmed" ? `Confirmé par ${p.witness?.display_name ?? "un collègue"}` : null,
           p.witness_status === "pending" ? "Confirmation en attente" : null,
         ].filter(Boolean);
-        const newsAfter = (i + 1) % NEWS_EVERY === 0 ? news[(i + 1) / NEWS_EVERY - 1] : undefined;
         return (
-          <Fragment key={p.id}>
-          <article className="overflow-hidden rounded-[20px] border border-encre/10 bg-papier">
+          <article key={p.id} className="overflow-hidden rounded-[20px] border border-encre/10 bg-papier">
             <div className={`h-2 ${t ? CATEGORY_TINT[t.category] : "bg-sable"}`} />
             <div className="flex flex-col gap-2 p-4">
               <div className="flex items-center gap-3">
@@ -193,8 +194,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
               </div>
 
               <h2 className="font-display text-lg leading-snug font-bold">
-                {t?.title ?? "Défi"}
-                {t && t.variants.length > 1 && variant ? ` · ${variant.label}` : ""}
+                {t ? actionTitle(t.id, p.variant) : "Action"}
               </h2>
               {p.caption ? <p className="text-sm leading-relaxed text-brun">{p.caption}</p> : null}
 
@@ -246,21 +246,8 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
               </div>
             </div>
           </article>
-          {newsAfter ? <NewsCard item={newsAfter} /> : null}
-          </Fragment>
         );
       })}
-
-      {leftoverNews.length > 0 ? (
-        <>
-          {postCount > 0 ? null : (
-            <h2 className="mt-2 font-display text-lg font-bold">Les bonnes nouvelles du jour</h2>
-          )}
-          {leftoverNews.map((n) => (
-            <NewsCard key={n.link} item={n} />
-          ))}
-        </>
-      ) : null}
 
       <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
         <span className="flex-1">
@@ -271,7 +258,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       </Link>
       <p className="text-center text-xs text-terre">
         <Link href="/regles" className="font-bold underline underline-offset-2">Comment marchent les pousses ?</Link>{" "}
-        Seuls tes collègues voient tes publications. Les bonnes nouvelles viennent de {news.length > 0 ? [...new Set(news.map((n) => n.source))].join(", ") : "médias écologiques"} et sont mises à jour plusieurs fois par jour.
+        Seuls tes collègues voient tes publications. Les bonnes nouvelles des médias sont dans S&apos;informer.
       </p>
     </>
   );

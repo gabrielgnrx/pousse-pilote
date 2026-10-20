@@ -4,15 +4,15 @@ import { POINTS } from "@/lib/co2/engagement.ts";
 import { SeedButton } from "./SeedButton";
 
 const QUESTS: Record<QuestKey, { label: string; href: string }> = {
-  preuve: { label: "Valide un défi avec une preuve", href: "/defis" },
-  defi: { label: "Valide un défi", href: "/defis" },
-  expert: { label: "Valide un défi expert", href: "/defis" },
+  preuve: { label: "Publie une action avec une photo", href: "/agir" },
+  defi: { label: "Enregistre une action", href: "/agir" },
+  expert: { label: "Enregistre une action de ton défi expert", href: "/agir" },
   lancer: { label: "Lance ton premier défi", href: "/defis?onglet=catalogue" },
   scan: { label: "Scanne un produit", href: "/scanner" },
   meilleur_choix: { label: "Choisis un produit mieux noté au scanner", href: "/scanner" },
   bravo: { label: "Encourage un collègue dans le fil", href: "/fil#publications" },
   cap: { label: "Garde le cap sur une habitude", href: "/defis" },
-  quiz: { label: "Réponds au quiz du jour", href: "/fil#quiz" },
+  quiz: { label: "Réponds au quiz du jour", href: "/informer#quiz" },
 };
 
 /** Les trois quêtes du jour, tirées chaque matin selon ton profil : +15 pousses quand tout est fait. */

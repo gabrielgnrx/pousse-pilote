@@ -118,7 +118,7 @@ function ActiveDuel({ d }: { d: Duel }) {
           <span className="w-10 text-right font-bold">{Math.min(r.n, d.target)}/{d.target}</span>
         </div>
       ))}
-      <Link href={d.kind === "scan" ? "/scanner" : "/defis"} className="text-xs font-bold underline underline-offset-2">
+      <Link href={d.kind === "scan" ? "/scanner" : "/agir"} className="text-xs font-bold underline underline-offset-2">
         {d.mine >= d.target ? "Objectif atteint, bravo !" : `Ajouter un ${k?.unit}`}
       </Link>
     </article>
