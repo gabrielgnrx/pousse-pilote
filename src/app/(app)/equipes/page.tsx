@@ -45,7 +45,6 @@ export default async function QGPage() {
   else if (mineIndex > 0) gap = `à ${fr(teams[mineIndex - 1].points_per_person - teams[mineIndex].points_per_person)} du ${ordinal(mineIndex)}`;
 
   const rows = messagesRes.data;
-  const chatError = "error" in messagesRes && messagesRes.error ? messagesRes.error.message : null;
   // Les prénoms des auteurs, lus à part (les profils des collègues sont lisibles dans l'entreprise).
   const authorIds = [...new Set((rows ?? []).flatMap((m) => (m.user_id ? [m.user_id] : [])))];
   const { data: authors } = authorIds.length
@@ -115,7 +114,6 @@ export default async function QGPage() {
         )}
       </section>
 
-      {chatError ? <p hidden data-chat-error={chatError} /> : null}
       {profile.team_id && w ? (
         <TeamChat
           week={w}
