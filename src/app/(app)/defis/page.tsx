@@ -16,6 +16,7 @@ import { keepHabit } from "./actions";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { DailyQuests } from "@/components/DailyQuests";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { getQuiz } from "@/lib/game/data.ts";
 
 interface ChallengeRow {
   id: string;
@@ -44,7 +45,7 @@ export default async function DefisPage({
   const { supabase, user, habits } = await requireHabits();
   const today = todayParis();
 
-  const [{ data: challenges }, { data: validations }, engagement, { data: fp }, daily] = await Promise.all([
+  const [{ data: challenges }, { data: validations }, engagement, { data: fp }, daily, quiz] = await Promise.all([
     supabase
       .from("user_challenges")
       .select("id, template_id, variant, target, ends_on, status")
@@ -66,6 +67,7 @@ export default async function DefisPage({
       .limit(1)
       .maybeSingle<{ total_kg: number; by_category: Footprint["byCategory"] }>(),
     claimDailyRewards(supabase),
+    getQuiz(supabase),
   ]);
   const kept = keptHabits(habits);
   // Garder le cap : 2 habitudes récompensées par semaine (keep_habit, 0009_equilibrage.sql).
@@ -123,6 +125,23 @@ export default async function DefisPage({
       ) : null}
 
       {daily ? <DailyQuests daily={daily} /> : null}
+
+      {quiz ? (
+        <Link href="/quiz" className="flex items-center gap-3 rounded-[18px] bg-papier px-4 py-3">
+          <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-peche font-display text-lg font-bold text-[#7a5a12]">?</span>
+          <span className="flex-1">
+            <span className="block text-sm font-bold">Quiz du jour</span>
+            <span className="block text-xs text-terre">
+              {quiz.current
+                ? quiz.answered > 0
+                  ? `${quiz.answered}/${quiz.total} répondues · ${quiz.score} juste${quiz.score > 1 ? "s" : ""}`
+                  : "10 questions, jusqu'à 15 pousses"
+                : `Terminé : ${quiz.score}/${quiz.total}. 10 nouvelles questions demain.`}
+            </span>
+          </span>
+          <span aria-hidden="true" className="font-bold text-sapin">{quiz.current ? (quiz.answered > 0 ? "Continuer ›" : "Jouer ›") : "Revoir ›"}</span>
+        </Link>
+      ) : null}
 
       <nav aria-label="Onglets des défis" className="flex rounded-full bg-sable p-1">
         {[

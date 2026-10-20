@@ -12,7 +12,7 @@ const QUESTS: Record<QuestKey, { label: string; href: string }> = {
   meilleur_choix: { label: "Choisis un produit mieux noté au scanner", href: "/scanner" },
   bravo: { label: "Encourage un collègue dans le fil", href: "/fil#publications" },
   cap: { label: "Garde le cap sur une habitude", href: "/defis" },
-  quiz: { label: "Termine le quiz du jour (10 questions)", href: "/informer#quiz" },
+  quiz: { label: "Termine le quiz du jour (10 questions)", href: "/quiz" },
 };
 
 /** Les trois quêtes du jour, tirées chaque matin selon ton profil : +15 pousses quand tout est fait. */

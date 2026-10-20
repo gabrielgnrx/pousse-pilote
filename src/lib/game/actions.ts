@@ -16,7 +16,8 @@ export async function answerQuiz(question: number, choice: number): Promise<Quiz
           : "Réponse non enregistrée, réessaie.",
     };
   }
-  revalidatePath("/informer");
+  revalidatePath("/quiz");
+  revalidatePath("/defis");
   return data as Quiz;
 }
 

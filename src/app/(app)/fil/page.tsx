@@ -10,7 +10,8 @@ import { IntroCard } from "@/components/IntroCard";
 import { TeamWeekCard } from "@/components/TeamWeekCard";
 import type { TeamWeek } from "@/lib/team";
 import { parisOffset } from "@/lib/dates";
-import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
+import { getDuels, getQuiz, getWeeklyGoal } from "@/lib/game/data.ts";
+import { QuizPopup } from "@/components/QuizPopup";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
 import { cancelChallenge, reportPost, toggleCheer } from "./actions";
@@ -54,7 +55,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
   if (teamOnly) postsQuery = postsQuery.eq("team_id", profile.team_id as string);
 
   const today = todayParis();
-  const [{ data: posts }, me, { data: myReports }, { data: pulse }, cookieStore, { data: teamWeek }, { data: mine }] = await Promise.all([
+  const [{ data: posts }, me, { data: myReports }, { data: pulse }, cookieStore, { data: teamWeek }, { data: mine }, quiz] = await Promise.all([
     postsQuery.order("created_at", { ascending: false }).limit(30).returns<Post[]>(),
     getEngagement(supabase, user.id),
     supabase.from("reports").select("validation_id").eq("user_id", user.id),
@@ -68,6 +69,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       .eq("status", "active")
       .gte("ends_on", today)
       .order("ends_on"),
+    getQuiz(supabase),
   ]);
   // Mes défis en cours, avec leur avancée et le duel qui leur est lié.
   const challengeIds = (mine ?? []).map((c) => c.id as string);
@@ -105,6 +107,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
 
   return (
     <>
+      {quiz?.current ? <QuizPopup quiz={quiz} day={today} /> : null}
       {defi ? (
         <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
           Défi lancé ! Il est juste en dessous : enregistre chaque fois que tu le fais avec le bouton +.
