@@ -24,7 +24,7 @@ export default async function QGPage() {
     profile.team_id
       ? supabase
           .from("team_messages")
-          .select("id, user_id, body, created_at, author:profiles(display_name)")
+          .select("id, user_id, body, created_at, author:profiles!team_messages_user_id_fkey(display_name)")
           .order("created_at", { ascending: false })
           .limit(80)
           .returns<{ id: string; user_id: string | null; body: string; created_at: string; author: { display_name: string } | null }[]>()
