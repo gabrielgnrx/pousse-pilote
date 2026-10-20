@@ -22,6 +22,8 @@ export interface Engagement {
   };
   /** Cette semaine (depuis lundi) : points et kg. */
   week: { points: number; kg: number };
+  /** Pousses gagnées aujourd'hui. */
+  today: number;
   /** Série : jours actifs d'affilée (défi, habitude gardée, bravo, scan). */
   streak: number;
   /** Dernières pousses gagnées, les plus récentes d'abord. */
@@ -56,7 +58,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
   const temoin = byKind("temoin");
   const bonus = byKind("quete") + byKind("serie");
   const scan = byKind("scan");
-  const jeu = byKind("quiz") + byKind("graine") + byKind("collectif") + byKind("duel");
+  const jeu = byKind("quiz") + byKind("graine") + byKind("collectif") + byKind("duel") + byKind("equipe");
   const LEDGER_LABEL: Record<string, string> = {
     maintien: "Cap gardé",
     influence: "Un collègue a relevé ton défi",
@@ -68,6 +70,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
     graine: "Graine mystère",
     collectif: "Défi collectif réussi",
     duel: "Duel réussi",
+    equipe: "Défi d'équipe réussi",
   };
   const recent = [
     ...(validations ?? [])
@@ -104,6 +107,9 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
         (ledger ?? []).filter((l) => parisDay(l.created_at) >= monday).reduce((s, l) => s + Number(l.points), 0),
       kg: thisWeek.reduce((s, v) => s + Number(v.kg), 0),
     },
+    today:
+      (validations ?? []).filter((v) => v.day === today).reduce((s, v) => s + Number(v.points), 0) +
+      (ledger ?? []).filter((l) => parisDay(l.created_at) === today).reduce((s, l) => s + Number(l.points), 0),
     recent,
     streak: Number(dayStreak ?? 0),
     keptThisWeek: new Set((checkins ?? []).filter((c) => c.week_start === monday).map((c) => c.habit as string)),

@@ -26,6 +26,10 @@ export default async function ProfilPage() {
           <p className="text-sm text-terre">{user.email}</p>
         </div>
       </section>
+      <div className="flex gap-2">
+        <Link href="/notifications" className="btn-ghost min-h-11 flex-1 px-3 text-sm">Notifications</Link>
+        <Link href="/jardin" className="btn-ghost min-h-11 flex-1 px-3 text-sm">Mon jardin</Link>
+      </div>
 
       <section id="pousses" className="card flex scroll-mt-4 flex-col gap-3">
         <div className="flex items-baseline justify-between">
@@ -51,7 +55,7 @@ export default async function ProfilPage() {
             { l: "Témoin pour un collègue", v: e.points.temoin },
             { l: "Quêtes du jour et séries", v: e.points.bonus },
             { l: "Meilleurs choix au scanner", v: e.points.scan },
-            { l: "Quiz, graines, défis collectifs et duels", v: e.points.jeu },
+            { l: "Quiz, graines, défis d'équipe et duels", v: e.points.jeu },
           ].map((r) => (
             <li key={r.l} className="flex justify-between border-t border-encre/10 py-1.5">
               <span>{r.l}</span>

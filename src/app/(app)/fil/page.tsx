@@ -1,29 +1,22 @@
 import Link from "next/link";
-import { requireHabits } from "@/lib/session";
-import { TEMPLATE_BY_ID, CATEGORY_LABEL, formatKg } from "@/lib/co2/challenges.ts";
-import { relativeTime } from "@/lib/dates";
-import { PROOF_BUCKET } from "@/lib/constants";
 import { cookies } from "next/headers";
+import { requireHabits } from "@/lib/session";
+import { TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
+import { relativeTime } from "@/lib/dates";
+import { INTRO_COOKIE, PROOF_BUCKET } from "@/lib/constants";
 import { claimDailyRewards, getEngagement } from "@/lib/engagement-data";
-import { nextStreakMilestone } from "@/lib/co2/engagement.ts";
-import { INTRO_COOKIE } from "@/lib/constants";
 import { CompanyPulse, type Pulse } from "@/components/CompanyPulse";
 import { IntroCard } from "@/components/IntroCard";
-import { GardenHero } from "@/components/GardenHero";
-import { DailyQuests } from "@/components/DailyQuests";
-import { InstallPrompt } from "@/components/InstallPrompt";
-import { DuelStrip } from "@/components/DuelStrip";
 import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
-import { reportPost, toggleCheer } from "./actions";
 import { actionTitle } from "@/lib/actions-catalog";
+import { reportPost, toggleCheer } from "./actions";
 
 interface Post {
   id: string;
   user_id: string;
   template_id: string;
   variant: string;
-  units: number;
   kg: number;
   points: number;
   caption: string | null;
@@ -31,30 +24,23 @@ interface Post {
   witness_status: string;
   created_at: string;
   author: { display_name: string } | null;
-  witness: { display_name: string } | null;
   team: { name: string } | null;
 }
 
-const CATEGORY_TINT: Record<string, string> = {
-  transport: "bg-sapin",
-  alimentation: "bg-argile",
-  consommation: "bg-[#e9c9a3]",
-  logement: "bg-abricot",
-  quotidien: "bg-sauge",
-};
+const AVATAR = ["#b9d3e8", "#f0a97b", "#d7e3c8", "#f6d9a8", "#e3c9e8", "#ecddbb"];
+const avatarColor = (id: string) => AVATAR[parseInt(id.replace(/-/g, "").slice(-2), 16) % AVATAR.length];
 
 export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string; vue?: string }> }) {
   const { publie, vue } = await searchParams;
   const { supabase, user, profile } = await requireHabits();
-  // D'abord les bonus du jour (quêtes, série), pour qu'ils apparaissent dans le total affiché.
-  // (et le défi collectif, et les duels terminés : tout ce qui crédite des pousses passe avant le total).
-  const [daily, weekly, duels] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
+  // Tout ce qui crédite des pousses passe avant le total affiché : bonus du jour, défi collectif, duels terminés.
+  const [daily, weekly] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
 
   const teamOnly = vue === "equipe" && !!profile.team_id;
   let postsQuery = supabase
     .from("validations")
     .select(
-      "id, user_id, template_id, variant, units, kg, points, caption, proof_photo_path, witness_status, created_at, author:profiles!validations_user_id_fkey(display_name), witness:profiles!validations_witness_id_fkey(display_name), team:teams(name)",
+      "id, user_id, template_id, variant, kg, points, caption, proof_photo_path, witness_status, created_at, author:profiles!validations_user_id_fkey(display_name), team:teams(name)",
     )
     .eq("company_id", profile.company_id)
     .eq("visibility", "company")
@@ -81,7 +67,6 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
   const photoUrl = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
   const reported = new Set((myReports ?? []).map((r) => r.validation_id));
 
-
   return (
     <>
       {publie ? (
@@ -89,9 +74,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
           Publié ! Tes collègues peuvent maintenant t&apos;encourager.
         </p>
       ) : null}
-
       {showIntro ? <IntroCard /> : null}
-
       {daily && daily.gained > 0 ? (
         <p role="status" className="animate-pousse-pop rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#402a16]">
           Bonus débloqué : +{daily.gained} pousses{daily.questDone ? " pour tes quêtes du jour" : ""} !
@@ -103,23 +86,9 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         </p>
       ) : null}
 
-      {pulse ? <CompanyPulse pulse={pulse as Pulse} /> : null}
+      {pulse ? <CompanyPulse pulse={pulse as Pulse} total={me.points.total} today={me.today} /> : null}
 
-      <GardenHero
-        total={me.points.total}
-        week={me.week.points}
-        streak={daily?.streak ?? 0}
-        nextMilestone={nextStreakMilestone(daily?.streak ?? 0)}
-        last={me.recent[0] ? { ...me.recent[0], when: relativeTime(me.recent[0].at) } : undefined}
-      />
-
-      {daily ? <DailyQuests daily={daily} /> : null}
-
-      <DuelStrip duels={duels} />
-
-      <InstallPrompt />
-
-      <div id="publications" className="-mb-1 flex scroll-mt-4 items-center justify-between gap-2 pt-1">
+      <div id="publications" className="mt-0.5 flex scroll-mt-4 items-center justify-between gap-2">
         <h2 className="font-display text-xl font-bold">Fil d&apos;actu</h2>
         {profile.team_id ? (
           <nav aria-label="Filtrer le fil" className="flex gap-1.5">
@@ -131,7 +100,9 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                 key={f.id}
                 href={f.href}
                 aria-current={f.on ? "page" : undefined}
-                className={`flex h-9 items-center rounded-full px-3 text-xs font-bold ${f.on ? "bg-encre text-creme" : "border-[1.5px] border-[#c7b78c] text-encre"}`}
+                className={`flex h-[34px] items-center rounded-full px-3 text-xs ${
+                  f.on ? "bg-encre font-bold text-[#f7f1e3]" : "border border-[#cdbf9f] font-semibold text-encre"
+                }`}
               >
                 {f.label}
               </Link>
@@ -141,12 +112,12 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       </div>
 
       {(posts ?? []).length === 0 ? (
-        <section className="card flex flex-col gap-3 text-center">
+        <section className="flex flex-col gap-3 rounded-[18px] bg-papier p-4 text-center">
           <p className="font-display text-lg font-bold">Le fil est encore calme</p>
           <p className="text-sm text-brun">
             Enregistre une action avec le bouton + puis publie-la avec une photo : tes collègues suivront.
           </p>
-          <Link href="/agir" className="btn-primary">Enregistrer une action</Link>
+          <Link href="/agir" className="btn-dark">Enregistrer une action</Link>
         </section>
       ) : null}
 
@@ -155,111 +126,91 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         const postCheers = (cheers ?? []).filter((c) => c.validation_id === p.id);
         const cheered = postCheers.some((c) => c.user_id === user.id);
         const url = p.proof_photo_path ? photoUrl.get(p.proof_photo_path) : undefined;
-        const name = p.author?.display_name ?? "Un collègue";
-        const proofs = [
-          p.proof_photo_path ? "Photo" : null,
-          p.witness_status === "confirmed" ? `Confirmé par ${p.witness?.display_name ?? "un collègue"}` : null,
-          p.witness_status === "pending" ? "Confirmation en attente" : null,
-        ].filter(Boolean);
+        const mine = p.user_id === user.id;
+        const name = mine ? "Toi" : (p.author?.display_name ?? "Un collègue");
+        const title = t ? actionTitle(t.id, p.variant) : "Action";
         return (
-          <article key={p.id} className="overflow-hidden rounded-[20px] border border-encre/10 bg-papier">
-            <div className={`h-2 ${t ? CATEGORY_TINT[t.category] : "bg-sable"}`} />
-            <div className="flex flex-col gap-2 p-4">
-              <div className="flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-full bg-sauge font-display font-bold">
-                  {name.charAt(0).toUpperCase()}
-                </span>
-                <div className="flex-1">
-                  <Link href={p.user_id === user.id ? "/jardin" : `/jardin/${p.user_id}`} className="text-sm font-bold hover:underline">
-                    {p.user_id === user.id ? "Toi" : name}
-                  </Link>
-                  <p className="text-xs text-terre">
-                    {p.team?.name ? `Équipe ${p.team.name} · ` : ""}
-                    {relativeTime(p.created_at)}
-                  </p>
-                </div>
-                {p.user_id !== user.id ? (
-                  <form action={reportPost}>
-                    <input type="hidden" name="validation" value={p.id} />
-                    <button
-                      type="submit"
-                      disabled={reported.has(p.id)}
-                      aria-label={reported.has(p.id) ? "Publication signalée" : "Signaler cette publication"}
-                      className="flex size-10 items-center justify-center rounded-full text-terre"
-                    >
-                      <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill={reported.has(p.id) ? "#c15f2c" : "none"} stroke="currentColor" strokeWidth="2"><path d="M4 22V4c4-2 8 2 12 0v10c-4 2-8-2-12 0" /></svg>
-                    </button>
-                  </form>
-                ) : null}
+          <article key={p.id} className="flex flex-col gap-2.5 rounded-[18px] bg-papier p-3.5">
+            <div className="flex items-center gap-2.5">
+              <Link
+                href={mine ? "/jardin" : `/jardin/${p.user_id}`}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-encre"
+                style={{ background: avatarColor(p.user_id) }}
+                aria-label={`Jardin de ${name}`}
+              >
+                {(p.author?.display_name ?? "?").charAt(0).toUpperCase()}
+              </Link>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold">
+                  {name}
+                  {p.team?.name ? ` · ${p.team.name}` : ""}
+                </p>
+                <p className="truncate text-xs text-[#5e5240]">
+                  {title} · {relativeTime(p.created_at)}
+                </p>
               </div>
-
-              <h2 className="font-display text-lg leading-snug font-bold">
-                {t ? actionTitle(t.id, p.variant) : "Action"}
-              </h2>
-              {p.caption ? <p className="text-sm leading-relaxed text-brun">{p.caption}</p> : null}
-
-              {url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={url} alt={`Preuve : ${t?.title ?? "défi"}`} className="mt-1 max-h-72 w-full rounded-xl object-cover" />
-              ) : null}
-
-              <div className="flex flex-wrap gap-2">
-                <span className="chip bg-peche">+{p.points} pousses</span>
-                <span className="chip bg-sauge">−{formatKg(Number(p.kg))} CO₂</span>
-                <span className="chip bg-creme font-semibold">
-                  {p.units} {p.units > 1 ? t?.unit.many : t?.unit.one} · {t ? CATEGORY_LABEL[t.category] : ""}
-                </span>
-                {proofs.map((pr) => (
-                  <span key={pr} className="chip bg-peche">{pr}</span>
-                ))}
-              </div>
-              {reported.has(p.id) ? (
-                <p className="text-xs font-semibold text-argile-fonce">Signalé, l&apos;équipe Pousse va vérifier.</p>
-              ) : null}
-
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <form action={toggleCheer}>
+              <span className="shrink-0 rounded-full bg-[#e3edd9] px-2 py-1 text-xs font-bold text-[#22502c]">
+                {Number(p.kg) > 0 ? `−${formatKg(Number(p.kg))}` : `+${p.points} pousses`}
+              </span>
+              {!mine ? (
+                <form action={reportPost}>
                   <input type="hidden" name="validation" value={p.id} />
                   <button
                     type="submit"
-                    aria-pressed={cheered}
-                    className={`flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold ${cheered ? "bg-argile text-white" : "bg-creme text-brun"}`}
+                    disabled={reported.has(p.id)}
+                    aria-label={reported.has(p.id) ? "Publication signalée" : "Signaler cette publication"}
+                    className="-mr-1.5 flex size-8 items-center justify-center rounded-full text-[#8c7a55]"
                   >
-                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill={cheered ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" /></svg>
-                    Bravo · {postCheers.length}
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill={reported.has(p.id) ? "#c15f2c" : "none"} stroke="currentColor" strokeWidth="2"><path d="M4 22V4c4-2 8 2 12 0v10c-4 2-8-2-12 0" /></svg>
                   </button>
                 </form>
-                {p.user_id !== user.id && t ? (
-                  <Link href={`/defis/nouveau/${t.id}?variante=${p.variant}&via=${p.id}`} className="flex h-10 items-center rounded-full bg-sable px-3.5 text-sm font-bold">
-                    Relever aussi
-                  </Link>
-                ) : null}
-                {p.user_id !== user.id && t ? (
-                  <Link
-                    href={`/duels?avec=${p.user_id}&type=${duelKindForTemplate(t.id)}`}
-                    className="flex h-10 items-center gap-1 rounded-full px-3 text-sm font-bold text-argile-fonce"
-                    aria-label={`Défier ${name} en duel`}
-                  >
-                    <span aria-hidden="true">⚔</span> Défier
-                  </Link>
-                ) : null}
-              </div>
+              ) : null}
+            </div>
+
+            <p className="text-[15px] leading-snug">{p.caption ?? title}</p>
+
+            {url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={url} alt={`Photo : ${title}`} className="max-h-72 w-full rounded-xl object-cover" />
+            ) : null}
+            {reported.has(p.id) ? (
+              <p className="text-xs font-semibold text-argile-fonce">Signalé, l&apos;équipe Pousse va vérifier.</p>
+            ) : null}
+
+            <div className="flex flex-wrap gap-2">
+              <form action={toggleCheer}>
+                <input type="hidden" name="validation" value={p.id} />
+                <button
+                  type="submit"
+                  aria-pressed={cheered}
+                  className={`flex h-10 items-center rounded-xl px-3.5 text-[13px] font-bold ${
+                    cheered ? "bg-[#22502c] text-[#f7f1e3]" : "bg-[#e3edd9] text-[#22502c]"
+                  }`}
+                >
+                  Bravo · {postCheers.length}
+                </button>
+              </form>
+              {!mine && t ? (
+                <Link
+                  href={t.category === "quotidien" ? "/agir" : `/defis/nouveau/${t.id}?variante=${p.variant}&via=${p.id}`}
+                  className="flex h-10 items-center rounded-xl border border-[#cdbf9f] px-3.5 text-[13px] font-semibold"
+                >
+                  J&apos;essaie aussi
+                </Link>
+              ) : null}
+              {!mine && t ? (
+                <Link
+                  href={`/duels?avec=${p.user_id}&type=${duelKindForTemplate(t.id)}`}
+                  className="flex h-10 items-center rounded-xl border border-[#cdbf9f] px-3.5 text-[13px] font-semibold"
+                  aria-label={`Défier ${name} en duel`}
+                >
+                  Défier
+                </Link>
+              ) : null}
             </div>
           </article>
         );
       })}
-
-      <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
-        <span className="flex-1">
-          <span className="block text-sm font-bold">30 secondes pour améliorer Pousse ?</span>
-          <span className="block text-xs text-[#5a4324]">3 questions sur ta semaine</span>
-        </span>
-        <span className="btn-primary min-h-10 px-4 text-sm">Répondre</span>
-      </Link>
-      <p className="text-center text-xs text-terre">
-        <Link href="/regles" className="font-bold underline underline-offset-2">Comment marchent les pousses ?</Link>{" "}
-        Seuls tes collègues voient tes publications. Les bonnes nouvelles des médias sont dans S&apos;informer.
-      </p>
     </>
   );
 }

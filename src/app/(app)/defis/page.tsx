@@ -13,6 +13,9 @@ import { formatDay, todayParis } from "@/lib/dates";
 import { POINTS, keptHabits } from "@/lib/co2/engagement.ts";
 import { getEngagement } from "@/lib/engagement-data";
 import { keepHabit } from "./actions";
+import { claimDailyRewards } from "@/lib/engagement-data";
+import { DailyQuests } from "@/components/DailyQuests";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 interface ChallengeRow {
   id: string;
@@ -41,7 +44,7 @@ export default async function DefisPage({
   const { supabase, user, habits } = await requireHabits();
   const today = todayParis();
 
-  const [{ data: challenges }, { data: validations }, engagement, { data: fp }] = await Promise.all([
+  const [{ data: challenges }, { data: validations }, engagement, { data: fp }, daily] = await Promise.all([
     supabase
       .from("user_challenges")
       .select("id, template_id, variant, target, ends_on, status")
@@ -62,6 +65,7 @@ export default async function DefisPage({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle<{ total_kg: number; by_category: Footprint["byCategory"] }>(),
+    claimDailyRewards(supabase),
   ]);
   const kept = keptHabits(habits);
   // Garder le cap : 2 habitudes récompensées par semaine (keep_habit, 0009_equilibrage.sql).
@@ -117,6 +121,8 @@ export default async function DefisPage({
           </div>
         </Link>
       ) : null}
+
+      {daily ? <DailyQuests daily={daily} /> : null}
 
       <nav aria-label="Onglets des défis" className="flex rounded-full bg-sable p-1">
         {[
@@ -267,6 +273,15 @@ export default async function DefisPage({
               </article>
             );
           })}
+
+          <InstallPrompt />
+          <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
+            <span className="flex-1">
+              <span className="block text-sm font-bold">30 secondes pour améliorer Pousse ?</span>
+              <span className="block text-xs text-[#5a4324]">3 questions sur ta semaine</span>
+            </span>
+            <span className="btn-primary min-h-10 px-4 text-sm">Répondre</span>
+          </Link>
         </>
       ) : (
         <>

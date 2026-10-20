@@ -190,11 +190,15 @@ psql -d pousse_test -f supabase/tests/scenario_engagement.sql
 psql -d pousse_test -f supabase/tests/scenario_rappels.sql
 psql -d pousse_test -f supabase/tests/scenario_jeu.sql
 psql -d pousse_test -f supabase/tests/scenario_actions.sql
+psql -d pousse_test -f supabase/tests/scenario_qg.sql
 ```
 
 `scenario_actions.sql` (migration `0012_actions_libres.sql`) vérifie le bouton + : action enregistrée sans
 preuve, CO₂ tiré du bilan (0 kg si rien n'est remplacé), plafonds du jour, action comptée dans le défi en
 cours, publication avec photo par l'auteur seulement, compteur commun de l'entreprise.
+
+`scenario_qg.sql` (migration `0013_qg_equipe.sql`) vérifie le QG : chat réservé à l'équipe, masquage après
+deux signalements, vote du lundi de 9 h à 14 h, choix le plus voté, annonce unique, +30 aux contributeurs.
 
 Le premier scénario vérifie 22 points : code d'entreprise, domaine e-mail, calculs identiques au TypeScript,
 plafond partagé, refus d'une insertion directe, photo hors de son dossier, témoin qui refuse,
