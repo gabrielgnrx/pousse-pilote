@@ -9,6 +9,7 @@
 import {
   CLOTHING_KG,
   COMMUTE_KG_PER_KM,
+  DRINK_KG_PER_L,
   DEVICE_KG,
   HEATING_SAVING_PER_DEGREE,
   HEATING_WEEKS_PER_YEAR,
@@ -19,7 +20,7 @@ import {
 } from "./factors.ts";
 import { LONG_FLIGHT_KM_ROUND_TRIP, MEALS_PER_WEEK, OTHER_MEAT_MEAL_KG, type Habits } from "./footprint.ts";
 
-export type Category = "transport" | "alimentation" | "consommation" | "logement" | "quotidien";
+export type Category = "transport" | "alimentation" | "consommation" | "logement" | "quotidien" | "nature";
 
 export interface Variant {
   key: string;
@@ -52,6 +53,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   consommation: "Consommation",
   logement: "Logement",
   quotidien: "Au quotidien",
+  nature: "Nature",
 };
 
 export const TEMPLATES: ChallengeTemplate[] = [
@@ -92,6 +94,18 @@ export const TEMPLATES: ChallengeTemplate[] = [
     source: SOURCES.transport,
   },
   {
+    id: "teletravail",
+    category: "transport",
+    title: "Télétravail au lieu du trajet",
+    unit: { one: "jour", many: "jours" },
+    variants: [{ key: "base", label: "Un aller-retour domicile-travail évité" }],
+    proofHint: "Aucune preuve demandée",
+    pointsPerUnit: 10,
+    dailyCap: 1,
+    defaultTarget: 8,
+    source: SOURCES.transport,
+  },
+  {
     id: "train",
     category: "transport",
     title: "Train au lieu de l'avion",
@@ -123,6 +137,18 @@ export const TEMPLATES: ChallengeTemplate[] = [
     dailyCap: 2,
     defaultTarget: 5,
     source: SOURCES.alimentation,
+  },
+  {
+    id: "eau_robinet",
+    category: "alimentation",
+    title: "Eau du robinet au lieu d'eau en bouteille",
+    unit: { one: "jour", many: "jours" },
+    variants: [{ key: "base", label: "Ta consommation d'eau en bouteille du jour" }],
+    proofHint: "Photo de ta gourde ou de ta carafe",
+    pointsPerUnit: 5,
+    dailyCap: 1,
+    defaultTarget: 20,
+    source: SOURCES.boisson,
   },
   {
     id: "moins_boeuf",
@@ -260,6 +286,38 @@ export const GESTES: ChallengeTemplate[] = [
     source: SOURCES.numerique,
   },
 ];
+
+const nature = (id: string, title: string, points: number): ChallengeTemplate => ({
+  id,
+  category: "nature",
+  title,
+  unit: { one: "fois", many: "fois" },
+  variants: [{ key: "base", label: "Aujourd'hui" }],
+  proofHint: "Une photo pour publier dans le fil",
+  pointsPerUnit: points,
+  dailyCap: 1,
+  defaultTarget: 4,
+  source: "https://www.vigienature.fr",
+});
+
+GESTES.push(
+  {
+    id: "antigaspi",
+    category: "alimentation",
+    title: "Repas anti-gaspi (restes ou panier d'invendus)",
+    unit: { one: "repas", many: "repas" },
+    variants: [{ key: "base", label: "Aujourd'hui" }],
+    proofHint: "Aucune preuve demandée",
+    pointsPerUnit: 3,
+    dailyCap: 1,
+    defaultTarget: 5,
+    source: SOURCES.alimentation,
+  },
+  nature("compost", "Déchets alimentaires au compost", 3),
+  nature("ramassage", "Ramassage de déchets dans la nature ou la rue", 5),
+  nature("sciences", "Comptage pour un programme de sciences participatives", 5),
+  nature("plantation", "Plantation, nichoir ou coin de nature aménagé", 5),
+);
 
 /** Remplacer une habitude, ou la réduire : la façon dont le geste est présenté dans « Mon plan ». */
 export function verbOf(templateId: string): "Remplacer" | "Réduire" | "Au quotidien" {
@@ -414,9 +472,29 @@ export function unitImpact(templateId: string, variantKey: string, h: Habits): U
       }
       return no("Appareil inconnu.");
     }
+    case "teletravail": {
+      if (!hasCommute || commuteFactor <= 0)
+        return no("Ton trajet domicile-travail déclaré n'émet déjà rien.");
+      const kg = 2 * h.commuteKm * commuteFactor;
+      return { kg, eligible: true, formula: `2 trajets × ${fmt(h.commuteKm, 1)} km × ${fmt(commuteFactor, 4)} kg/km` };
+    }
+    case "eau_robinet": {
+      const litres = h.bottledWaterLDay ?? 0;
+      if (litres <= 0) return no("Tu as déclaré boire déjà l'eau du robinet.");
+      return {
+        kg: litres * DRINK_KG_PER_L.eau_bouteille,
+        eligible: true,
+        formula: `${fmt(litres, 1)} L × ${fmt(DRINK_KG_PER_L.eau_bouteille)} kg/L d'eau en bouteille`,
+      };
+    }
     case "escaliers":
     case "gourde":
     case "ecran":
+    case "antigaspi":
+    case "compost":
+    case "ramassage":
+    case "sciences":
+    case "plantation":
       return no("Pas de CO₂ mesurable, mais ça compte pour ta série.");
     default:
       return no("Défi inconnu.");

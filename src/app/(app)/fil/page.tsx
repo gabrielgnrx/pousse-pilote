@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { requireHabits } from "@/lib/session";
-import { TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
+import { GESTES, TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
 import { relativeTime } from "@/lib/dates";
 import { INTRO_COOKIE, PROOF_BUCKET } from "@/lib/constants";
 import { claimDailyRewards, getEngagement } from "@/lib/engagement-data";
@@ -239,7 +239,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
               </form>
               {!mine && t ? (
                 <Link
-                  href={t.category === "quotidien" ? "/agir" : `/defis/nouveau/${t.id}?variante=${p.variant}&via=${p.id}`}
+                  href={GESTES.some((g) => g.id === t.id) ? "/agir" : `/defis/nouveau/${t.id}?variante=${p.variant}&via=${p.id}`}
                   className="flex h-10 items-center rounded-xl border border-[#cdbf9f] px-3.5 text-[13px] font-semibold"
                 >
                   J&apos;essaie aussi

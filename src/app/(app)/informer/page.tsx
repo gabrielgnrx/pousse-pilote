@@ -73,6 +73,17 @@ export default async function InformerPage() {
         </section>
       ) : null}
 
+      <Link href="/informer/saison" className="flex items-center gap-3 rounded-[20px] bg-sauge p-4 text-sapin">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-papier">
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+        </span>
+        <span className="flex-1">
+          <span className="block font-bold">De saison ce mois-ci</span>
+          <span className="block text-xs">Le calendrier des fruits et légumes, avec leur CO₂</span>
+        </span>
+        <span aria-hidden="true">›</span>
+      </Link>
+
       <section className="flex flex-col gap-2">
         <h2 className="font-display text-xl font-bold">Recettes végé de la semaine</h2>
         <ul className="flex flex-col gap-2">

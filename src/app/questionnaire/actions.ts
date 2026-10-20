@@ -34,6 +34,8 @@ function parseAnswers(raw: unknown): BilanAnswers | null {
     newClothesYear: num("newClothesYear"),
     phoneEveryYears: num("phoneEveryYears"),
     newDevicesYear: num("newDevicesYear"),
+    // Question ajoutée en octobre 2026 : absente des anciens bilans.
+    bottledWaterLDay: typeof r.bottledWaterLDay === "number" ? r.bottledWaterLDay : 0,
   };
   return Object.values(a).every((v) => typeof v !== "number" || Number.isFinite(v)) ? a : null;
 }

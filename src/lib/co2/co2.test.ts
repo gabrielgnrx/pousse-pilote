@@ -20,6 +20,7 @@ const gabriel: BilanAnswers = {
   newClothesYear: 15,
   phoneEveryYears: 3,
   newDevicesYear: 0,
+  bottledWaterLDay: 0,
 };
 
 const near = (a: number, b: number, eps = 0.01) =>
@@ -87,11 +88,27 @@ test("défis : éligibilité par modèle", () => {
     "moins_boeuf",
     "occasion",
     "reparation",
+    "teletravail",
     "transports",
     "vege",
     "vegetalien",
     "velo",
   ]);
+});
+
+test("télétravail et eau du robinet : calculés depuis le bilan", () => {
+  const h = computeFootprint(gabriel).habits;
+  const tele = unitImpact("teletravail", "base", h);
+  const velo = unitImpact("velo", "base", h);
+  assert.equal(tele.kg, 2 * velo.kg, "un jour de télétravail = l'aller et le retour");
+  assert.equal(unitImpact("eau_robinet", "base", { ...h, bottledWaterLDay: 0 }).eligible, false);
+  assert.equal(unitImpact("eau_robinet", "base", { ...h, bottledWaterLDay: 1.5 }).kg, 1.5 * 0.32);
+  const withWater = computeFootprint({ ...gabriel, bottledWaterLDay: 1 });
+  assert.equal(
+    withWater.byCategory.alimentation - computeFootprint(gabriel).byCategory.alimentation,
+    Math.round(365 * 0.32),
+    "1 L par jour : 117 kg par an",
+  );
 });
 
 test("plan d'action : trié par impact, seulement des habitudes déclarées", () => {

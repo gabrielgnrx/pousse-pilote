@@ -27,6 +27,7 @@ export interface HabitsRow {
   new_devices_year: number;
   heating: HeatingMode;
   heating_kg_year: number;
+  bottled_water_l_day?: number | null;
 }
 
 export function habitsFromRow(r: HabitsRow): Habits {
@@ -43,6 +44,7 @@ export function habitsFromRow(r: HabitsRow): Habits {
     newDevicesYear: r.new_devices_year ?? 0,
     heating: r.heating,
     heatingKgYear: Number(r.heating_kg_year),
+    bottledWaterLDay: Number(r.bottled_water_l_day ?? 0),
   };
 }
 
@@ -61,6 +63,7 @@ export function habitsToRow(userId: string, h: Habits): HabitsRow & { updated_at
     new_devices_year: h.newDevicesYear,
     heating: h.heating,
     heating_kg_year: h.heatingKgYear,
+    bottled_water_l_day: h.bottledWaterLDay,
     updated_at: new Date().toISOString(),
   };
 }
@@ -118,6 +121,8 @@ export function sqlErrorMessage(message: string | undefined): string {
       return "Cette demande a déjà été traitée.";
     case "already_kept":
       return "C'est déjà noté pour cette semaine. Reviens lundi !";
+    case "teletravail_conflict":
+      return "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.";
     case "not_kept_habit":
       return "Cette habitude ne fait pas partie de ton bilan.";
     default:

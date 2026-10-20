@@ -12,6 +12,7 @@ import {
   COMMUTE_KG_PER_KM,
   CLOTHING_KG,
   DEVICE_KG,
+  DRINK_KG_PER_L,
   HEATING_KG_PER_M2_YEAR,
   MEAL_KG,
   SHARED_SERVICES_KG_YEAR,
@@ -46,6 +47,8 @@ export interface BilanAnswers {
   phoneEveryYears: number;
   /** Autres appareils électroniques neufs par an (ordinateur, tablette, console, télé). */
   newDevicesYear: number;
+  /** Litres d'eau en bouteille bus par jour (0 = eau du robinet). */
+  bottledWaterLDay: number;
 }
 
 export interface Habits {
@@ -62,6 +65,8 @@ export interface Habits {
   heating: HeatingMode;
   /** Émissions annuelles du chauffage attribuées à la personne, en kg. */
   heatingKgYear: number;
+  /** Litres d'eau en bouteille par jour. */
+  bottledWaterLDay: number;
 }
 
 export interface Footprint {
@@ -112,6 +117,7 @@ export function normalizeAnswers(a: BilanAnswers): BilanAnswers {
     phoneEveryYears: clamp(a.phoneEveryYears, 0, 10),
     // Absent des bilans faits avant l'ajout de la question : compté comme 0.
     newDevicesYear: clamp(a.newDevicesYear, 0, 10),
+    bottledWaterLDay: clamp(a.bottledWaterLDay ?? 0, 0, 3),
   };
 }
 
@@ -142,9 +148,10 @@ export function computeFootprint(raw: BilanAnswers): Footprint {
   const vegMeals = MEALS_PER_WEEK - a.beefMealsWeek - a.otherMeatMealsWeek;
   const alimentation =
     WEEKS_PER_YEAR *
-    (a.beefMealsWeek * MEAL_KG.boeuf +
-      a.otherMeatMealsWeek * OTHER_MEAT_MEAL_KG +
-      vegMeals * MEAL_KG.vegetarien);
+      (a.beefMealsWeek * MEAL_KG.boeuf +
+        a.otherMeatMealsWeek * OTHER_MEAT_MEAL_KG +
+        vegMeals * MEAL_KG.vegetarien) +
+    (a.bottledWaterLDay ?? 0) * 365 * DRINK_KG_PER_L.eau_bouteille;
 
   // Logement : chauffage seulement, partagé entre les membres du foyer.
   let heatingMode = a.heating;
@@ -193,6 +200,7 @@ export function computeFootprint(raw: BilanAnswers): Footprint {
       newDevicesYear: a.newDevicesYear,
       heating: heatingMode,
       heatingKgYear: round(heatingKgYear),
+      bottledWaterLDay: a.bottledWaterLDay ?? 0,
     },
   };
 }

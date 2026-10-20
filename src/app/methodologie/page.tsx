@@ -27,7 +27,7 @@ export default function MethodologiePage() {
     >
       <Section title="Ton bilan">
         <p>
-          14 questions sur tes trajets, tes repas, ton chauffage, tes vêtements, ton smartphone et tes appareils électroniques, calculées
+          15 questions sur tes trajets, tes repas, ton eau en bouteille, ton chauffage, tes vêtements, ton smartphone et tes appareils électroniques, calculées
           avec les facteurs de l&apos;ADEME ci-dessous, plus une part commune d&apos;environ 1 tonne pour
           les services publics (ordre de grandeur donné par Nos Gestes Climat).
         </p>

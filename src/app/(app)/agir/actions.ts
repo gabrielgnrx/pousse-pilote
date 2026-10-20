@@ -31,6 +31,7 @@ export type LogResult = { ok: true; action: LoggedAction } | { ok: false; error:
 const ERRORS: Record<string, string> = {
   cap_reached: "Déjà compté aujourd'hui : au-delà du plafond du jour, rien n'est compté. Reviens demain !",
   unknown_action: "Cette action n'existe pas.",
+  teletravail_conflict: "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.",
 };
 
 /** Enregistre une action en un tap, sans preuve. Le CO₂ et les pousses sont calculés par la base. */

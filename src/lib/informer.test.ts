@@ -19,6 +19,7 @@ const h: Habits = {
   newDevicesYear: 0,
   heating: "gaz",
   heatingKgYear: 1000,
+  bottledWaterLDay: 1,
 };
 
 test("bouton + : une ligne par variante, le CO₂ vient du bilan", () => {

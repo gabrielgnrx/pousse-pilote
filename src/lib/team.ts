@@ -1,6 +1,6 @@
 /** Défis d'équipe votés le lundi (types vérifiés par la base, 0013_qg_equipe.sql). */
 
-export type TeamKind = "repas" | "actions" | "preuve" | "quiz" | "scan" | "bravo";
+export type TeamKind = "repas" | "actions" | "preuve" | "quiz" | "scan" | "bravo" | "nature";
 
 export const TEAM_KINDS: Record<TeamKind, { option: (n: number) => string; unit: string; hint: string; href: string }> = {
   repas: { option: (n) => `${n} repas végé chacun`, unit: "repas végé", hint: "Enregistre-les avec le bouton +.", href: "/agir" },
@@ -9,6 +9,7 @@ export const TEAM_KINDS: Record<TeamKind, { option: (n: number) => string; unit:
   quiz: { option: (n) => `${n} quiz réussis chacun (7/10 ou plus)`, unit: "quiz réussis (7/10 ou plus)", hint: "10 questions par jour dans S'informer.", href: "/informer#quiz" },
   scan: { option: (n) => `${n} meilleur choix au scanner chacun`, unit: "meilleurs choix au scanner", hint: "Scanne un produit et prends mieux noté.", href: "/scanner" },
   bravo: { option: (n) => `${n} bravos dans le fil chacun`, unit: "bravos dans le fil", hint: "Encourage les publications de tes collègues.", href: "/fil" },
+  nature: { option: (n) => `${n} action nature chacun (compost, ramassage…)`, unit: "actions nature", hint: "Compost, ramassage de déchets, comptage, plantation : bouton +, thème Nature.", href: "/agir" },
 };
 
 export interface TeamWeek {

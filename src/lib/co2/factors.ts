@@ -12,6 +12,8 @@ export const SOURCES = {
   habillement: "https://impactco2.fr/outils/habillement",
   numerique: "https://impactco2.fr/outils/numerique",
   chauffage: "https://impactco2.fr/outils/chauffage",
+  boisson: "https://impactco2.fr/outils/boisson",
+  saison: "https://impactco2.fr/outils/fruitsetlegumes",
   servicesPublics: "https://nosgestesclimat.fr/nouveautes/lempreinte-climat-des-services-societaux",
 } as const;
 
@@ -41,6 +43,15 @@ export const MEAL_KG = {
   saumon: 1.46,
   vegetarien: 0.85,
   vegetalien: 0.54,
+} as const;
+
+/**
+ * kg CO2e par litre (Agribalyse 3.2 via Impact CO₂, relevé le 20/10/2026).
+ * L'eau du robinet y est à 0 kg (arrondi).
+ */
+export const DRINK_KG_PER_L = {
+  eau_bouteille: 0.32,
+  eau_robinet: 0,
 } as const;
 
 /** kg CO2e pour un article neuf (Impact CO₂, ADEME). */

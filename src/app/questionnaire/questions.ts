@@ -39,6 +39,7 @@ export const DEFAULT_ANSWERS: BilanAnswers = {
   newClothesYear: 10,
   phoneEveryYears: 3,
   newDevicesYear: 0,
+  bottledWaterLDay: 0,
 };
 
 export const STEPS: Step[] = [
@@ -130,6 +131,25 @@ export const STEPS: Step[] = [
     question: "Et avec du porc, du poulet ou du poisson ?",
     why: "Sur 14 repas par semaine, les autres sont comptés comme végétariens.",
     fields: [{ field: { kind: "choice", key: "otherMeatMealsWeek", options: counts([0, 1, 2, 3, 4, 5, 7, 10]) } }],
+  },
+  {
+    category: "Alimentation",
+    question: "Combien d'eau en bouteille bois-tu par jour ?",
+    why: "Un litre d'eau en bouteille émet 0,32 kg de CO₂, l'eau du robinet presque rien (ADEME).",
+    fields: [
+      {
+        field: {
+          kind: "choice",
+          key: "bottledWaterLDay",
+          options: [
+            { value: 0, label: "Aucune, je bois l'eau du robinet" },
+            { value: 0.5, label: "Environ 0,5 litre" },
+            { value: 1, label: "Environ 1 litre" },
+            { value: 1.5, label: "1,5 litre ou plus" },
+          ],
+        },
+      },
+    ],
   },
   {
     category: "Logement",

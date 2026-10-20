@@ -6,7 +6,7 @@
 import { GESTES, TEMPLATE_BY_ID, TEMPLATES, unitImpact } from "./co2/challenges.ts";
 import type { Habits } from "./co2/footprint.ts";
 
-export type Theme = "trajets" | "repas" | "achats" | "maison" | "voyages" | "bureau";
+export type Theme = "trajets" | "repas" | "achats" | "maison" | "voyages" | "bureau" | "nature";
 
 export const THEMES: { id: Theme; label: string }[] = [
   { id: "trajets", label: "Trajets" },
@@ -15,6 +15,7 @@ export const THEMES: { id: Theme; label: string }[] = [
   { id: "maison", label: "Maison" },
   { id: "voyages", label: "Voyages" },
   { id: "bureau", label: "Au bureau" },
+  { id: "nature", label: "Nature" },
 ];
 
 export interface ActionItem {
@@ -32,6 +33,13 @@ export interface ActionItem {
 
 const THEME_OF: Record<string, Theme> = {
   velo: "trajets",
+  teletravail: "trajets",
+  eau_robinet: "repas",
+  antigaspi: "repas",
+  compost: "nature",
+  ramassage: "nature",
+  sciences: "nature",
+  plantation: "nature",
   transports: "trajets",
   covoiturage: "trajets",
   train: "voyages",
@@ -54,6 +62,10 @@ export function actionTitle(templateId: string, variant: string): string {
   switch (templateId) {
     case "velo":
       return "Venu au bureau à vélo";
+    case "teletravail":
+      return "Journée en télétravail";
+    case "eau_robinet":
+      return "Eau du robinet toute la journée";
     case "transports":
       return "Métro ou RER au lieu de la voiture";
     case "covoiturage":

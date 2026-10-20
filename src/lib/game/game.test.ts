@@ -23,7 +23,7 @@ test("jardin : espèces, exploits et plantes des graines", () => {
   assert.ok(g.rares.find((r) => r.key === "lotus")!.owned);
   assert.ok(!g.rares.find((r) => r.key === "chene")!.owned);
   assert.equal(g.grown, 4);
-  assert.equal(g.total, 18);
+  assert.equal(g.total, 19);
 });
 
 test("libellés alignés avec la base (types de duel et de défi collectif)", () => {

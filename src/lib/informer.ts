@@ -2,7 +2,7 @@
  * Contenus de l'onglet « S'informer » : fiches gestes, recettes végé, mini-jeu « Lequel pèse le plus ? ».
  * Tous les chiffres viennent de factors.ts (ADEME, Impact CO₂, Agribalyse) : rien n'est saisi à la main.
  */
-import { CLOTHING_KG, DEVICE_KG, HEATING_SAVING_PER_DEGREE, MEAL_KG, TRANSPORT_KG_PER_KM } from "./co2/factors.ts";
+import { CLOTHING_KG, DEVICE_KG, DRINK_KG_PER_L, HEATING_SAVING_PER_DEGREE, MEAL_KG, TRANSPORT_KG_PER_KM } from "./co2/factors.ts";
 
 const fr = (n: number, digits = 2) => n.toLocaleString("fr-FR", { maximumFractionDigits: digits });
 const OTHER_MEAT = (MEAL_KG.porc + MEAL_KG.poulet + MEAL_KG.saumon) / 3;
@@ -104,6 +104,62 @@ export const FICHES: Record<string, Fiche> = {
       "19 °C dans les pièces à vivre, un peu moins dans les chambres.",
       "Baisse le chauffage quand tu t'absentes, même une journée.",
       "Un pull en plus compense largement la différence.",
+    ],
+  },
+  teletravail: {
+    why: "Un jour de télétravail évite l'aller-retour domicile-travail : deux fois ton trajet. L'ADEME rappelle des effets rebond (chauffage du logement en journée, trajets en plus) qui réduisent le gain, surtout pour les trajets courts. Pousse compte l'aller-retour évité, sans les déduire.",
+    how: [
+      "Regroupe tes réunions sur les jours où tu es au bureau.",
+      "Chauffe seulement la pièce où tu travailles, à 19 °C.",
+      "Évite de reprendre la voiture pour d'autres trajets ce jour-là.",
+    ],
+  },
+  eau_robinet: {
+    why: `Un litre d'eau en bouteille émet ${fr(DRINK_KG_PER_L.eau_bouteille)} kg de CO₂ (fabrication de la bouteille, transport), l'eau du robinet presque rien (Agribalyse, via l'ADEME). En France, l'eau du robinet est l'un des aliments les plus contrôlés.`,
+    how: [
+      "Une carafe au réfrigérateur fait disparaître le goût de chlore.",
+      "Une gourde dans le sac pour la journée.",
+      "Au bureau, demande une fontaine ou des carafes plutôt que des bouteilles.",
+    ],
+  },
+  antigaspi: {
+    why: "Près d'un tiers de la nourriture produite dans le monde est perdue ou gaspillée (FAO) : toutes les émissions de sa production, pour rien. Il n'existe pas de chiffre fiable par repas, donc Pousse compte 0 kg, mais des pousses.",
+    how: [
+      "Emporte tes restes pour le déjeuner du lendemain.",
+      "Les applis de paniers d'invendus proposent des repas à petit prix près du bureau.",
+      "Prévois tes menus avant les courses pour acheter juste ce qu'il faut.",
+    ],
+  },
+  compost: {
+    why: "Les déchets alimentaires pèsent lourd dans nos poubelles. Compostés, ils redeviennent de la terre au lieu d'être incinérés ou enfouis. Depuis 2024, les collectivités doivent proposer une solution de tri des biodéchets.",
+    how: [
+      "Demande à ta mairie : bac de collecte, composteur de quartier ou composteur individuel.",
+      "Épluchures, restes de repas, marc de café : presque tout y va.",
+      "Un petit seau fermé dans la cuisine suffit pour commencer.",
+    ],
+  },
+  ramassage: {
+    why: "Les déchets abandonnés finissent dans les sols, les rivières puis la mer, et blessent la faune. Les ramasser ne réduit pas ton CO₂, mais protège directement la nature autour de toi.",
+    how: [
+      "Des gants et un sac suffisent, le temps d'une balade.",
+      "C'est encore mieux en équipe : une sortie de ramassage fait une belle photo pour le fil.",
+      "Signale les dépôts sauvages à ta mairie.",
+    ],
+  },
+  sciences: {
+    why: "Les programmes de sciences participatives du Muséum national d'Histoire naturelle (Vigie-Nature) s'appuient sur des milliers de bénévoles pour suivre l'état des oiseaux, des papillons ou des insectes pollinisateurs.",
+    how: [
+      "Choisis un protocole sur vigienature.fr : quelques minutes à une heure.",
+      "Pas besoin d'être expert : les protocoles sont faits pour les débutants.",
+      "Note tes observations au même endroit, régulièrement.",
+    ],
+  },
+  plantation: {
+    why: "Haies, arbres et coins de nature offrent abri et nourriture aux oiseaux et aux insectes. Un geste pour la biodiversité plus que pour le CO₂.",
+    how: [
+      "Préfère des espèces locales, adaptées à ta région.",
+      "Un nichoir ou un hôtel à insectes s'installe même sur un balcon.",
+      "Laisse un coin du jardin sans tondre.",
     ],
   },
   escaliers: {

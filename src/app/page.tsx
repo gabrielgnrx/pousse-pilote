@@ -30,7 +30,7 @@ export default async function Home() {
         fondre, semaine après semaine.
       </p>
       <div className="flex gap-4 text-sm font-semibold text-terre">
-        <span>14 questions</span>
+        <span>15 questions</span>
         <span>2 minutes</span>
         <span>Zéro jugement</span>
       </div>

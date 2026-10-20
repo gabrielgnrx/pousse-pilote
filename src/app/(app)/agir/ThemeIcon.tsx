@@ -39,6 +39,13 @@ const PATHS: Record<Theme, React.ReactNode> = {
       <path d="M4 20h4v-4h4v-4h4V8h4" />
     </>
   ),
+  nature: (
+    <>
+      <path d="M12 22V12" />
+      <path d="M12 12C7 12 4 9 4 4c5 0 8 3 8 8Z" />
+      <path d="M12 15c0-4 3-7 8-7 0 4-3 7-8 7Z" />
+    </>
+  ),
 };
 
 const COLOR: Record<Theme, string> = {
@@ -48,6 +55,7 @@ const COLOR: Record<Theme, string> = {
   maison: "#4a4030",
   voyages: "#1f4a6b",
   bureau: "#3b4a2c",
+  nature: "#2f6b3a",
 };
 
 export function ThemeIcon({ theme, size = 22, color }: { theme: Theme; size?: number; color?: string }) {

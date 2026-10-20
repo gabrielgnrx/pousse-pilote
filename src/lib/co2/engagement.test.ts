@@ -11,7 +11,7 @@ const near = (a: number, b: number, eps = 0.01) => assert.ok(Math.abs(a - b) <= 
 const gabriel: BilanAnswers = {
   commuteMode: "voiture_seul", commuteKm: 6, commuteDaysPerWeek: 5, carType: "thermique", carOtherKmYear: 5000,
   shortFlightsYear: 0, longFlightsYear: 0, beefMealsWeek: 4, otherMeatMealsWeek: 1, heating: "gaz",
-  surfaceM2: 45, householdSize: 1, newClothesYear: 15, phoneEveryYears: 3, newDevicesYear: 0,
+  surfaceM2: 45, householdSize: 1, newClothesYear: 15, phoneEveryYears: 3, newDevicesYear: 0, bottledWaterLDay: 0,
 };
 
 // Profil déjà engagé : vélo, végétarien, pas d'avion, reconditionné, mais un vol long-courrier par an.
