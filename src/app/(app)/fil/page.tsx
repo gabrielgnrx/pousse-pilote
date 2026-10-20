@@ -7,6 +7,9 @@ import { INTRO_COOKIE, PROOF_BUCKET } from "@/lib/constants";
 import { claimDailyRewards, getEngagement } from "@/lib/engagement-data";
 import { CompanyPulse, type Pulse } from "@/components/CompanyPulse";
 import { IntroCard } from "@/components/IntroCard";
+import { TeamWeekCard } from "@/components/TeamWeekCard";
+import type { TeamWeek } from "@/lib/team";
+import { parisOffset } from "@/lib/dates";
 import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
@@ -47,13 +50,17 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
     .eq("status", "valid");
   if (teamOnly) postsQuery = postsQuery.eq("team_id", profile.team_id as string);
 
-  const [{ data: posts }, me, { data: myReports }, { data: pulse }, cookieStore] = await Promise.all([
+  const [{ data: posts }, me, { data: myReports }, { data: pulse }, cookieStore, { data: teamWeek }] = await Promise.all([
     postsQuery.order("created_at", { ascending: false }).limit(30).returns<Post[]>(),
     getEngagement(supabase, user.id),
     supabase.from("reports").select("validation_id").eq("user_id", user.id),
     supabase.rpc("company_pulse"),
     cookies(),
+    profile.team_id ? supabase.rpc("my_team_week") : Promise.resolve({ data: null }),
   ]);
+  const week = teamWeek as TeamWeek | null;
+  const at = (local: string) => new Date(`${local}${parisOffset(new Date(`${local}Z`))}`).getTime();
+  const voteOpen = !!week && week.phase === "open" && Date.now() < at(week.closes_at);
   const showIntro = !cookieStore.get(INTRO_COOKIE);
 
   const ids = (posts ?? []).map((p) => p.id);
@@ -87,6 +94,8 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       ) : null}
 
       {pulse ? <CompanyPulse pulse={pulse as Pulse} total={me.points.total} today={me.today} /> : null}
+
+      {week ? <TeamWeekCard week={week} voteOpen={voteOpen} /> : null}
 
       <div id="publications" className="mt-0.5 flex scroll-mt-4 items-center justify-between gap-2">
         <h2 className="font-display text-xl font-bold">Fil d&apos;actu</h2>

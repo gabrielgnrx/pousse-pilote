@@ -19,18 +19,8 @@ export async function getWeeklyGoal(supabase: SupabaseClient): Promise<WeeklyGoa
   return error || !data ? null : (data as WeeklyGoal);
 }
 
-export interface Quiz {
-  id: number;
-  question: string;
-  choices: string[];
-  answered: boolean;
-  choice?: number;
-  answer?: number;
-  correct?: boolean;
-  explanation?: string;
-  answers?: number;
-  good?: number;
-}
+export type { Quiz } from "./quiz.ts";
+import type { Quiz } from "./quiz.ts";
 
 export async function getQuiz(supabase: SupabaseClient): Promise<Quiz | null> {
   const { data, error } = await supabase.rpc("today_quiz");

@@ -66,7 +66,7 @@ export async function getEngagement(supabase: SupabaseClient, userId: string): P
     quete: "Quêtes du jour réussies",
     serie: "Bonus de série",
     scan: "Meilleur choix au scanner",
-    quiz: "Bonne réponse au quiz",
+    quiz: "Quiz du jour",
     graine: "Graine mystère",
     collectif: "Défi collectif réussi",
     duel: "Duel réussi",

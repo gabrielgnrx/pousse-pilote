@@ -25,7 +25,7 @@ export const SPECIES: Species[] = [
   { key: "scan", name: "Tournesol", grownBy: "meilleurs choix au scanner", shape: "fleur", color: "#f2c230", accent: "#6b4a1e" },
   { key: "cap", name: "Cactus", grownBy: "habitudes gardées", shape: "cactus", color: "#7fa36a", accent: "#e98aa0" },
   { key: "bravo", name: "Coquelicot", grownBy: "bravos à tes collègues", shape: "fleur", color: "#d9432f", accent: "#2b2420" },
-  { key: "quiz", name: "Lavande", grownBy: "bonnes réponses au quiz", shape: "touffe", color: "#8f7ac0", accent: "#8f7ac0" },
+  { key: "quiz", name: "Lavande", grownBy: "quiz réussis (7/10 ou plus)", shape: "touffe", color: "#8f7ac0", accent: "#8f7ac0" },
 ];
 
 /** Seuils des 4 stades : 1 action pour germer, puis 5, 15 et 40. */

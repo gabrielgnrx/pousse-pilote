@@ -18,7 +18,7 @@ import {
 } from "./footprint.ts";
 
 /** Pousses hors défis (les défis ont leurs propres pousses, +5 avec preuve). */
-export const POINTS = { preuve: 5, maintien: 10, influence: 15, temoin: 3, quete: 15, scan: 5, quiz: 5, collectif: 30, duelSeul: 40, duelDeux: 25 } as const;
+export const POINTS = { preuve: 5, maintien: 10, influence: 15, temoin: 3, quete: 15, scan: 5, quiz: 1, collectif: 30, duelSeul: 40, duelDeux: 25 } as const;
 
 /** Paliers de série de jours actifs (bonus crédités par claim_daily_rewards, 0007_pousses.sql). */
 export const STREAK_MILESTONES = [
@@ -41,7 +41,8 @@ export const POINT_RULES: { label: string; points: string }[] = [
   { label: "Scanner : choisir une alternative mieux notée (3 par jour)", points: "+5" },
   { label: "Un collègue relève un défi grâce à ta publication", points: "+15" },
   { label: "Confirmer le défi d'un collègue", points: "+3" },
-  { label: "Bonne réponse au quiz du jour", points: "+5" },
+  { label: "Bonne réponse au quiz du jour (10 questions)", points: "+1" },
+  { label: "Quiz du jour à 8/10 ou plus", points: "+5" },
   { label: "Graine mystère (après les 3 quêtes du jour) : au hasard, ou une plante rare", points: "+5 à +20" },
   { label: "Défi collectif de la semaine atteint, si tu y as contribué", points: "+30" },
   { label: "Duel réussi : seul gagnant / tous les deux", points: "+40 / +25" },

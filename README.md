@@ -184,14 +184,21 @@ l'authentification et du stockage. Le scénario se joue sur une base neuve :
 
 ```bash
 createdb pousse_test
-for f in supabase/tests/supabase_stub.sql supabase/migrations/*.sql; do psql -d pousse_test -v ON_ERROR_STOP=1 -f "$f"; done
+# migrations jusqu'à 0013, puis les scénarios qui les testent
+for f in supabase/tests/supabase_stub.sql $(ls supabase/migrations/*.sql | awk -F/ '$3 < "0014"'); do psql -d pousse_test -v ON_ERROR_STOP=1 -f "$f"; done
 psql -d pousse_test -f supabase/tests/scenario.sql
 psql -d pousse_test -f supabase/tests/scenario_engagement.sql
 psql -d pousse_test -f supabase/tests/scenario_rappels.sql
 psql -d pousse_test -f supabase/tests/scenario_jeu.sql
 psql -d pousse_test -f supabase/tests/scenario_actions.sql
 psql -d pousse_test -f supabase/tests/scenario_qg.sql
+# puis le quiz quotidien (0014 et 0015) et son scénario
+for f in $(ls supabase/migrations/*.sql | awk -F/ '$3 >= "0014"'); do psql -d pousse_test -v ON_ERROR_STOP=1 -f "$f"; done
+psql -d pousse_test -f supabase/tests/scenario_quiz.sql
 ```
+
+La banque du quiz (`0015_quiz_banque.sql`) est générée : `node scripts/generate-quiz.ts > supabase/migrations/0015_quiz_banque.sql`.
+Toutes les questions sont calculées depuis `src/lib/co2/factors.ts` (ADEME), avec des choix proches pour rester difficiles.
 
 `scenario_actions.sql` (migration `0012_actions_libres.sql`) vérifie le bouton + : action enregistrée sans
 preuve, CO₂ tiré du bilan (0 kg si rien n'est remplacé), plafonds du jour, action comptée dans le défi en

@@ -4,13 +4,19 @@ import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/session";
 import type { Quiz } from "./data.ts";
 
-export async function answerQuiz(choice: number): Promise<Quiz | { error: string }> {
+export async function answerQuiz(question: number, choice: number): Promise<Quiz | { error: string }> {
   const { supabase } = await requireProfile();
-  const { data, error } = await supabase.rpc("answer_quiz", { p_choice: choice });
+  const { data, error } = await supabase.rpc("answer_quiz", { p_question: question, p_choice: choice });
   if (error) {
-    return { error: error.message.includes("already_answered") ? "Tu as déjà répondu aujourd'hui." : "Réponse non enregistrée, réessaie." };
+    return {
+      error: error.message.includes("already_answered")
+        ? "Tu as déjà répondu à cette question."
+        : error.message.includes("not_today")
+          ? "Cette question n'est plus celle du jour : recharge la page."
+          : "Réponse non enregistrée, réessaie.",
+    };
   }
-  revalidatePath("/fil");
+  revalidatePath("/informer");
   return data as Quiz;
 }
 

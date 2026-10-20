@@ -44,8 +44,9 @@ export default function ReglesPage() {
             (repas végé, trajets, scanner, quiz…). S&apos;il est atteint, +30 pour chaque personne qui y a contribué.</li>
           <li><strong>Duels.</strong> Défie un collègue sur 7 jours. Seules les actions avec preuve comptent. Les deux
             réussissent : +25 chacun ; un seul : +40. Personne ne perd de pousses.</li>
-          <li><strong>Quiz du jour.</strong> Une question, la même pour toute l&apos;entreprise : +5 si c&apos;est juste,
-            et ça compte pour ta série.</li>
+          <li><strong>Quiz du jour.</strong> 10 questions difficiles, les mêmes pour toute l&apos;entreprise, jamais
+            déjà posées : +1 par bonne réponse, +5 de bonus à 8/10 ou plus. 7/10 ou plus compte comme un quiz réussi
+            pour les défis d&apos;équipe.</li>
           <li><strong>Graine mystère.</strong> Quand tes 3 quêtes du jour sont faites : +5, +10, +20 pousses ou une
             plante rare pour ton jardin.</li>
           <li><strong>Jardin.</strong> Chaque type d&apos;action fait pousser une espèce (4 stades), les exploits
