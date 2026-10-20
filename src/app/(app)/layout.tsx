@@ -6,7 +6,7 @@ import { getEngagement } from "@/lib/engagement-data";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { supabase, user, profile } = await requireProfile();
 
-  const [{ data: company }, { data: team }, { count: pending }, me] = await Promise.all([
+  const [{ data: company }, { data: team }, { count: toConfirm }, { count: unseen }, me] = await Promise.all([
     supabase.from("companies").select("name").eq("id", profile.company_id).single(),
     profile.team_id
       ? supabase.from("teams").select("name").eq("id", profile.team_id).single()
@@ -16,8 +16,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       .select("id", { count: "exact", head: true })
       .eq("witness_id", user.id)
       .eq("witness_status", "pending"),
+    supabase.from("alerts").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("seen_at", null),
     getEngagement(supabase, user.id),
   ]);
+
+  const pending = (toConfirm ?? 0) + (unseen ?? 0);
 
   return (
     <div className="mx-auto min-h-dvh max-w-md pb-28">
@@ -32,7 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {pending ? (
             <Link
               href="/notifications"
-              aria-label={`Notifications, ${pending} en attente`}
+              aria-label={`Notifications, ${pending} nouvelle${pending > 1 ? "s" : ""}`}
               className="relative flex size-10 items-center justify-center rounded-full bg-sable"
             >
               <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a4030" strokeWidth="1.8">

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireProfile } from "@/lib/session";
 import { TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
 import { formatDay, relativeTime } from "@/lib/dates";
@@ -20,14 +21,46 @@ export default async function NotificationsPage() {
   const select =
     "id, template_id, units, kg, day, created_at, witness_status, author:profiles!validations_user_id_fkey(display_name), witness:profiles!validations_witness_id_fkey(display_name)";
 
-  const [{ data: toConfirm }, { data: answered }] = await Promise.all([
+  const [{ data: toConfirm }, { data: answered }, { data: alerts }] = await Promise.all([
     supabase.from("validations").select(select).eq("witness_id", user.id).eq("witness_status", "pending").order("created_at", { ascending: false }).returns<Row[]>(),
     supabase.from("validations").select(select).eq("user_id", user.id).in("witness_status", ["confirmed", "denied"]).order("created_at", { ascending: false }).limit(10).returns<Row[]>(),
+    supabase
+      .from("alerts")
+      .select("id, title, body, url, created_at, seen_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .returns<{ id: number; title: string; body: string; url: string; created_at: string; seen_at: string | null }[]>(),
   ]);
+  // Ouvrir la page vaut lecture : la pastille disparaît, et ces alertes ne partent plus en notification.
+  if ((alerts ?? []).some((a) => !a.seen_at)) await supabase.rpc("mark_alerts_seen");
 
   return (
     <>
       <h1 className="font-display text-2xl font-bold">Notifications</h1>
+
+      {(alerts ?? []).length ? (
+        <section className="flex flex-col gap-1">
+          <h2 className="label">Récentes</h2>
+          {(alerts ?? []).map((a) => (
+            <Link key={a.id} href={a.url} className="flex items-start gap-3 rounded-2xl px-1 py-2 active:bg-sable">
+              <span
+                aria-hidden="true"
+                className={`mt-1.5 size-2.5 shrink-0 rounded-full ${a.seen_at ? "bg-trait" : "bg-argile"}`}
+              />
+              <span className="flex-1">
+                <span className="block text-sm leading-snug font-bold">
+                  {a.title}
+                  {a.seen_at ? null : <span className="sr-only"> (nouvelle)</span>}
+                </span>
+                <span className="block text-sm text-brun">{a.body}</span>
+                <span className="block text-xs text-terre">{relativeTime(a.created_at)}</span>
+              </span>
+              <span aria-hidden="true" className="text-terre">›</span>
+            </Link>
+          ))}
+        </section>
+      ) : null}
 
       <section className="flex flex-col gap-3">
         <h2 className="label">À confirmer</h2>

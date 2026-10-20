@@ -1,5 +1,5 @@
-// Service worker de Pousse : page hors ligne et rappels (notifications push sans contenu).
-const CACHE = "pousse-v1";
+// Service worker de Pousse : page hors ligne, rappels et alertes (notifications push sans contenu).
+const CACHE = "pousse-v2";
 const OFFLINE = "/hors-ligne";
 
 self.addEventListener("install", (event) => {
@@ -23,7 +23,7 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("push", (event) => {
   event.waitUntil(
     (async () => {
-      let msg = { title: "Pousse", body: "Tes quêtes du jour t'attendent.", url: "/fil" };
+      let msg = { title: "Pousse", body: "Tes quêtes du jour t'attendent.", url: "/fil", tag: "rappel-du-jour" };
       try {
         const res = await fetch("/api/rappel", { credentials: "include", cache: "no-store" });
         if (res.ok) msg = { ...msg, ...(await res.json()) };
@@ -35,7 +35,7 @@ self.addEventListener("push", (event) => {
         body: msg.body,
         icon: "/icon-192.png",
         badge: "/badge-96.png",
-        tag: "rappel-du-jour",
+        tag: msg.tag,
         lang: "fr",
         data: { url: msg.url },
       });

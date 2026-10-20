@@ -123,6 +123,8 @@ export function sqlErrorMessage(message: string | undefined): string {
       return "C'est déjà noté pour cette semaine. Reviens lundi !";
     case "teletravail_conflict":
       return "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.";
+    case "team_locked":
+      return "Tu fais déjà partie d'une équipe. Pour en changer, demande à la personne qui pilote Pousse.";
     case "not_kept_habit":
       return "Cette habitude ne fait pas partie de ton bilan.";
     default:
