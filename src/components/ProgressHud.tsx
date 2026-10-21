@@ -57,16 +57,20 @@ export function ProgressHud({
   total,
   streak,
   notifications,
+  teamName,
 }: {
   initial: string;
   total: number;
   streak: number;
   notifications: number;
+  /** Le nom de ton équipe : l'onglet Équipe s'appelle « QG <équipe> ». */
+  teamName: string | null;
 }) {
   const path = usePathname();
   const level = levelFor(total);
   const pousses = Math.round(useCountUp(total, "pousse.hud.total"));
-  const title = TITLES.find((t) => path === t.prefix || path.startsWith(`${t.prefix}/`))?.title ?? "Pousse";
+  const found = TITLES.find((t) => path === t.prefix || path.startsWith(`${t.prefix}/`))?.title ?? "Pousse";
+  const title = path === "/equipes" ? (teamName ? `QG ${teamName}` : "QG de l'équipe") : found;
 
   return (
     <header className="flex items-center gap-2.5 px-4 pt-3.5 pb-3">
