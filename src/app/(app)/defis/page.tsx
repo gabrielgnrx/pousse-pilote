@@ -165,7 +165,7 @@ export default async function DefisPage({
           ) : (
             <div className="card flex flex-col gap-2 text-center">
               <p className="font-display text-lg font-bold">Aucun défi en cours</p>
-              <p className="text-sm text-brun">Choisis une action adaptée à ton bilan et essaie-le quelques jours, seul, en duel ou en équipe.</p>
+              <p className="text-sm text-brun">Choisis une action adaptée à ton bilan et essaie-la quelques jours, seul, en duel ou en équipe.</p>
             </div>
           )}
 
