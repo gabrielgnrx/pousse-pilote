@@ -13,3 +13,17 @@ export async function keepHabit(form: FormData) {
   if (error) redirect(`/defis?erreur=${encodeURIComponent(sqlErrorMessage(error.message))}`);
   redirect("/defis?garde=1");
 }
+
+/** Annuler un défi en cours (il disparaît de Mon plan ; ce qui a été validé reste compté). */
+export async function cancelChallenge(form: FormData) {
+  const { supabase, user } = await requireProfile();
+  const id = String(form.get("challenge") ?? "");
+  await supabase
+    .from("user_challenges")
+    .update({ status: "abandoned" })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .eq("status", "active");
+  revalidatePath("/defis");
+  revalidatePath("/fil");
+}

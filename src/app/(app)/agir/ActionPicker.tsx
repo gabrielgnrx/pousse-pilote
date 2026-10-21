@@ -191,9 +191,8 @@ export function ActionPicker({
         </>
       )}
 
-      <Link href="/defis?onglet=catalogue" className="flex items-center gap-3 rounded-2xl border-[1.5px] border-dashed border-[#c7b78c] px-4 py-3">
-        <span className="flex-1 text-sm text-brun">Envie d&apos;un objectif sur plusieurs jours, seul ou à plusieurs ?</span>
-        <span className="text-sm font-bold text-sapin">Lancer un défi ›</span>
+      <Link href="/defis?onglet=catalogue" className="self-center py-2 text-center text-[13px] font-semibold text-argile-fonce underline underline-offset-2">
+        Un objectif sur plusieurs jours ? C&apos;est dans Mon plan
       </Link>
 
       <p className="text-center text-xs text-terre">

@@ -18,7 +18,7 @@ const LEFT: Tab[] = [
   {
     href: "/defis",
     label: "Mon plan",
-    also: ["/bilan"],
+    also: ["/duels"],
     icon: (
       <>
         <path d="M12 21v-9" />
@@ -33,7 +33,7 @@ const RIGHT: Tab[] = [
   {
     href: "/informer",
     label: "S'informer",
-    also: ["/scanner"],
+    also: ["/scanner", "/quiz"],
     icon: (
       <>
         <path d="M9 18h6M10 21h4" />
@@ -44,7 +44,6 @@ const RIGHT: Tab[] = [
   {
     href: "/equipes",
     label: "Équipe",
-    also: ["/duels"],
     icon: (
       <>
         <circle cx="9" cy="8" r="3.5" />

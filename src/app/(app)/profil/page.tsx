@@ -7,12 +7,29 @@ import { SubmitButton } from "@/components/ui";
 import { getEngagement } from "@/lib/engagement-data";
 import { RecentGains } from "@/components/RecentGains";
 import { PhoneCard } from "./PhoneCard";
+import { InstallPrompt } from "@/components/InstallPrompt";
+import type { Footprint } from "@/lib/co2/footprint.ts";
+
+const FP_PARTS: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
+  { key: "transport", label: "Transports", color: "#f0a97b" },
+  { key: "alimentation", label: "Alimentation", color: "#b5c890" },
+  { key: "logement", label: "Chauffage", color: "#e9c9a3" },
+  { key: "consommation", label: "Achats", color: "#8fa06a" },
+  { key: "services", label: "Services publics", color: "#6f7d52" },
+];
 
 export default async function ProfilPage() {
   const { supabase, user, profile } = await requireProfile();
-  const [e, { count: doneChallenges }] = await Promise.all([
+  const [e, { count: doneChallenges }, { data: fp }] = await Promise.all([
     getEngagement(supabase, user.id),
     supabase.from("user_challenges").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "done"),
+    supabase
+      .from("footprints")
+      .select("total_kg, by_category")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ total_kg: number; by_category: Footprint["byCategory"] }>(),
   ]);
 
   return (
@@ -26,10 +43,47 @@ export default async function ProfilPage() {
           <p className="text-sm text-terre">{user.email}</p>
         </div>
       </section>
-      <div className="flex gap-2">
-        <Link href="/notifications" className="btn-ghost min-h-11 flex-1 px-3 text-sm">Notifications</Link>
-        <Link href="/jardin" className="btn-ghost min-h-11 flex-1 px-3 text-sm">Mon jardin</Link>
-      </div>
+
+      {fp ? (
+        <Link href="/bilan" className="card flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-display text-lg font-bold">Mon bilan</span>
+            <span className="font-display text-lg font-bold">
+              {(Number(fp.total_kg) / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} t/an
+            </span>
+          </div>
+          <div className="flex h-3 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
+            {FP_PARTS.map((c) => (
+              <div key={c.key} style={{ width: `${(Number(fp.by_category[c.key]) / Number(fp.total_kg)) * 100}%`, background: c.color }} />
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-brun">
+            {FP_PARTS.filter((c) => c.key !== "services").map((c) => (
+              <span key={c.key} className="flex items-center gap-1">
+                <span className="size-2.5 rounded-sm" style={{ background: c.color }} aria-hidden="true" />
+                {c.label} {Math.round((Number(fp.by_category[c.key]) / Number(fp.total_kg)) * 100)} %
+              </span>
+            ))}
+          </div>
+          {e.kgAvoided > 0 ? (
+            <span className="rounded-xl bg-[#e3edd9] px-3 py-2 text-[13px] font-bold text-[#22502c]">−{formatKg(e.kgAvoided)} évités grâce à tes gestes</span>
+          ) : null}
+          <span className="text-sm font-bold underline underline-offset-2">Le détail et comment le réduire ›</span>
+        </Link>
+      ) : null}
+
+      <nav aria-label="Mon espace" className="flex flex-col overflow-hidden rounded-[20px] border border-encre/10 bg-papier">
+        {[
+          { href: "/jardin", label: "Mon jardin" },
+          { href: "/notifications", label: "Notifications" },
+          { href: "/regles", label: "Le barème des pousses" },
+        ].map((l, i) => (
+          <Link key={l.href} href={l.href} className={`flex min-h-[52px] items-center justify-between px-4 text-[15px] font-semibold ${i ? "border-t border-encre/10" : ""}`}>
+            {l.label}
+            <span aria-hidden="true" className="text-terre">›</span>
+          </Link>
+        ))}
+      </nav>
 
       <section id="pousses" className="card flex scroll-mt-4 flex-col gap-3">
         <div className="flex items-baseline justify-between">
@@ -65,17 +119,6 @@ export default async function ProfilPage() {
           ))}
         </ul>
       </section>
-
-      <div className="grid grid-cols-2 gap-2.5">
-        <Link href="/jardin" className="flex items-center gap-2 rounded-[18px] border border-encre/10 bg-papier px-3.5 py-3">
-          <span aria-hidden="true" className="text-xl">🌻</span>
-          <span className="text-sm font-bold">Mon jardin</span>
-        </Link>
-        <Link href="/duels" className="flex items-center gap-2 rounded-[18px] border border-encre/10 bg-papier px-3.5 py-3">
-          <span aria-hidden="true" className="text-xl">⚔</span>
-          <span className="text-sm font-bold">Mes duels</span>
-        </Link>
-      </div>
 
       <RecentGains items={e.recent.slice(0, 8)} />
 
@@ -128,6 +171,15 @@ export default async function ProfilPage() {
         <Link href="/confidentialite" className="font-bold underline">Politique de confidentialité</Link>
         <Link href="/methodologie" className="font-bold underline">Méthodologie de calcul</Link>
       </section>
+
+      <InstallPrompt />
+      <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
+        <span className="flex-1">
+          <span className="block text-sm font-bold">30 secondes pour améliorer Pousse ?</span>
+          <span className="block text-xs text-[#5a4324]">3 questions sur ta semaine</span>
+        </span>
+        <span className="btn-primary min-h-10 px-4 text-sm">Répondre</span>
+      </Link>
 
       <form action={signOut}>
         <button type="submit" className="btn-ghost w-full">Se déconnecter</button>

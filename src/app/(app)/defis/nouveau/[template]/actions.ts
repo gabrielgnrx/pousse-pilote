@@ -79,5 +79,5 @@ export async function createChallenge(_prev: { error?: string }, form: FormData)
     }
     redirect("/duels?lance=1");
   }
-  redirect("/fil?defi=1");
+  redirect("/defis?cree=1");
 }

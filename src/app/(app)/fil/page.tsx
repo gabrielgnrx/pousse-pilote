@@ -6,17 +6,12 @@ import { relativeTime } from "@/lib/dates";
 import { INTRO_COOKIE, PROOF_BUCKET } from "@/lib/constants";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { IntroCard } from "@/components/IntroCard";
-import { TeamWeekCard } from "@/components/TeamWeekCard";
-import type { TeamWeek } from "@/lib/team";
-import { parisOffset } from "@/lib/dates";
-import { getDuels, getQuiz, getWeeklyGoal } from "@/lib/game/data.ts";
-import { QuizPopup } from "@/components/QuizPopup";
+import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
+import { CompanyHero, type CompanyPulse } from "@/components/CompanyHero";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
-import { cancelChallenge, reportPost, setFeedSharing, toggleCheer } from "./actions";
-import { ActiveChallenges } from "@/components/ActiveChallenges";
-import { DuelStrip } from "@/components/DuelStrip";
-import { formatDay, todayParis } from "@/lib/dates";
+import { reportPost, setFeedSharing, toggleCheer } from "./actions";
+import { formatDay } from "@/lib/dates";
 
 interface Post {
   id: string;
@@ -36,11 +31,12 @@ interface Post {
 const AVATAR = ["#b9d3e8", "#f0a97b", "#d7e3c8", "#f6d9a8", "#e3c9e8", "#ecddbb"];
 const avatarColor = (id: string) => AVATAR[parseInt(id.replace(/-/g, "").slice(-2), 16) % AVATAR.length];
 
-export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string; vue?: string; defi?: string }> }) {
-  const { publie, vue, defi } = await searchParams;
+export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string; vue?: string }> }) {
+  const { publie, vue } = await searchParams;
   const { supabase, user, profile } = await requireHabits();
-  // Tout ce qui crédite des pousses passe avant le total affiché : bonus du jour, défi collectif, duels terminés.
-  const [daily, weekly, duels] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
+  // Tout ce qui crédite des pousses passe avant le total affiché : bonus du jour, défi collectif, duels terminés
+  // (getDuels solde les duels finis). Les défis et les duels eux-mêmes s'affichent dans Mon plan.
+  const [daily, weekly] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
 
   const teamOnly = vue === "equipe" && !!profile.team_id;
   let postsQuery = supabase
@@ -53,43 +49,13 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
     .eq("status", "valid");
   if (teamOnly) postsQuery = postsQuery.eq("team_id", profile.team_id as string);
 
-  const today = todayParis();
-  const [{ data: posts }, { data: myReports }, cookieStore, { data: teamWeek }, { data: mine }, quiz, { data: challengeEvents }] = await Promise.all([
+  const [{ data: posts }, { data: myReports }, cookieStore, { data: pulse }, { data: challengeEvents }] = await Promise.all([
     postsQuery.order("created_at", { ascending: false }).limit(30).returns<Post[]>(),
     supabase.from("reports").select("validation_id").eq("user_id", user.id),
     cookies(),
-    profile.team_id ? supabase.rpc("my_team_week") : Promise.resolve({ data: null }),
-    supabase
-      .from("user_challenges")
-      .select("id, template_id, variant, target, ends_on")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .gte("ends_on", today)
-      .order("ends_on"),
-    getQuiz(supabase),
+    supabase.rpc("company_pulse"),
     supabase.rpc("company_challenge_feed", { p_team_only: teamOnly }),
   ]);
-  // Mes défis en cours, avec leur avancée et le duel qui leur est lié.
-  const challengeIds = (mine ?? []).map((c) => c.id as string);
-  const { data: progress } = challengeIds.length
-    ? await supabase.from("validations").select("challenge_id, units").in("challenge_id", challengeIds).eq("status", "valid")
-    : { data: [] as { challenge_id: string; units: number }[] };
-  const activeChallenges = (mine ?? []).map((c) => {
-    const t = TEMPLATE_BY_ID[c.template_id as string];
-    const duel = duels.find((d) => d.challenge_id === c.id && ["pending", "active"].includes(d.status));
-    return {
-      id: c.id as string,
-      title: t ? actionTitle(t.id, c.variant as string) : "Défi",
-      unit: t?.unit ?? { one: "fois", many: "fois" },
-      done: (progress ?? []).filter((p) => p.challenge_id === c.id).reduce((s, p) => s + Number(p.units), 0),
-      target: Number(c.target),
-      endsOn: formatDay(c.ends_on as string, "short"),
-      duel: duel ? { other: duel.other_name, theirs: duel.theirs, status: duel.status } : null,
-    };
-  });
-  const week = teamWeek as TeamWeek | null;
-  const at = (local: string) => new Date(`${local}${parisOffset(new Date(`${local}Z`))}`).getTime();
-  const voteOpen = !!week && week.phase === "open" && Date.now() < at(week.closes_at);
   const showIntro = !cookieStore.get(INTRO_COOKIE);
 
   const ids = (posts ?? []).map((p) => p.id);
@@ -127,12 +93,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
 
   return (
     <>
-      {quiz?.current ? <QuizPopup quiz={quiz} day={today} /> : null}
-      {defi ? (
-        <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
-          Défi lancé ! Il est juste en dessous : enregistre chaque fois que tu le fais avec le bouton +.
-        </p>
-      ) : null}
+      <h1 className="sr-only">Accueil</h1>
       {publie ? (
         <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
           Publié ! Tes collègues peuvent maintenant t&apos;encourager.
@@ -150,12 +111,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         </p>
       ) : null}
 
-
-      {week ? <TeamWeekCard week={week} voteOpen={voteOpen} /> : null}
-
-      <DuelStrip duels={duels.filter((d) => d.status === "pending" && d.role === "opponent")} />
-
-      <ActiveChallenges items={activeChallenges} cancel={cancelChallenge} />
+      {pulse ? <CompanyHero pulse={pulse as CompanyPulse} /> : null}
 
       {!profile.feed_choice_at ? (
         <section aria-labelledby="partage" className="flex flex-col gap-2.5 rounded-[18px] border-2 border-sapin bg-papier p-4">

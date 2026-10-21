@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { formatKg } from "@/lib/co2/challenges.ts";
 import { levelFor } from "@/lib/co2/engagement.ts";
 
 /** Fait défiler un nombre depuis la dernière valeur vue sur cet appareil. */
@@ -34,123 +34,102 @@ function useCountUp(target: number, storageKey: string) {
   return shown;
 }
 
-const RING = 2 * Math.PI * 23;
+const RING = 2 * Math.PI * 19;
+
+/** Le titre affiché à côté de l'avatar, pour les 4 onglets de la barre du bas. */
+const TITLES: { prefix: string; title: string }[] = [
+  { prefix: "/fil", title: "Pousse" },
+  { prefix: "/defis", title: "Mon plan" },
+  { prefix: "/duels", title: "Mon plan" },
+  { prefix: "/informer", title: "S'informer" },
+  { prefix: "/scanner", title: "S'informer" },
+  { prefix: "/quiz", title: "S'informer" },
+  { prefix: "/equipes", title: "Équipe" },
+];
 
 /**
- * La barre du haut, façon jeu : ton niveau autour de ton avatar, tes pousses, ta série,
- * et juste en dessous la jauge de toute l'entreprise. Présente sur toutes les pages.
+ * La barre du haut, identique sur toutes les pages : l'avatar (ton niveau en anneau) qui ouvre ton profil,
+ * le nom de la rubrique, et un seul compteur pour le jeu : tes pousses et ta série.
+ * La jauge de l'entreprise vit sur l'accueil (CompanyHero), plus ici.
  */
 export function ProgressHud({
   initial,
   total,
   streak,
   notifications,
-  company,
 }: {
   initial: string;
   total: number;
   streak: number;
   notifications: number;
-  company: { name: string; kg: number; goalKg: number } | null;
 }) {
+  const path = usePathname();
   const level = levelFor(total);
   const pousses = Math.round(useCountUp(total, "pousse.hud.total"));
-  const kg = useCountUp(company?.kg ?? 0, "pousse.hud.kg");
-  const pct = company && company.goalKg > 0 ? Math.min(100, (company.kg / company.goalKg) * 100) : 0;
+  const title = TITLES.find((t) => path === t.prefix || path.startsWith(`${t.prefix}/`))?.title ?? "Pousse";
 
   return (
-    <header className="flex flex-col gap-2.5 px-4 pt-3.5 pb-2">
-      <div className="flex items-center gap-2.5">
-        <Link
-          href="/profil"
-          aria-label={`Ton profil : niveau ${level.index + 1}, ${level.name}, ${total} pousses${level.next ? ` sur ${level.next.min}` : ""}`}
-          className="relative size-[52px] shrink-0"
-        >
-          <svg aria-hidden="true" width="52" height="52" viewBox="0 0 52 52" className="absolute inset-0">
-            <circle cx="26" cy="26" r="23" fill="none" stroke="#e6dcc6" strokeWidth="5" />
-            <circle
-              cx="26"
-              cy="26"
-              r="23"
-              fill="none"
-              stroke="#2f6b3a"
-              strokeWidth="5"
-              strokeLinecap="round"
-              strokeDasharray={RING}
-              strokeDashoffset={RING * (1 - Math.max(0.03, level.progress))}
-              transform="rotate(-90 26 26)"
-              className="transition-[stroke-dashoffset] duration-1000"
-            />
+    <header className="flex items-center gap-2.5 px-4 pt-3.5 pb-3">
+      <Link
+        href="/profil"
+        aria-label={`Ton profil : niveau ${level.index + 1}, ${level.name}, ${total} pousses${level.next ? ` sur ${level.next.min}` : ""}`}
+        className="relative size-11 shrink-0"
+      >
+        <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" className="absolute inset-0">
+          <circle cx="22" cy="22" r="19" fill="none" stroke="#e6dcc6" strokeWidth="4" />
+          <circle
+            cx="22"
+            cy="22"
+            r="19"
+            fill="none"
+            stroke="#2f6b3a"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeDasharray={RING}
+            strokeDashoffset={RING * (1 - Math.max(0.03, level.progress))}
+            transform="rotate(-90 22 22)"
+            className="transition-[stroke-dashoffset] duration-1000"
+          />
+        </svg>
+        <span className="absolute inset-[6px] flex items-center justify-center rounded-full bg-abricot font-display text-[15px] font-bold text-[#402a16]">
+          {initial}
+        </span>
+      </Link>
+
+      <p className="min-w-0 flex-1 truncate font-display text-2xl font-bold">{title}</p>
+
+      <Link
+        href="/profil#pousses"
+        aria-label={`${total} pousses, série de ${streak} jour${streak > 1 ? "s" : ""} d'affilée`}
+        className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-sable px-3 text-sm font-bold text-encre"
+      >
+        <span className="flex items-center gap-1 tabular-nums">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2f6b3a" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 21v-9" />
+            <path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" />
+            <path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" />
           </svg>
-          <span className="absolute inset-[7px] flex items-center justify-center rounded-full bg-abricot font-display text-[17px] font-bold text-[#402a16]">
-            {initial}
-          </span>
-          <span className="absolute -right-1 -bottom-0.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#f4e8d0] bg-sapin px-1 text-[11px] font-bold text-sapin-clair">
-            {level.index + 1}
-          </span>
-        </Link>
-
-        <Link href="/jardin" className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-[11px] font-bold tracking-[0.06em] text-[#5e4630] uppercase">
-            Niveau {level.index + 1} · {level.name}
-          </span>
-          <span className="flex items-baseline gap-1">
-            <span className="font-display text-xl font-bold tabular-nums">{pousses.toLocaleString("fr-FR")}</span>
-            <span className="truncate text-xs text-terre">
-              {level.next ? `/ ${level.next.min.toLocaleString("fr-FR")} pousses` : "pousses · niveau max"}
-            </span>
-          </span>
-        </Link>
-
-        <Link
-          href="/profil#pousses"
-          aria-label={`Série de ${streak} jour${streak > 1 ? "s" : ""} d'affilée`}
-          className="flex h-[38px] items-center gap-1.5 rounded-full bg-sable px-3 text-sm font-bold text-brun"
-        >
+          {pousses.toLocaleString("fr-FR")}
+        </span>
+        <span aria-hidden="true" className="h-4 w-px bg-[#cdbf9f]" />
+        <span className="flex items-center gap-1">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill={streak > 0 ? "#f0a97b" : "none"} stroke="#c15f2c" strokeWidth="2">
             <path d="M12 2c2 4-2 5-2 8a4 4 0 1 0 8 0c0-2-1-3-2-4 1 3-1 4-2 3 1-2-1-3-2-7Z" />
           </svg>
-          {streak}
-        </Link>
-        <Link
-          href="/notifications"
-          aria-label={notifications ? `Notifications, ${notifications} nouvelle${notifications > 1 ? "s" : ""}` : "Notifications"}
-          className="relative flex size-[38px] shrink-0 items-center justify-center rounded-full bg-sable"
-        >
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a4030" strokeWidth="1.8">
-            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-          </svg>
-          {notifications ? <span className="absolute top-1.5 right-2 size-2.5 rounded-full bg-argile" /> : null}
-        </Link>
-      </div>
-
-      {company ? (
-        <Link href="/equipes/classement" className="flex items-center gap-2.5 rounded-[14px] bg-[#2f5b36] px-3 py-2 text-[#f7f1e3]">
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cfe3c4" strokeWidth="2" strokeLinecap="round">
-            <path d="M3 21h18M5 21V10l7-6 7 6v11" />
-            <path d="M10 21v-5h4v5" />
-          </svg>
-          <span className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="flex justify-between gap-2 text-xs">
-              <span className="truncate font-bold">
-                {company.name} · <span className="tabular-nums">{formatKg(kg)}</span> de CO₂ évités (déclaré)
-              </span>
-              <span className="shrink-0 text-[#cfe3c4]">{Math.round(pct)} %</span>
-            </span>
-            <span
-              className="h-1.5 overflow-hidden rounded-full bg-white/[0.18]"
-              role="progressbar"
-              aria-label={`Objectif de l'entreprise : ${formatKg(company.goalKg)}`}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(pct)}
-            >
-              <span className="block h-full rounded-full bg-abricot transition-[width] duration-1000" style={{ width: `${Math.max(pct, company.kg > 0 ? 3 : 0)}%` }} />
-            </span>
-          </span>
-        </Link>
-      ) : null}
+          {streak} j
+        </span>
+      </Link>
+      <Link
+        href="/notifications"
+        aria-label={notifications ? `Notifications, ${notifications} nouvelle${notifications > 1 ? "s" : ""}` : "Notifications"}
+        className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-sable"
+      >
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a4030" strokeWidth="1.8">
+          <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+        </svg>
+        {notifications ? <span className="absolute top-1.5 right-2 size-2.5 rounded-full bg-argile" /> : null}
+      </Link>
     </header>
   );
 }

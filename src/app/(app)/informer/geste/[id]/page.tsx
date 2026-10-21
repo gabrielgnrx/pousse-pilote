@@ -16,7 +16,7 @@ export default async function FicheGestePage({ params }: { params: Promise<{ id:
 
   return (
     <>
-      <Link href="/defis?onglet=catalogue" className="flex size-11 items-center justify-center rounded-full bg-papier" aria-label="Retour à Mon plan">
+      <Link href="/informer#fiches" className="flex size-11 items-center justify-center rounded-full bg-papier" aria-label="Retour à S'informer">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m15 6-6 6 6 6" /></svg>
       </Link>
 

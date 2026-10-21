@@ -11,18 +11,19 @@ export interface ActiveChallenge {
   endsOn: string;
   /** Duel lié au défi : adversaire et score. */
   duel: { other: string; theirs: number; status: string } | null;
+  /** Où enregistrer une fois de plus (le bouton +, ou directement le reçu pour un achat). */
+  href?: string;
+  /** Pour un défi lancé seul : la page qui le passe en duel. */
+  duelHref?: string;
 }
 
-/** Sur l'accueil : mes défis en cours, avec de quoi avancer… ou annuler. */
+/** Dans Mon plan : mes défis en cours, avec de quoi avancer… ou annuler. */
 export function ActiveChallenges({ items, cancel }: { items: ActiveChallenge[]; cancel: (form: FormData) => Promise<void> }) {
   const [confirm, setConfirm] = useState<string | null>(null);
   if (!items.length) return null;
   return (
     <section className="flex flex-col gap-2" aria-labelledby="mes-defis">
-      <div className="flex items-baseline justify-between">
-        <h2 id="mes-defis" className="font-display text-xl font-bold">Mes défis en cours</h2>
-        <Link href="/defis?onglet=catalogue" className="text-xs font-bold underline underline-offset-2">+ Défi</Link>
-      </div>
+      <h2 id="mes-defis" className="font-display text-xl font-bold">Mes défis en cours</h2>
       {items.map((c) => {
         const pct = Math.min(100, (c.done / c.target) * 100);
         return (
@@ -64,7 +65,7 @@ export function ActiveChallenges({ items, cancel }: { items: ActiveChallenge[]; 
               </div>
             ) : (
               <div className="flex gap-2">
-                <Link href="/agir" className="flex h-10 flex-1 items-center justify-center rounded-xl bg-[#2f5b36] text-[13px] font-bold text-[#f7f1e3]">
+                <Link href={c.href ?? "/agir"} className="flex h-10 flex-1 items-center justify-center rounded-xl bg-[#2f5b36] text-[13px] font-bold text-[#f7f1e3]">
                   Je l&apos;ai fait
                 </Link>
                 <button
@@ -76,6 +77,11 @@ export function ActiveChallenges({ items, cancel }: { items: ActiveChallenge[]; 
                 </button>
               </div>
             )}
+            {c.duelHref && confirm !== c.id ? (
+              <Link href={c.duelHref} className="self-end text-xs font-bold text-sapin underline underline-offset-2">
+                Passer en duel · ×1,5 ›
+              </Link>
+            ) : null}
           </article>
         );
       })}

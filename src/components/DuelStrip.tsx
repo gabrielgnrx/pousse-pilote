@@ -3,7 +3,7 @@ import type { Duel } from "@/lib/game/data.ts";
 import { duelUnits } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
 
-/** Sur l'accueil : les invitations à un duel et les duels en cours, en une ligne chacun. */
+/** Dans Mon plan : les invitations à un duel et les duels en cours, en une ligne chacun. */
 export function DuelStrip({ duels }: { duels: Duel[] }) {
   const invites = duels.filter((d) => d.status === "pending" && d.role === "opponent");
   const active = duels.filter((d) => d.status === "active");

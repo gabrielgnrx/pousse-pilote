@@ -9,15 +9,16 @@ import {
   templateEligibility,
   verbOf,
 } from "@/lib/co2/challenges.ts";
-import type { Footprint } from "@/lib/co2/footprint.ts";
 import { formatDay, todayParis } from "@/lib/dates";
 import { POINTS, keptHabits } from "@/lib/co2/engagement.ts";
 import { getEngagement } from "@/lib/engagement-data";
-import { keepHabit } from "./actions";
+import { cancelChallenge, keepHabit } from "./actions";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { DailyQuests } from "@/components/DailyQuests";
-import { InstallPrompt } from "@/components/InstallPrompt";
-import { getDuels, getQuiz } from "@/lib/game/data.ts";
+import { getDuels } from "@/lib/game/data.ts";
+import { ActiveChallenges } from "@/components/ActiveChallenges";
+import { DuelStrip } from "@/components/DuelStrip";
+import { actionTitle } from "@/lib/actions-catalog";
 import { BONUS, MODES, fmtMult } from "@/lib/boosts";
 import { TEAM_KINDS, type TeamWeek } from "@/lib/team";
 
@@ -30,14 +31,6 @@ interface ChallengeRow {
   status: string;
 }
 
-const FP_PARTS: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
-  { key: "transport", label: "Transports", color: "#f0a97b" },
-  { key: "alimentation", label: "Alimentation", color: "#b5c890" },
-  { key: "logement", label: "Chauffage", color: "#e9c9a3" },
-  { key: "consommation", label: "Achats", color: "#8fa06a" },
-  { key: "services", label: "Services publics", color: "#6f7d52" },
-];
-
 export default async function DefisPage({
   searchParams,
 }: {
@@ -48,7 +41,7 @@ export default async function DefisPage({
   const { supabase, user, profile, habits } = await requireHabits();
   const today = todayParis();
 
-  const [{ data: challenges }, { data: validations }, engagement, { data: fp }, daily, quiz] = await Promise.all([
+  const [{ data: challenges }, { data: validations }, engagement, daily] = await Promise.all([
     supabase
       .from("user_challenges")
       .select("id, template_id, variant, target, ends_on, status")
@@ -62,15 +55,7 @@ export default async function DefisPage({
       .eq("user_id", user.id)
       .eq("status", "valid"),
     getEngagement(supabase, user.id),
-    supabase
-      .from("footprints")
-      .select("total_kg, by_category")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle<{ total_kg: number; by_category: Footprint["byCategory"] }>(),
     claimDailyRewards(supabase),
-    getQuiz(supabase),
   ]);
   const [duels, { data: teamWeekData }] = await Promise.all([
     getDuels(supabase),
@@ -91,8 +76,24 @@ export default async function DefisPage({
     p.kg += Number(v.kg);
     progress.set(v.challenge_id, p);
   }
-  const todayUnits = (ids: string[]) =>
-    (validations ?? []).filter((v) => v.day === today && ids.includes(v.template_id)).reduce((s, v) => s + v.units, 0);
+  // Mes défis en cours, avec leur avancée et le duel qui leur est lié ; les réussis, à part.
+  const active = (challenges ?? []).filter((c) => c.status === "active" && c.ends_on >= today);
+  const succeeded = (challenges ?? []).filter((c) => c.status === "done").slice(0, 5);
+  const activeChallenges = active.map((c) => {
+    const t = TEMPLATE_BY_ID[c.template_id];
+    const d = duelOf(c.id);
+    return {
+      id: c.id,
+      title: t ? actionTitle(t.id, c.variant) : "Défi",
+      unit: t?.unit ?? { one: "fois", many: "fois" },
+      done: progress.get(c.id)?.units ?? 0,
+      target: Number(c.target),
+      endsOn: formatDay(c.ends_on, "short"),
+      duel: d ? { other: d.other_name, theirs: d.theirs, status: d.status } : null,
+      href: t?.requiresReceipt ? `/agir?ajout=${t.id}:${c.variant}` : "/agir",
+      duelHref: d ? undefined : `/defis/${c.id}/duel`,
+    };
+  });
 
   const catalog = TEMPLATES.map((t) => ({ t, e: templateEligibility(t, habits) }));
   const eligible = catalog.filter((c) => c.e.eligible && c.t.level !== "expert");
@@ -103,55 +104,7 @@ export default async function DefisPage({
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Mon plan</h1>
-        <Link href="/defis?onglet=catalogue" className="btn-primary min-h-11 px-4 text-sm">+ Défi</Link>
-      </div>
-
-      {fp ? (
-        <Link href="/bilan" className="card flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="text-sm text-terre">Mon empreinte</span>
-            <span className="text-sm font-bold">
-              {(Number(fp.total_kg) / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} t/an
-              {engagement.kgAvoided > 0 ? <span className="text-sapin"> · −{formatKg(engagement.kgAvoided)} évités</span> : null}
-            </span>
-          </div>
-          <div className="flex h-3 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
-            {FP_PARTS.map((c) => (
-              <div key={c.key} style={{ width: `${(Number(fp.by_category[c.key]) / Number(fp.total_kg)) * 100}%`, background: c.color }} />
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-brun">
-            {FP_PARTS.filter((c) => c.key !== "services").map((c) => (
-              <span key={c.key} className="flex items-center gap-1">
-                <span className="size-2.5 rounded-sm" style={{ background: c.color }} aria-hidden="true" />
-                {c.label} {Math.round((Number(fp.by_category[c.key]) / Number(fp.total_kg)) * 100)} %
-              </span>
-            ))}
-            <span className="font-bold underline underline-offset-2">Détail ›</span>
-          </div>
-        </Link>
-      ) : null}
-
-      {daily ? <DailyQuests daily={daily} /> : null}
-
-      {quiz ? (
-        <Link href="/quiz" className="flex items-center gap-3 rounded-[18px] bg-papier px-4 py-3">
-          <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-peche font-display text-lg font-bold text-[#7a5a12]">?</span>
-          <span className="flex-1">
-            <span className="block text-sm font-bold">Quiz du jour</span>
-            <span className="block text-xs text-terre">
-              {quiz.current
-                ? quiz.answered > 0
-                  ? `${quiz.answered}/${quiz.total} répondues · ${quiz.score} juste${quiz.score > 1 ? "s" : ""}`
-                  : "10 questions, jusqu'à 15 pousses"
-                : `Terminé : ${quiz.score}/${quiz.total}. 10 nouvelles questions demain.`}
-            </span>
-          </span>
-          <span aria-hidden="true" className="font-bold text-sapin">{quiz.current ? (quiz.answered > 0 ? "Continuer ›" : "Jouer ›") : "Revoir ›"}</span>
-        </Link>
-      ) : null}
+      <h1 className="sr-only">Mon plan</h1>
 
       <nav aria-label="Onglets des défis" className="flex rounded-full bg-sable p-1">
         {[
@@ -186,7 +139,7 @@ export default async function DefisPage({
       ) : null}
       {cree ? (
         <p role="status" className="animate-pousse-pop rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
-          Défi lancé ! Reviens le valider chaque fois que tu le réalises.
+          Défi lancé ! Il est juste en dessous : enregistre chaque fois que tu le fais avec le bouton +.
         </p>
       ) : null}
       {erreur ? (
@@ -195,6 +148,45 @@ export default async function DefisPage({
 
       {tab === "en-cours" ? (
         <>
+          <DuelStrip duels={duels.filter((d) => d.status === "pending" && d.role === "opponent")} />
+
+          {teamWeek?.chosen ? (
+            <Link href="/equipes" className="flex flex-col gap-2 rounded-[20px] bg-peche p-4 text-[#402a16]">
+              <span className="flex items-center justify-between">
+                <span className="rounded-full bg-argile px-2.5 py-0.5 text-[11px] font-bold text-white uppercase">Équipe · {fmtMult(MODES.equipe.mult)}</span>
+                <span className="text-xs">jusqu&apos;à dimanche</span>
+              </span>
+              <span className="font-bold">
+                {teamWeek.target} {TEAM_KINDS[teamWeek.chosen].unit} pour l&apos;équipe
+              </span>
+              <span className="h-2.5 overflow-hidden rounded-full bg-[#ecd3b4]">
+                <span className="block h-full rounded-full bg-argile" style={{ width: `${Math.min(100, ((teamWeek.progress ?? 0) / Math.max(1, teamWeek.target ?? 1)) * 100)}%` }} />
+              </span>
+              <span className="text-xs">
+                {teamWeek.progress ?? 0}/{teamWeek.target} · toi : {teamWeek.mine ?? 0}. Objectif atteint = +{BONUS.equipe} pour chaque contributeur.
+              </span>
+            </Link>
+          ) : null}
+
+          {activeChallenges.length ? (
+            <ActiveChallenges items={activeChallenges} cancel={cancelChallenge} />
+          ) : (
+            <div className="card flex flex-col gap-2 text-center">
+              <p className="font-display text-lg font-bold">Aucun défi en cours</p>
+              <p className="text-sm text-brun">Choisis un geste adapté à ton bilan et essaie-le quelques jours, seul, en duel ou en équipe.</p>
+            </div>
+          )}
+
+          <Link
+            href="/defis?onglet=catalogue"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#8fa77b] text-[15px] font-bold text-[#22502c]"
+          >
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            Lancer un défi
+          </Link>
+
+          {daily ? <DailyQuests daily={daily} /> : null}
+
           {kept.length ? (
             <section className="flex flex-col gap-3 rounded-[20px] bg-sapin p-4 text-sapin-clair">
               <div className="flex items-start justify-between gap-3">
@@ -241,26 +233,27 @@ export default async function DefisPage({
             </section>
           ) : null}
 
-          <section className="card flex flex-col gap-2">
-            <p className="label">Plafonds du jour</p>
-            <div className="flex gap-4">
-              {[
-                { label: "Trajets", used: todayUnits(["velo", "transports", "covoiturage"]), max: 2 },
-                { label: "Repas", used: todayUnits(["vege", "moins_boeuf", "vegetalien"]), max: 2 },
-              ].map((c) => (
-                <div key={c.label} className="flex-1">
-                  <p className="text-xs font-semibold">
-                    {c.label} {c.used}/{c.max}
-                  </p>
-                  <div className="mt-1 h-1.5 rounded-full bg-trait">
-                    <div className="h-1.5 rounded-full bg-sapin" style={{ width: `${Math.min(100, (c.used / c.max) * 100)}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-[11px] text-terre">Au-delà, rien n&apos;est compté. Un trajet ne compte que pour un défi.</p>
-          </section>
+          {succeeded.length ? (
+            <section className="flex flex-col gap-2" aria-labelledby="reussis">
+              <h2 id="reussis" className="font-display text-lg font-bold">Défis réussis</h2>
+              <ul className="flex flex-col gap-1.5">
+                {succeeded.map((c) => {
+                  const t = TEMPLATE_BY_ID[c.template_id];
+                  return (
+                    <li key={c.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#e3edd9] px-4 py-2.5">
+                      <span className="text-sm font-bold text-[#22502c]">{t ? actionTitle(t.id, c.variant) : "Défi"}</span>
+                      <span className="shrink-0 text-xs font-bold text-[#22502c]">{formatKg(progress.get(c.id)?.kg ?? 0)} évités</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
 
+          <Link href="/duels" className="self-center text-sm font-bold text-sapin underline underline-offset-2">Tous mes duels ›</Link>
+        </>
+      ) : (
+        <>
           <div className="grid grid-cols-3 gap-1.5 text-center" aria-label="Ce que rapporte chaque mode">
             {(
               [
@@ -275,95 +268,6 @@ export default async function DefisPage({
               </div>
             ))}
           </div>
-
-          {teamWeek?.chosen ? (
-            <Link href="/equipes" className="flex flex-col gap-2 rounded-[20px] bg-peche p-4 text-[#402a16]">
-              <span className="flex items-center justify-between">
-                <span className="rounded-full bg-argile px-2.5 py-0.5 text-[11px] font-bold text-white uppercase">Équipe · {fmtMult(MODES.equipe.mult)}</span>
-                <span className="text-xs">jusqu&apos;à dimanche</span>
-              </span>
-              <span className="font-bold">
-                {teamWeek.target} {TEAM_KINDS[teamWeek.chosen].unit} pour l&apos;équipe
-              </span>
-              <span className="h-2.5 overflow-hidden rounded-full bg-[#ecd3b4]">
-                <span className="block h-full rounded-full bg-argile" style={{ width: `${Math.min(100, ((teamWeek.progress ?? 0) / Math.max(1, teamWeek.target ?? 1)) * 100)}%` }} />
-              </span>
-              <span className="text-xs">
-                {teamWeek.progress ?? 0}/{teamWeek.target} · toi : {teamWeek.mine ?? 0}. Objectif atteint = +{BONUS.equipe} pour chaque contributeur.
-              </span>
-            </Link>
-          ) : null}
-
-          {(challenges ?? []).length === 0 ? (
-            <div className="card flex flex-col gap-3 text-center">
-              <p className="font-display text-lg font-bold">Aucun défi en cours</p>
-              <p className="text-sm text-brun">Choisis un geste adapté à ton bilan et essaie-le quelques semaines.</p>
-              <Link href="/defis?onglet=catalogue" className="btn-primary">Voir les gestes à essayer</Link>
-            </div>
-          ) : null}
-
-          {(challenges ?? []).map((c) => {
-            const t = TEMPLATE_BY_ID[c.template_id];
-            if (!t) return null;
-            const p = progress.get(c.id) ?? { units: 0, kg: 0 };
-            const variant = t.variants.find((v) => v.key === c.variant);
-            const done = c.status === "done";
-            const d = duelOf(c.id);
-            return (
-              <article key={c.id} className={`flex flex-col gap-2 rounded-[20px] p-4 ${d ? "bg-sauge" : "card"}`}>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2">
-                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${d ? "bg-sapin text-sapin-clair" : "bg-sable text-brun"}`}>
-                      {d ? `Duel · ${fmtMult(MODES.duel.mult)}` : `Seul · ${fmtMult(MODES.seul.mult)}`}
-                    </span>
-                    <span className="label">{done ? "réussi" : `jusqu'au ${formatDay(c.ends_on, "short")}`}</span>
-                  </span>
-                  <span className="text-xs font-bold text-argile-fonce">
-                    {p.units}/{c.target} {c.target > 1 ? t.unit.many : t.unit.one}
-                  </span>
-                </div>
-                <h2 className="font-display text-lg font-bold">{t.title}</h2>
-                {t.variants.length > 1 && variant ? <p className="-mt-1 text-sm text-terre">{variant.label}</p> : null}
-                {d ? (
-                  <p className="-mt-1 text-sm text-sapin">
-                    {d.status === "pending"
-                      ? `Contre ${d.other_name} : en attente de sa réponse`
-                      : `Contre ${d.other_name} : toi ${Math.min(d.mine, d.target)}/${d.target}, ${d.other_name} ${Math.min(d.theirs, d.target)}/${d.target}`}
-                  </p>
-                ) : null}
-                <div className="h-2 rounded-full bg-trait">
-                  <div className="h-2 rounded-full bg-sapin" style={{ width: `${Math.min(100, (p.units / c.target) * 100)}%` }} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="chip bg-sauge">{formatKg(p.kg)} évités</span>
-                  {done ? (
-                    <span className="chip bg-peche">Défi réussi{d ? "" : ` · +${BONUS.seul}`}</span>
-                  ) : t.requiresReceipt ? (
-                    <Link href={`/agir?ajout=${t.id}:${c.variant}`} className="btn-primary min-h-10 px-4 text-sm">Ajouter avec le reçu</Link>
-                  ) : (
-                    <Link href={`/defis/${c.id}/valider`} className="btn-primary min-h-10 px-4 text-sm">Valider</Link>
-                  )}
-                </div>
-                {!done && !d ? (
-                  <Link href={`/defis/${c.id}/duel`} className="self-end text-xs font-bold text-sapin underline underline-offset-2">
-                    Passer en duel · {fmtMult(MODES.duel.mult)} ›
-                  </Link>
-                ) : null}
-              </article>
-            );
-          })}
-
-          <InstallPrompt />
-          <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
-            <span className="flex-1">
-              <span className="block text-sm font-bold">30 secondes pour améliorer Pousse ?</span>
-              <span className="block text-xs text-[#5a4324]">3 questions sur ta semaine</span>
-            </span>
-            <span className="btn-primary min-h-10 px-4 text-sm">Répondre</span>
-          </Link>
-        </>
-      ) : (
-        <>
           <p className="text-sm text-brun">
             Triés par impact pour toi. Lance un défi sur plusieurs jours, ou enregistre simplement le geste avec le
             bouton + quand tu le fais.
