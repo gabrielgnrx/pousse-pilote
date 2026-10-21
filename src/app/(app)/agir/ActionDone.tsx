@@ -134,12 +134,16 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
           </div>
         ) : (
           <p className="rounded-2xl bg-sable px-3 py-2 text-xs leading-snug text-brun">
-            {action.theme === "bureau"
-              ? "Pas de CO₂ mesurable sur cette petite action, mais il compte pour ta série."
-              : "Pas de CO₂ pour toi sur cette action (elle ne remplace rien dans ton bilan), mais il compte pour ta série."}
-            {action.points === 0
-              ? " Tu as déjà tes 5 pousses du jour pour les actions à 0 kg : celle-ci ne t'en rapporte pas."
-              : " Les actions à 0 kg rapportent 5 pousses par jour au plus."}
+            {action.habit
+              ? "Tu le fais déjà : pas de CO₂ en plus dans ton bilan, mais cette bonne habitude rapporte toutes ses pousses."
+              : action.theme === "bureau"
+                ? "Pas de CO₂ mesurable sur cette petite action, mais elle compte pour ta série."
+                : "Pas de CO₂ pour toi sur cette action (elle ne remplace rien dans ton bilan), mais elle compte pour ta série."}
+            {action.habit
+              ? ""
+              : action.points === 0
+                ? " Tu as déjà tes 5 pousses du jour pour les petites actions : celle-ci ne t'en rapporte pas."
+                : " Les petites actions rapportent 5 pousses par jour au plus."}
           </p>
         )}
 

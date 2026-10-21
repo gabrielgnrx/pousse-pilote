@@ -52,8 +52,10 @@ export default function MethodologiePage() {
       <Section title="Déclaration et plafonds">
         <p>
           Une action s&apos;enregistre en un tap avec le bouton +, sans preuve : elle rapporte ses pousses
-          tout de suite et compte dans tes défis et tes duels. Seuls les achats via une appli durable
-          demandent le reçu, qui reste privé. Publier une action dans le fil avec une photo est un choix,
+          tout de suite et compte dans tes défis et tes duels. Seuls les achats via une appli durable,
+          le train, les vacances en train et les réparations demandent un justificatif (reçu, billet ou facture),
+          qui reste privé. Une bonne habitude que tu as déjà rapporte autant de pousses qu&apos;un changement,
+          sans CO₂ en plus. Publier une action dans le fil avec une photo est un choix,
           qui rapporte 5 pousses de plus.
         </p>
         <p>
@@ -89,8 +91,9 @@ export default function MethodologiePage() {
           l&apos;objectif commun de l&apos;entreprise, par défaut 30 kg par participant sur la durée du pilote.
         </p>
         <p>
-          Les équipes sont classées sur leurs pousses par participant ; une personne inactive compte 0. Les
-          équipes de moins de 5 personnes sont regroupées. « Ce que tes habitudes évitent déjà », dans le bilan,
+          Les équipes sont classées sur leurs pousses par personne : tous les membres comptent dans
+          l&apos;effectif, une personne inactive compte 0. Le score est lissé : (pousses de l&apos;équipe + 3 ×
+          moyenne de l&apos;entreprise) ÷ (membres + 3). Les équipes de moins de 5 membres ne sont pas classées. « Ce que tes habitudes évitent déjà », dans le bilan,
           compare tes habitudes à la voiture thermique seule et à des repas avec viande : c&apos;est une
           information, qui ne compte ni dans les pousses ni dans le CO₂ évité.
         </p>

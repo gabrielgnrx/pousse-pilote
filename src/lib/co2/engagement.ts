@@ -30,10 +30,10 @@ export const STREAK_MILESTONES = [
 
 /** Le barème, tel qu'il est expliqué dans l'application. */
 export const POINT_RULES: { label: string; points: string }[] = [
-  { label: "Action enregistrée avec le bouton + (trajet, repas, vêtement, semaine de chauffage), sans preuve", points: "+10" },
-  { label: "Train au lieu de l'avion (aller simple)", points: "+30" },
-  { label: "Actions expert : végétalien, réparation, vacances en train", points: "+15 à +150" },
-  { label: "Petites actions sans CO₂ évité pour toi (escaliers, gourde…), tous confondus", points: "5 par jour au plus" },
+  { label: "Action enregistrée avec le bouton + (trajet, repas, vêtement, semaine de chauffage), que tu changes une habitude ou que tu le fasses déjà", points: "+10" },
+  { label: "Train au lieu de l'avion (aller simple), avec le billet", points: "+30" },
+  { label: "Actions expert : repas végétalien ; réparation et vacances en train avec justificatif", points: "+15 à +150" },
+  { label: "Petits gestes (escaliers, gourde…) et actions qui ne remplacent rien dans ton bilan, tous confondus", points: "5 par jour au plus" },
   { label: "Publier une action dans le fil avec une photo", points: "+5" },
   { label: "Garder le cap sur une habitude (2 récompensées par semaine)", points: "+10" },
   { label: "Les 3 quêtes du jour réussies", points: "+15" },
@@ -45,7 +45,7 @@ export const POINT_RULES: { label: string; points: string }[] = [
   { label: "Graine mystère (après les 3 quêtes du jour) : au hasard, ou une plante rare", points: "+5 à +20" },
   { label: "Achat via une appli durable (occasion, anti-gaspi), avec le reçu", points: "+30" },
   { label: "Action qui compte dans un duel en cours / dans le défi d'équipe de la semaine", points: "×1,5 / ×2" },
-  { label: "Défi perso réussi, seul", points: "+20" },
+  { label: "Défi perso réussi, seul (3 fois au moins, ou 1 pour une action hebdomadaire)", points: "+20" },
   { label: "Duel réussi : seul gagnant / tous les deux", points: "+40 / +30" },
   { label: "Défi d'équipe de la semaine atteint, si tu y as contribué", points: "+50" },
   { label: "Duel échoué (ta mise)", points: "−10" },

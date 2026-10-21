@@ -12,7 +12,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
   const { periode } = await searchParams;
   const week = periode !== "total";
   const since = week ? weekStart(todayParis()) : null;
-  const { supabase, user } = await requireProfile();
+  const { supabase, user, profile } = await requireProfile();
 
   const [{ teams }, goal, me] = await Promise.all([
     getTeamRanking(supabase, since),
@@ -52,10 +52,14 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
 
       {teams.length === 0 ? (
         <p className="card text-sm">
-          Le classement apparaît dès qu&apos;une équipe compte 5 participants, pour que personne ne soit
+          Le classement apparaît dès qu&apos;une équipe compte 5 membres, pour que personne ne soit
           identifiable. En attendant, tes pousses comptent déjà.
         </p>
       ) : (
+        <>
+        {profile.team_id && !teams.some((t) => t.is_mine) ? (
+          <p className="card text-sm">Ton équipe compte moins de 5 membres : elle n&apos;est pas classée, pour que personne ne soit identifiable.</p>
+        ) : null}
         <ol className="card flex flex-col divide-y divide-encre/10 p-0">
           {teams.map((t, i) => (
             <li key={t.team_name} className={`flex items-center gap-3 px-4 py-3 ${t.is_mine ? "bg-peche" : ""}`}>
@@ -71,11 +75,12 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
               </div>
               <div className="text-right">
                 <p className="font-display text-xl font-bold">{Number(t.points_per_person).toLocaleString("fr-FR")}</p>
-                <p className="text-[11px] text-terre">par personne</p>
+                <p className="text-[11px] text-terre">par personne, lissé</p>
               </div>
             </li>
           ))}
         </ol>
+        </>
       )}
 
       <section className="flex items-center gap-4 rounded-[20px] bg-sapin p-4 text-sapin-clair">
@@ -102,7 +107,8 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
 
       <p className="rounded-2xl bg-sauge px-4 py-3 text-xs leading-relaxed text-[#2e3a22]">
         Ton employeur voit les totaux par équipe, jamais ton nom ni tes défis. Les équipes de moins de 5
-        participants sont regroupées ou masquées.
+        membres ne sont pas classées. Le score par personne est lissé vers la moyenne de l&apos;entreprise,
+        pour qu&apos;une petite équipe ne gagne pas sur un coup de chance.
       </p>
     </>
   );

@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { requireHabits } from "@/lib/session";
-import { TEMPLATE_BY_ID, unitImpact } from "@/lib/co2/challenges.ts";
+import { TEMPLATE_BY_ID, isHabitAction, minTarget, unitImpact } from "@/lib/co2/challenges.ts";
 import { addDays, todayParis } from "@/lib/dates";
 
 const DURATIONS = [7, 30, 90];
@@ -20,12 +20,14 @@ export async function createChallenge(_prev: { error?: string }, form: FormData)
     if (error) return { error: error.message.includes("no_team") ? "Rejoins d'abord une équipe." : "La proposition n'a pas pu être envoyée." };
     redirect("/equipes?propose=1");
   }
-  if (!t.requiresReceipt && !unitImpact(t.id, variant, habits).eligible) {
+  if (!t.id.startsWith("appli_") && !isHabitAction(t.id) && !unitImpact(t.id, variant, habits).eligible) {
     return { error: "Ce choix ne remplace aucune de tes habitudes déclarées." };
   }
   const target = Number(form.get("target"));
   const days = Number(form.get("days"));
-  if (!Number.isInteger(target) || target < 1 || target > 100) return { error: "Objectif invalide." };
+  if (!Number.isInteger(target) || target < minTarget(t.id) || target > 100) {
+    return { error: `Un défi, c'est au moins ${minTarget(t.id)} fois : sinon, enregistre simplement l'action avec le bouton +.` };
+  }
   if (!DURATIONS.includes(days)) return { error: "Durée invalide." };
 
   // Défi relevé depuis la publication d'un collègue : vérifié ici, et de nouveau par la base.
@@ -57,7 +59,11 @@ export async function createChallenge(_prev: { error?: string }, form: FormData)
     ends_on: addDays(start, days - 1),
     inspired_by: inspiredBy,
   }).select("id").single();
-  if (error || !created) return { error: "Impossible de créer le défi. Réessaie." };
+  if (error || !created) {
+    if (error?.message.includes("challenge_exists")) return { error: "Tu as déjà un défi en cours sur cette action : il est dans Mon plan." };
+    if (error?.message.includes("target_too_small")) return { error: `Un défi, c'est au moins ${minTarget(t.id)} fois.` };
+    return { error: "Impossible de créer le défi. Réessaie." };
+  }
 
   if (withDuel) {
     const { error: duelError } = await supabase.rpc("challenge_duel_action", { p_challenge: created.id, p_opponent: opponent });

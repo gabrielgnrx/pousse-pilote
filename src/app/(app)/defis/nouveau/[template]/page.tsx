@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireHabits } from "@/lib/session";
-import { TEMPLATE_BY_ID, unitImpact } from "@/lib/co2/challenges.ts";
+import { TEMPLATE_BY_ID, unitImpact, isHabitAction, minTarget } from "@/lib/co2/challenges.ts";
 import { NewChallengeForm } from "./NewChallengeForm";
 import { teamKindFor } from "@/lib/boosts";
 
@@ -41,10 +41,11 @@ export default async function NewChallengePage({
     if (src && src.user_id !== user.id) inspiredBy = { id: src.id, name: src.author?.display_name ?? "un collègue" };
   }
 
-  // Un achat avec reçu se lance même sans CO₂ compté : ce sont les pousses qui comptent.
+  // Un achat via une appli, ou une bonne habitude que tu as déjà, se lance même sans CO₂ compté :
+  // ce sont les pousses qui comptent.
   const variants = t.variants.map((v) => {
     const impact = unitImpact(t.id, v.key, habits);
-    return { ...v, impact: t.requiresReceipt ? { ...impact, eligible: true } : impact };
+    return { ...v, impact: t.id.startsWith("appli_") || isHabitAction(t.id) ? { ...impact, eligible: true } : impact };
   });
   const firstEligible =
     variants.find((v) => v.key === variante && v.impact.eligible) ?? variants.find((v) => v.impact.eligible);
@@ -58,7 +59,7 @@ export default async function NewChallengePage({
       <h1 className="-mt-2 font-display text-2xl font-bold">{t.title}</h1>
       {firstEligible ? (
         <NewChallengeForm
-          template={{ id: t.id, unit: t.unit, variantQuestion: t.variantQuestion, proofHint: t.proofHint, defaultTarget: t.defaultTarget, pointsPerUnit: t.pointsPerUnit, source: t.source }}
+          template={{ id: t.id, unit: t.unit, variantQuestion: t.variantQuestion, proofHint: t.proofHint, defaultTarget: Math.max(t.defaultTarget, minTarget(t.id)), minTarget: minTarget(t.id), pointsPerUnit: t.pointsPerUnit, source: t.source }}
           variants={variants.map((v) => ({ key: v.key, label: v.label, kg: v.impact.kg, eligible: v.impact.eligible, reason: v.impact.reason, formula: v.impact.formula }))}
           initialVariant={firstEligible.key}
           inspiredBy={inspiredBy}

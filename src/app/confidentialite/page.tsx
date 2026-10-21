@@ -11,7 +11,7 @@ export default function ConfidentialitePage() {
       <Section title="Ce que voit ton employeur">
         <p>
           Des totaux par équipe et pour l&apos;entreprise : nombre de participants et CO₂ évité. Les équipes
-          de moins de 5 participants sont regroupées ou masquées pour que personne ne soit identifiable.
+          de moins de 5 membres ne sont pas classées, pour que personne ne soit identifiable.
         </p>
       </Section>
       <Section title="Ce que voient tes collègues">

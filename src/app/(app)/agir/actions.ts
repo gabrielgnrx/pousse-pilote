@@ -4,12 +4,14 @@ import { requireProfile, sqlErrorMessage } from "@/lib/session";
 import { getEngagement } from "@/lib/engagement-data";
 import { PROOF_BUCKET } from "@/lib/constants";
 import { actionTitle, themeOf, type Theme } from "@/lib/actions-catalog";
-import { TEMPLATE_BY_ID } from "@/lib/co2/challenges.ts";
+import { TEMPLATE_BY_ID, isHabitAction } from "@/lib/co2/challenges.ts";
 
 export interface LoggedAction {
   id: string;
   title: string;
   theme: Theme;
+  /** Une bonne habitude que la personne a déjà : 0 kg, mais toutes ses pousses. */
+  habit: boolean;
   kg: number;
   points: number;
   /** Nombre de fois et CO₂ cumulé de cette action, ce mois-ci. */
@@ -40,8 +42,8 @@ const ERRORS: Record<string, string> = {
   cap_reached: "Déjà compté aujourd'hui : au-delà du plafond du jour, rien n'est compté. Reviens demain !",
   unknown_action: "Cette action n'existe pas.",
   teletravail_conflict: "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.",
-  receipt_required: "Joins ton reçu ou ta confirmation de commande pour valider cet achat.",
-  invalid_photo: "Ce reçu n'a pas pu être enregistré. Réessaie.",
+  receipt_required: "Joins ton justificatif (reçu, billet ou facture) pour valider cette action.",
+  invalid_photo: "Ce justificatif n'a pas pu être enregistré. Réessaie.",
 };
 
 /** Enregistre une action en un tap, sans preuve. Le CO₂ et les pousses sont calculés par la base. */
@@ -70,7 +72,7 @@ export async function logActionWithReceipt(form: FormData): Promise<LogResult> {
 
   const path = `${user.id}/recu-${crypto.randomUUID()}.${ext}`;
   const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
-  if (upload) return { ok: false, error: "Envoi du reçu impossible. Réessaie." };
+  if (upload) return { ok: false, error: "Envoi du justificatif impossible. Réessaie." };
 
   const { data, error } = await supabase.rpc("log_action", { p_template: templateId, p_variant: variant, p_receipt: path });
   if (error || !data) {
@@ -115,6 +117,7 @@ async function describe(
       id: r.id,
       title: actionTitle(r.template_id, r.variant),
       theme: themeOf(r.template_id),
+      habit: isHabitAction(r.template_id),
       kg: Number(r.kg),
       points: Number(r.points),
       monthCount: Number(r.month_count),

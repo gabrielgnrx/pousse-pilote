@@ -34,6 +34,8 @@ export function NewChallengeForm({
     variantQuestion?: string;
     proofHint: string;
     defaultTarget: number;
+    /** Objectif minimum : 3, ou 1 pour une action hebdomadaire. */
+    minTarget: number;
     pointsPerUnit: number;
     source: string;
   };
@@ -181,7 +183,7 @@ export function NewChallengeForm({
       <fieldset className="flex flex-col gap-2">
         <legend className="label mb-2">Ton objectif</legend>
         <div className="flex items-center justify-between rounded-2xl bg-sable p-3">
-          <button type="button" aria-label="Diminuer l'objectif" onClick={() => setTarget((n) => Math.max(1, n - 1))} className="flex size-11 items-center justify-center rounded-full bg-creme text-2xl font-bold">−</button>
+          <button type="button" aria-label="Diminuer l'objectif" onClick={() => setTarget((n) => Math.max(template.minTarget, n - 1))} className="flex size-11 items-center justify-center rounded-full bg-creme text-2xl font-bold">−</button>
           <div className="text-center">
             <div className="font-display text-3xl font-bold">{target}</div>
             <div className="text-xs text-terre">{target > 1 ? template.unit.many : template.unit.one}</div>

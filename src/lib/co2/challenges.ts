@@ -121,8 +121,9 @@ export const TEMPLATES: ChallengeTemplate[] = [
     proofHint: "Photo du billet",
     pointsPerUnit: 30,
     dailyCap: 2,
-    defaultTarget: 2,
+    defaultTarget: 3,
     source: SOURCES.transport,
+    requiresReceipt: true,
   },
   {
     id: "vege",
@@ -181,7 +182,7 @@ export const TEMPLATES: ChallengeTemplate[] = [
     proofHint: "Photo de l'achat ou de l'annonce",
     pointsPerUnit: 10,
     dailyCap: 3,
-    defaultTarget: 2,
+    defaultTarget: 3,
     source: SOURCES.habillement,
   },
   {
@@ -224,6 +225,7 @@ export const TEMPLATES: ChallengeTemplate[] = [
     source: SOURCES.transport,
     level: "expert",
     pitch: "Le plus gros geste possible : un aller-retour long-courrier pèse à lui seul près de 2 tonnes.",
+    requiresReceipt: true,
   },
   {
     id: "reparation",
@@ -242,6 +244,7 @@ export const TEMPLATES: ChallengeTemplate[] = [
     source: SOURCES.numerique,
     level: "expert",
     pitch: "La fabrication fait l'essentiel de l'empreinte d'un appareil : le garder, c'est l'éviter.",
+    requiresReceipt: true,
   },
 ];
 
@@ -345,7 +348,7 @@ export const APP_TEMPLATES: ChallengeTemplate[] = [
     proofHint: "Reçu ou confirmation de commande de l'appli",
     pointsPerUnit: 30,
     dailyCap: 2,
-    defaultTarget: 2,
+    defaultTarget: 3,
     source: SOURCES.habillement,
     requiresReceipt: true,
   },
@@ -580,3 +583,15 @@ export function formatKg(kg: number) {
   if (kg >= 10) return `${fmt(kg, 0)} kg`;
   return `${fmt(kg, 1)} kg`;
 }
+
+/**
+ * Les actions « habitude » : elles rapportent leurs pousses même à 0 kg, quand la personne le fait déjà
+ * (même liste que is_habit_action, migration 0024). Le CO₂, lui, reste à 0.
+ */
+export const HABIT_ACTIONS = ["velo", "transports", "covoiturage", "teletravail", "vege", "moins_boeuf", "vegetalien", "occasion", "chauffage"];
+export const isHabitAction = (templateId: string) => HABIT_ACTIONS.includes(templateId);
+
+/** Actions qui se font une fois par semaine au plus (plafond sur 7 jours, comme en base). */
+const WEEKLY_ACTIONS = ["chauffage", "reparation", "vacances_train"];
+/** Objectif minimum d'un défi : 3, ou 1 pour une action hebdomadaire (check_new_challenge, migration 0024). */
+export const minTarget = (templateId: string) => (WEEKLY_ACTIONS.includes(templateId) ? 1 : 3);

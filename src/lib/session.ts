@@ -127,7 +127,7 @@ export function sqlErrorMessage(message: string | undefined): string {
     case "teletravail_conflict":
       return "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.";
     case "receipt_required":
-      return "Joins ton reçu ou ta confirmation de commande pour valider cet achat.";
+      return "Joins ton justificatif (reçu, billet ou facture) pour valider cette action.";
     case "team_locked":
       return "Tu fais déjà partie d'une équipe. Pour en changer, demande à la personne qui pilote Pousse.";
     case "not_kept_habit":

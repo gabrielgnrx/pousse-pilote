@@ -13,7 +13,7 @@ export function IntroCard() {
         </li>
         <li className="flex gap-2.5">
           <span className="font-display font-bold">2</span>
-          <span><strong>Ton équipe, pour gagner.</strong> Les équipes sont classées en pousses par participant. Déjà très sobre ? Tu marques autant que les autres.</span>
+          <span><strong>Ton équipe, pour gagner.</strong> Les équipes sont classées en pousses par personne. Déjà très sobre ? Tes bonnes habitudes rapportent autant que les changements des autres.</span>
         </li>
         <li className="flex gap-2.5">
           <span className="font-display font-bold">3</span>

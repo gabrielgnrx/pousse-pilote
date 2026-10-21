@@ -99,7 +99,9 @@ export function ActionPicker({
               {busy
                 ? "Enregistrement…"
                 : item.requiresReceipt
-                  ? "Reçu obligatoire · gardé privé"
+                  ? item.templateId.startsWith("appli_")
+                    ? "Reçu obligatoire · gardé privé"
+                    : "Justificatif obligatoire · gardé privé"
                   : challenge
                   ? "Compte pour ton défi en cours"
                   : count > 0
@@ -166,7 +168,7 @@ export function ActionPicker({
               <p className="text-xs text-terre">Vinted, Leboncoin, Back Market, Too Good To Go… Avec ton reçu, gardé privé.</p>
             </div>
             <ul className="flex flex-col gap-2">
-              {[...new Set(items.filter((i) => i.requiresReceipt).map((i) => i.templateId))]
+              {[...new Set(items.filter((i) => i.templateId.startsWith("appli_")).map((i) => i.templateId))]
                 .map((id) => items.find((i) => i.templateId === id)!)
                 .map((i) => ({ ...i, title: TEMPLATE_BY_ID[i.templateId]?.title ?? i.title }))
                 .map(row)}
@@ -196,7 +198,7 @@ export function ActionPicker({
       </Link>
 
       <p className="text-center text-xs text-terre">
-        Pas de preuve demandée, sauf le reçu pour les achats via une appli. Un plafond par jour s&apos;applique (2 trajets, 2 repas…) pour que le compteur de
+        Pas de preuve demandée, sauf un justificatif privé pour les achats via une appli, le train, les vacances en train et les réparations. Un plafond par jour s&apos;applique (2 trajets, 2 repas…) pour que le compteur de
         l&apos;entreprise reste juste. Les actions à 0 kg rapportent 5 pousses par jour au plus, tous confondus.
       </p>
 
@@ -252,7 +254,9 @@ function ReceiptSheet({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">Achat via une appli · reçu obligatoire</p>
+            <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">
+              {item.templateId.startsWith("appli_") ? "Achat via une appli · reçu obligatoire" : "Justificatif obligatoire"}
+            </p>
             <h2 id="recu-titre" className="font-display text-xl leading-tight font-bold">{t?.title ?? item.title}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sable">
@@ -273,13 +277,13 @@ function ReceiptSheet({
           <input type="hidden" name="variant" value={item.variant} />
         )}
         <label className="flex flex-col gap-1 text-sm font-bold">
-          Ton reçu ou ta confirmation de commande
+          {item.templateId.startsWith("appli_") ? "Ton reçu ou ta confirmation de commande" : (t?.proofHint ?? "Ton justificatif")}
           <span className="text-xs font-normal text-terre">Une photo ou une capture d&apos;écran. Il reste privé : personne d&apos;autre ne le voit, et il est effacé après 90 jours.</span>
           <input name="receipt" type="file" accept="image/jpeg,image/png,image/webp" required className="text-sm font-normal" />
         </label>
         {error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{error}</p> : null}
         <button type="submit" disabled={pending} className="btn-dark">
-          {pending ? "Envoi…" : `Valider avec le reçu · +${boostedPoints(item.points, boost)}`}
+          {pending ? "Envoi…" : `Valider avec ${item.templateId.startsWith("appli_") ? "le reçu" : "le justificatif"} · +${boostedPoints(item.points, boost)}`}
         </button>
       </form>
     </div>

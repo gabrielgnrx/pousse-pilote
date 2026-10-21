@@ -6,6 +6,7 @@ import {
   TEMPLATE_BY_ID,
   TEMPLATES,
   formatKg,
+  isHabitAction,
   templateEligibility,
   verbOf,
 } from "@/lib/co2/challenges.ts";
@@ -98,7 +99,9 @@ export default async function DefisPage({
   const catalog = TEMPLATES.map((t) => ({ t, e: templateEligibility(t, habits) }));
   const eligible = catalog.filter((c) => c.e.eligible && c.t.level !== "expert");
   const expert = catalog.filter((c) => c.e.eligible && c.t.level === "expert");
-  const notForYou = catalog.filter((c) => !c.e.eligible);
+  // Les bonnes habitudes que tu as déjà : pas de CO₂ en plus, mais un défi dessus rapporte ses pousses.
+  const alreadyDoing = catalog.filter((c) => !c.e.eligible && isHabitAction(c.t.id));
+  const notForYou = catalog.filter((c) => !c.e.eligible && !isHabitAction(c.t.id));
   // Profil déjà sobre : peu de défis du quotidien lui restent.
   const alreadySober = eligible.length <= 3;
 
@@ -336,6 +339,32 @@ export default async function DefisPage({
                     </div>
                   </div>
                   <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-sapin text-sapin-clair">
+                    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                  </Link>
+                </article>
+              ))}
+            </section>
+          ) : null}
+
+          {alreadyDoing.length ? (
+            <section className="flex flex-col gap-3">
+              <div className="mt-2">
+                <h2 className="font-display text-lg font-bold">Tu le fais déjà</h2>
+                <p className="text-xs text-terre">
+                  Pas de CO₂ en plus dans ton bilan, mais ces bonnes habitudes rapportent autant de pousses qu&apos;un changement.
+                </p>
+              </div>
+              {alreadyDoing.map(({ t }) => (
+                <article key={t.id} className="card flex items-center gap-3">
+                  <div className="flex-1">
+                    <span className="label">{CATEGORY_LABEL[t.category]}</span>
+                    <h3 className="mt-1 font-bold">{t.title}</h3>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      <span className="chip bg-peche">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
+                      <span className="chip bg-sable">0 kg en plus</span>
+                    </div>
+                  </div>
+                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-argile text-white">
                     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                   </Link>
                 </article>

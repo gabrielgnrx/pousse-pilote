@@ -18,10 +18,12 @@ export default function ReglesPage() {
         </div>
         <p className="text-sm leading-relaxed">
           C&apos;est le seul chiffre qui compte pour le classement. On en gagne avec chaque action
-          enregistrée avec le bouton + (sans preuve), les quêtes du jour, une série de jours actifs, un meilleur choix au scanner,
+          enregistrée avec le bouton + (sans preuve, sauf pour quelques grosses actions), les quêtes du jour, une série de jours actifs, un meilleur choix au scanner,
           les habitudes déjà acquises. Quelqu&apos;un de très sobre gagne autant de pousses que quelqu&apos;un
-          qui part de loin. Les petites actions qui ne réduisent pas ton empreinte d&apos;après ton bilan (0 kg) rapportent
-          5 pousses par jour au plus, tous confondus : ils comptent quand même pour ta série et tes quêtes.
+          qui part de loin : une bonne habitude que tu as déjà (vélo, repas végé…) rapporte autant qu&apos;un
+          changement, même si elle n&apos;évite pas de CO₂ en plus. Les petits gestes (escaliers, gourde…) rapportent
+          5 pousses par jour au plus, tous confondus : ils comptent quand même pour ta série et tes quêtes. Le
+          train, les vacances en train et les réparations demandent un justificatif, gardé privé.
         </p>
         <table className="w-full text-left text-sm">
           <tbody>
@@ -69,9 +71,11 @@ export default function ReglesPage() {
           <h2 className="font-display text-lg font-bold">Le classement des équipes</h2>
         </div>
         <p className="text-sm leading-relaxed">
-          Chaque équipe est classée sur ses pousses par participant, pour que les grandes équipes n&apos;écrasent
-          pas les petites. Une personne inactive compte 0 : chaque participant compte. Les équipes de moins de
-          5 personnes sont regroupées pour que personne ne soit identifiable.
+          Chaque équipe est classée sur ses pousses par personne, pour que les grandes équipes n&apos;écrasent
+          pas les petites. Tous les membres de l&apos;équipe comptent dans l&apos;effectif, actifs ou non. Le score
+          est lissé vers la moyenne de l&apos;entreprise, comme si chaque équipe comptait 3 personnes « moyennes »
+          de plus : une petite équipe ne gagne pas sur un coup de chance, et une grande n&apos;est pas noyée.
+          Les équipes de moins de 5 membres ne sont pas classées, pour que personne ne soit identifiable.
         </p>
       </section>
 

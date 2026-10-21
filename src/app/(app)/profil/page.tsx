@@ -178,7 +178,7 @@ export default async function ProfilPage() {
         </label>
         <label className="flex items-start gap-3 text-sm">
           <input type="checkbox" name="consent_team_stats" defaultChecked={profile.consent_team_stats} className="mt-0.5 size-5 accent-sapin" />
-          <span>Mes défis comptent dans les totaux anonymes de mon équipe.</span>
+          <span>Mes pousses comptent pour mon équipe (totaux anonymes). Sans cette case, tu comptes quand même dans l&apos;effectif de ton équipe, avec 0 pousse.</span>
         </label>
         <label className="flex items-start gap-3 text-sm">
           <input type="checkbox" name="consent_feedback" defaultChecked={profile.consent_feedback} className="mt-0.5 size-5 accent-sapin" />
