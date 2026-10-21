@@ -4,8 +4,7 @@ import { requireHabits } from "@/lib/session";
 import { GESTES, TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
 import { relativeTime } from "@/lib/dates";
 import { INTRO_COOKIE, PROOF_BUCKET } from "@/lib/constants";
-import { claimDailyRewards, getEngagement } from "@/lib/engagement-data";
-import { CompanyPulse, type Pulse } from "@/components/CompanyPulse";
+import { claimDailyRewards } from "@/lib/engagement-data";
 import { IntroCard } from "@/components/IntroCard";
 import { TeamWeekCard } from "@/components/TeamWeekCard";
 import type { TeamWeek } from "@/lib/team";
@@ -55,11 +54,9 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
   if (teamOnly) postsQuery = postsQuery.eq("team_id", profile.team_id as string);
 
   const today = todayParis();
-  const [{ data: posts }, me, { data: myReports }, { data: pulse }, cookieStore, { data: teamWeek }, { data: mine }, quiz] = await Promise.all([
+  const [{ data: posts }, { data: myReports }, cookieStore, { data: teamWeek }, { data: mine }, quiz] = await Promise.all([
     postsQuery.order("created_at", { ascending: false }).limit(30).returns<Post[]>(),
-    getEngagement(supabase, user.id),
     supabase.from("reports").select("validation_id").eq("user_id", user.id),
-    supabase.rpc("company_pulse"),
     cookies(),
     profile.team_id ? supabase.rpc("my_team_week") : Promise.resolve({ data: null }),
     supabase
@@ -130,7 +127,6 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         </p>
       ) : null}
 
-      {pulse ? <CompanyPulse pulse={pulse as Pulse} total={me.points.total} today={me.today} /> : null}
 
       {week ? <TeamWeekCard week={week} voteOpen={voteOpen} /> : null}
 
