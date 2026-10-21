@@ -113,7 +113,7 @@ export default async function DuelsPage({
         </section>
       ) : null}
 
-      <Link href="/fil" className="text-center text-xs font-bold underline underline-offset-2">Retour au fil</Link>
+      <Link href="/defis" className="text-center text-xs font-bold underline underline-offset-2">Retour à Mon plan</Link>
     </>
   );
 }

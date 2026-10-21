@@ -197,6 +197,7 @@ for f in $(ls supabase/migrations/*.sql | awk -F/ '$3 >= "0014"'); do psql -d po
 psql -d pousse_test -f supabase/tests/scenario_quiz.sql
 psql -d pousse_test -f supabase/tests/scenario_duels.sql
 psql -d pousse_test -f supabase/tests/scenario_nature.sql
+psql -d pousse_test -f supabase/tests/scenario_coherence.sql
 ```
 
 La banque du quiz (`0015_quiz_banque.sql`) est générée : `node scripts/generate-quiz.ts > supabase/migrations/0015_quiz_banque.sql`.

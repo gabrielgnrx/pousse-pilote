@@ -17,10 +17,10 @@ export default function ReglesPage() {
           <h2 className="font-display text-lg font-bold">Les pousses</h2>
         </div>
         <p className="text-sm leading-relaxed">
-          C&apos;est le seul chiffre qui compte pour le classement. On en gagne avec ce qui se vérifie : un défi
-          validé avec une preuve, les quêtes du jour, une série de jours actifs, un meilleur choix au scanner,
+          C&apos;est le seul chiffre qui compte pour le classement. On en gagne avec chaque action
+          enregistrée avec le bouton + (sans preuve), les quêtes du jour, une série de jours actifs, un meilleur choix au scanner,
           les habitudes déjà acquises. Quelqu&apos;un de très sobre gagne autant de pousses que quelqu&apos;un
-          qui part de loin. Les gestes qui ne réduisent pas ton empreinte d&apos;après ton bilan (0 kg) rapportent
+          qui part de loin. Les petites actions qui ne réduisent pas ton empreinte d&apos;après ton bilan (0 kg) rapportent
           5 pousses par jour au plus, tous confondus : ils comptent quand même pour ta série et tes quêtes.
         </p>
         <table className="w-full text-left text-sm">
@@ -41,9 +41,7 @@ export default function ReglesPage() {
           <h2 className="font-display text-lg font-bold">Les à-côtés du jeu</h2>
         </div>
         <ul className="flex flex-col gap-2 text-sm leading-relaxed">
-          <li><strong>Défi collectif de la semaine.</strong> Chaque lundi, un objectif commun à toute l&apos;entreprise
-            (repas végé, trajets, scanner, quiz…). S&apos;il est atteint, +30 pour chaque personne qui y a contribué.</li>
-          <li><strong>Actions et défis.</strong> Une action, c&apos;est un geste perso enregistré avec le bouton + :
+          <li><strong>Actions et défis.</strong> Une action, c&apos;est ce que tu fais au quotidien, enregistré avec le bouton + :
             ses pousses arrivent tout de suite. Un défi, c&apos;est un objectif sur plusieurs jours, seul, en duel ou en
             équipe. À plusieurs, ça rapporte plus : chaque action qui compte dans un duel vaut ×1,5, dans le défi
             d&apos;équipe de la semaine ×2. Défi réussi seul : +20 ; défi d&apos;équipe atteint : +50 pour chaque

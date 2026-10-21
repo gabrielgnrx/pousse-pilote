@@ -6,8 +6,9 @@ import { relativeTime } from "@/lib/dates";
 import { INTRO_COOKIE, PROOF_BUCKET } from "@/lib/constants";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { IntroCard } from "@/components/IntroCard";
-import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
+import { getDuels } from "@/lib/game/data.ts";
 import { CompanyHero, type CompanyPulse } from "@/components/CompanyHero";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
 import { reportPost, setFeedSharing, toggleCheer } from "./actions";
@@ -34,9 +35,9 @@ const avatarColor = (id: string) => AVATAR[parseInt(id.replace(/-/g, "").slice(-
 export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string; vue?: string }> }) {
   const { publie, vue } = await searchParams;
   const { supabase, user, profile } = await requireHabits();
-  // Tout ce qui crédite des pousses passe avant le total affiché : bonus du jour, défi collectif, duels terminés
+  // Tout ce qui crédite des pousses passe avant le total affiché : bonus du jour, duels terminés
   // (getDuels solde les duels finis). Les défis et les duels eux-mêmes s'affichent dans Mon plan.
-  const [daily, weekly] = await Promise.all([claimDailyRewards(supabase), getWeeklyGoal(supabase), getDuels(supabase)]);
+  const [daily] = await Promise.all([claimDailyRewards(supabase), getDuels(supabase)]);
 
   const teamOnly = vue === "equipe" && !!profile.team_id;
   let postsQuery = supabase
@@ -105,13 +106,9 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
           Bonus débloqué : +{daily.gained} pousses{daily.questDone ? " pour tes quêtes du jour" : ""} !
         </p>
       ) : null}
-      {weekly && weekly.gained > 0 ? (
-        <p role="status" className="animate-pousse-pop rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#402a16]">
-          Défi collectif réussi : +{weekly.gained} pousses pour toi !
-        </p>
-      ) : null}
 
       {pulse ? <CompanyHero pulse={pulse as CompanyPulse} /> : null}
+      <InstallPrompt />
 
       {!profile.feed_choice_at ? (
         <section aria-labelledby="partage" className="flex flex-col gap-2.5 rounded-[18px] border-2 border-sapin bg-papier p-4">

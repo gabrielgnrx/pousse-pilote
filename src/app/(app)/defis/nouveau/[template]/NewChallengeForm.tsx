@@ -126,7 +126,7 @@ export function NewChallengeForm({
               mult: MODES.equipe.mult,
               text: teamKind
                 ? `Proposé au vote de lundi prochain dans le QG. S'il est choisi, toute l'équipe joue : +${BONUS.equipe} pour chaque contributeur.`
-                : "Pas pour ce geste : toute l'équipe doit pouvoir le faire (chacun n'a pas le même trajet ou les mêmes achats). En équipe : repas végé ou actions nature, ou le défi voté chaque lundi.",
+                : "Pas pour cette action : toute l'équipe doit pouvoir le faire (chacun n'a pas le même trajet ou les mêmes achats). En équipe : repas végé ou actions nature, ou le défi voté chaque lundi.",
               disabled: !teamKind,
             },
           ] as const
@@ -234,7 +234,7 @@ export function NewChallengeForm({
           Impact {level} · soit {carKmEquivalent(total)} km en voiture thermique
         </p>
         <p className="mt-2 text-xs leading-relaxed">
-          Calcul : {target} × ({current.formula}). Preuve : {template.proofHint.toLowerCase()}.{" "}
+          Calcul : {target} × ({current.formula}).{" "}
           <a href={template.source} target="_blank" rel="noreferrer" className="underline">Source ADEME</a>
         </p>
       </section>

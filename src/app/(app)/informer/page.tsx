@@ -42,7 +42,7 @@ export default async function InformerPage() {
       <nav aria-label="Aller à une rubrique" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
         {[
           { href: "#quiz", label: "Quiz" },
-          { href: "#fiches", label: "Fiches gestes" },
+          { href: "#fiches", label: "Fiches" },
           { href: "#recettes", label: "Recettes" },
           { href: "#saison", label: "De saison" },
           { href: "#actu", label: "Actus" },
@@ -86,7 +86,7 @@ export default async function InformerPage() {
       {fiches.length ? (
         <section id="fiches" className="flex scroll-mt-4 flex-col gap-2" aria-labelledby="fiches-titre">
           <div>
-            <h2 id="fiches-titre" className="font-display text-xl font-bold">Fiches gestes</h2>
+            <h2 id="fiches-titre" className="font-display text-xl font-bold">Les fiches</h2>
             <p className="text-sm text-terre">Pourquoi ça compte et comment s&apos;y prendre, d&apos;après ton bilan.</p>
           </div>
           <ul className="grid grid-cols-2 gap-2.5">
@@ -97,7 +97,7 @@ export default async function InformerPage() {
                   className={`flex h-full flex-col gap-1.5 rounded-[18px] p-3 ${t.id === featured.id ? "border-2 border-[#8fa77b] bg-papier" : "bg-papier"}`}
                 >
                   <span className="text-[11px] font-bold tracking-[0.06em] text-argile-fonce uppercase">
-                    {t.id === featured.id ? "Geste de la semaine" : `${verbOf(t.id)} · ${CATEGORY_LABEL[t.category]}`}
+                    {t.id === featured.id ? "La fiche de la semaine" : `${verbOf(t.id)} · ${CATEGORY_LABEL[t.category]}`}
                   </span>
                   <span className="text-sm leading-snug font-bold">{t.title}</span>
                   <span className="mt-auto text-[13px] font-bold text-[#22502c]">jusqu&apos;à −{formatKg(e.maxKg)} par {t.unit.one}</span>

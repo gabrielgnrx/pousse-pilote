@@ -13,8 +13,16 @@ export const DUEL_KINDS: Record<string, { label: string; unit: string; units: st
   repas: { label: "Repas végé", unit: "repas végé", units: "repas végé" },
   trajets: { label: "Trajets sans voiture", unit: "trajet sans voiture", units: "trajets sans voiture" },
   scan: { label: "Meilleurs choix au scanner", unit: "meilleur choix", units: "meilleurs choix" },
-  defis: { label: "Défis avec preuve", unit: "défi avec preuve", units: "défis avec preuve" },
+  defis: { label: "Actions enregistrées", unit: "action enregistrée", units: "actions enregistrées" },
 };
+
+/** Une action compte-t-elle dans ce duel ? (même règle que la base, migration 0023) */
+export function duelCountsFor(d: { kind: string; template_id?: string | null }, templateId: string): boolean {
+  if (d.kind === "action") return d.template_id === templateId;
+  if (d.kind === "trajets") return ["velo", "transports", "covoiturage"].includes(templateId);
+  if (d.kind === "repas") return ["vege", "vegetalien"].includes(templateId);
+  return d.kind === "defis";
+}
 
 /** Ce qu'on compte dans un duel, au pluriel (« repas végé », « Venu au bureau à vélo »). */
 export function duelUnits(d: { kind: string; template_id?: string | null; variant?: string | null }, titleOf?: (t: string, v: string) => string): string {

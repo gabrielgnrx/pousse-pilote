@@ -17,7 +17,7 @@ import {
   type Habits,
 } from "./footprint.ts";
 
-/** Pousses hors défis (les défis ont leurs propres pousses, +5 avec preuve). */
+/** Pousses hors actions (chaque action a ses propres pousses ; +5 si on la publie avec une photo). */
 export const POINTS = { preuve: 5, maintien: 10, influence: 15, temoin: 3, quete: 15, scan: 5, quiz: 1, collectif: 30, duelSeul: 40, duelDeux: 25 } as const;
 
 /** Paliers de série de jours actifs (bonus crédités par claim_daily_rewards, 0007_pousses.sql). */
@@ -30,21 +30,19 @@ export const STREAK_MILESTONES = [
 
 /** Le barème, tel qu'il est expliqué dans l'application. */
 export const POINT_RULES: { label: string; points: string }[] = [
-  { label: "Défi du quotidien validé avec preuve (trajet, repas, vêtement, semaine de chauffage)", points: "+10" },
-  { label: "Train au lieu de l'avion, avec preuve (aller simple)", points: "+30" },
-  { label: "Défis expert avec preuve : végétalien, réparation, vacances en train", points: "+15 à +150" },
-  { label: "Bonus de preuve (photo ou collègue témoin)", points: "+5" },
-  { label: "Défi validé sans preuve : le CO₂ compte, pas les pousses", points: "0" },
+  { label: "Action enregistrée avec le bouton + (trajet, repas, vêtement, semaine de chauffage), sans preuve", points: "+10" },
+  { label: "Train au lieu de l'avion (aller simple)", points: "+30" },
+  { label: "Actions expert : végétalien, réparation, vacances en train", points: "+15 à +150" },
+  { label: "Petites actions sans CO₂ évité pour toi (escaliers, gourde…), tous confondus", points: "5 par jour au plus" },
+  { label: "Publier une action dans le fil avec une photo", points: "+5" },
   { label: "Garder le cap sur une habitude (2 récompensées par semaine)", points: "+10" },
   { label: "Les 3 quêtes du jour réussies", points: "+15" },
   { label: "Série de jours actifs : 3, 7, 14, 30 jours", points: "+10, +25, +50, +100" },
   { label: "Scanner : choisir une alternative mieux notée (3 par jour)", points: "+5" },
   { label: "Un collègue relève un défi grâce à ta publication", points: "+15" },
-  { label: "Confirmer le défi d'un collègue", points: "+3" },
   { label: "Bonne réponse au quiz du jour (10 questions)", points: "+1" },
   { label: "Quiz du jour à 8/10 ou plus", points: "+5" },
   { label: "Graine mystère (après les 3 quêtes du jour) : au hasard, ou une plante rare", points: "+5 à +20" },
-  { label: "Défi collectif de la semaine atteint, si tu y as contribué", points: "+30" },
   { label: "Achat via une appli durable (occasion, anti-gaspi), avec le reçu", points: "+30" },
   { label: "Action qui compte dans un duel en cours / dans le défi d'équipe de la semaine", points: "×1,5 / ×2" },
   { label: "Défi perso réussi, seul", points: "+20" },

@@ -9,7 +9,7 @@ export function IntroCard() {
       <ol className="flex flex-col gap-2.5 text-sm leading-snug">
         <li className="flex gap-2.5">
           <span className="font-display font-bold">1</span>
-          <span><strong>Les pousses, pour jouer.</strong> Relève des défis, réussis tes quêtes du jour, garde tes bonnes habitudes : chaque geste fait grandir ta plante.</span>
+          <span><strong>Les pousses, pour jouer.</strong> Enregistre tes actions, relève des défis, réussis tes quêtes du jour : tu montes de niveau et ton jardin pousse.</span>
         </li>
         <li className="flex gap-2.5">
           <span className="font-display font-bold">2</span>

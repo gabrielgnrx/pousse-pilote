@@ -160,7 +160,7 @@ export default async function BilanPage() {
       <section className="flex flex-col gap-3">
         <div>
           <h2 className="font-display text-lg font-bold">Ton plan d&apos;action</h2>
-          <p className="text-xs text-terre">Les gestes qui réduisent le plus ton empreinte, calculés sur tes réponses.</p>
+          <p className="text-xs text-terre">Les actions qui réduisent le plus ton empreinte, calculés sur tes réponses.</p>
         </div>
         {plan.map((p, i) => (
           <article key={p.templateId} className="card flex flex-col gap-2">

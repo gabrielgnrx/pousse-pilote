@@ -6,12 +6,7 @@ import { getEngagement } from "@/lib/engagement-data";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { supabase, user, profile } = await requireProfile();
 
-  const [{ count: toConfirm }, { count: unseen }, me, { data: team }] = await Promise.all([
-    supabase
-      .from("validations")
-      .select("id", { count: "exact", head: true })
-      .eq("witness_id", user.id)
-      .eq("witness_status", "pending"),
+  const [{ count: unseen }, me, { data: team }] = await Promise.all([
     supabase.from("alerts").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("seen_at", null),
     getEngagement(supabase, user.id),
     profile.team_id ? supabase.from("teams").select("name").eq("id", profile.team_id).maybeSingle<{ name: string }>() : Promise.resolve({ data: null }),
@@ -23,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         initial={profile.display_name.charAt(0).toUpperCase()}
         total={me.points.total}
         streak={me.streak}
-        notifications={(toConfirm ?? 0) + (unseen ?? 0)}
+        notifications={unseen ?? 0}
         teamName={team?.name ?? null}
       />
       <main className="flex flex-col gap-4 px-4">{children}</main>

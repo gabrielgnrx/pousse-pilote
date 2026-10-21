@@ -1,24 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { GardenData } from "./garden.ts";
 
-export interface WeeklyGoal {
-  kind: string;
-  target: number;
-  progress: number;
-  mine: number;
-  ends_on: string;
-  reached: boolean;
-  /** Pousses créditées à l'instant (objectif atteint). */
-  gained: number;
-  last_week: { kind: string; reached: boolean };
-}
-
-/** Le défi collectif de la semaine (crédite +30 aux contributeurs quand il est atteint). */
-export async function getWeeklyGoal(supabase: SupabaseClient): Promise<WeeklyGoal | null> {
-  const { data, error } = await supabase.rpc("my_weekly_goal");
-  return error || !data ? null : (data as WeeklyGoal);
-}
-
 export type { Quiz } from "./quiz.ts";
 import type { Quiz } from "./quiz.ts";
 

@@ -2,7 +2,7 @@
 import { requireProfile } from "@/lib/session";
 
 // Doit correspondre à la liste affichée dans FeedbackForm.tsx.
-const BRAKES = ["Pas le temps", "Défis pas adaptés", "Preuve trop lourde", "J'ai oublié", "Rien"] as const;
+const BRAKES = ["Pas le temps", "Défis pas adaptés", "Appli pas claire", "J'ai oublié", "Rien"] as const;
 
 export interface FeedbackState {
   error?: string;

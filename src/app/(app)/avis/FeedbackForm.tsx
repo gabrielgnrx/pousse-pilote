@@ -4,7 +4,7 @@ import Link from "next/link";
 import { sendFeedback, type FeedbackState } from "./actions";
 import { FormError, SubmitButton } from "@/components/ui";
 
-const BRAKES = ["Pas le temps", "Défis pas adaptés", "Preuve trop lourde", "J'ai oublié", "Rien"];
+const BRAKES = ["Pas le temps", "Défis pas adaptés", "Appli pas claire", "J'ai oublié", "Rien"];
 
 export function FeedbackForm() {
   const [state, action] = useActionState<FeedbackState, FormData>(sendFeedback, {});

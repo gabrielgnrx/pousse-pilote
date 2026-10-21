@@ -5,9 +5,6 @@ import { todayParis } from "@/lib/dates";
 import { weekStart } from "@/lib/co2/engagement.ts";
 import { getCollectiveGoal, getEngagement, getTeamRanking } from "@/lib/engagement-data";
 import { GoalCard } from "@/components/GoalCard";
-import { WeeklyGoalCard } from "@/components/WeeklyGoalCard";
-import { DuelStrip } from "@/components/DuelStrip";
-import { getDuels, getWeeklyGoal } from "@/lib/game/data.ts";
 
 export const metadata = { title: "Classement des équipes · Pousse" };
 
@@ -17,12 +14,10 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
   const since = week ? weekStart(todayParis()) : null;
   const { supabase, user } = await requireProfile();
 
-  const [{ teams }, goal, me, weekly, duels] = await Promise.all([
+  const [{ teams }, goal, me] = await Promise.all([
     getTeamRanking(supabase, since),
     getCollectiveGoal(supabase),
     getEngagement(supabase, user.id),
-    getWeeklyGoal(supabase),
-    getDuels(supabase),
   ]);
 
   return (
@@ -97,19 +92,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
         <Link href="/agir" className="btn-primary min-h-11 shrink-0 px-4 text-sm">Gagner des pousses</Link>
       </section>
 
-      <h2 className="mt-1 font-display text-xl font-bold">Duels</h2>
-      <DuelStrip duels={duels} />
-      <Link href="/duels" className="flex items-center gap-3 rounded-[18px] border border-encre/10 bg-papier px-4 py-3">
-        <span aria-hidden="true" className="font-display text-xl">⚔</span>
-        <span className="flex-1">
-          <span className="block text-sm font-bold">Défier un collègue</span>
-          <span className="block text-xs text-terre">Une autre équipe, 7 jours, des pousses à gagner… ou à perdre</span>
-        </span>
-        <span className="text-sm font-bold">›</span>
-      </Link>
-
       <h2 className="mt-1 font-display text-xl font-bold">Toute l&apos;entreprise</h2>
-      {weekly ? <WeeklyGoalCard goal={weekly} /> : null}
       {goal ? (
         <section className="card flex flex-col gap-2">
           <p className="label">L&apos;impact de toute l&apos;entreprise</p>

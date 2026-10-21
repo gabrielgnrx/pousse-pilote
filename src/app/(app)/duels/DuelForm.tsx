@@ -46,7 +46,7 @@ export function DuelForm({
         </select>
       </label>
       <p className="text-xs leading-relaxed text-terre">
-        Seules les actions avec preuve comptent (ou les meilleurs choix au scanner). {DUEL_STAKES}
+        Chaque action enregistrée avec le bouton + compte, avec ou sans photo, et vaut ×1,5 pendant le duel (pour le scanner : chaque meilleur choix). {DUEL_STAKES}
       </p>
       {state.error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{state.error}</p> : null}
       <button type="submit" disabled={pending} className="btn-primary">{pending ? "Envoi…" : "Envoyer le défi"}</button>

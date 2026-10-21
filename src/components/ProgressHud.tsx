@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { levelFor } from "@/lib/co2/engagement.ts";
 
@@ -45,7 +45,15 @@ const TITLES: { prefix: string; title: string }[] = [
   { prefix: "/scanner", title: "S'informer" },
   { prefix: "/quiz", title: "S'informer" },
   { prefix: "/equipes", title: "Équipe" },
+  // Les pages du profil (ouvertes par l'avatar) : pas d'onglet allumé, donc un bouton retour.
+  { prefix: "/profil", title: "Profil" },
+  { prefix: "/bilan", title: "Mon bilan" },
+  { prefix: "/jardin", title: "Jardin" },
+  { prefix: "/notifications", title: "Notifications" },
+  { prefix: "/regles", title: "Le barème" },
+  { prefix: "/avis", title: "Ton avis" },
 ];
+const BACK = ["/profil", "/bilan", "/jardin", "/notifications", "/regles", "/avis"];
 
 /**
  * La barre du haut, identique sur toutes les pages : l'avatar (ton niveau en anneau) qui ouvre ton profil,
@@ -67,6 +75,8 @@ export function ProgressHud({
   teamName: string | null;
 }) {
   const path = usePathname();
+  const router = useRouter();
+  const withBack = BACK.some((p) => path === p || path.startsWith(`${p}/`));
   const level = levelFor(total);
   const pousses = Math.round(useCountUp(total, "pousse.hud.total"));
   const found = TITLES.find((t) => path === t.prefix || path.startsWith(`${t.prefix}/`))?.title ?? "Pousse";
@@ -74,6 +84,19 @@ export function ProgressHud({
 
   return (
     <header className="flex items-center gap-2.5 px-4 pt-3.5 pb-3">
+      {withBack ? (
+        <button
+          type="button"
+          onClick={() => (window.history.length > 1 ? router.back() : router.push("/fil"))}
+          aria-label="Retour"
+          className="-mr-1 flex size-10 shrink-0 items-center justify-center rounded-full bg-sable"
+        >
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2a2015" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5" />
+            <path d="m11 6-6 6 6 6" />
+          </svg>
+        </button>
+      ) : null}
       <Link
         href="/profil"
         aria-label={`Ton profil : niveau ${level.index + 1}, ${level.name}, ${total} pousses${level.next ? ` sur ${level.next.min}` : ""}`}
@@ -97,6 +120,9 @@ export function ProgressHud({
         </svg>
         <span className="absolute inset-[6px] flex items-center justify-center rounded-full bg-abricot font-display text-[15px] font-bold text-[#402a16]">
           {initial}
+        </span>
+        <span className="absolute -right-1 -bottom-0.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#f4e8d0] bg-sapin px-1 text-[11px] font-bold text-sapin-clair">
+          {level.index + 1}
         </span>
       </Link>
 

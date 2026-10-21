@@ -34,9 +34,9 @@ interface ChallengeRow {
 export default async function DefisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ onglet?: string; garde?: string; erreur?: string; valide?: string; cree?: string }>;
+  searchParams: Promise<{ onglet?: string; garde?: string; erreur?: string; cree?: string }>;
 }) {
-  const { onglet, garde, erreur, valide, cree } = await searchParams;
+  const { onglet, garde, erreur, cree } = await searchParams;
   const tab = onglet === "catalogue" ? "catalogue" : "en-cours";
   const { supabase, user, profile, habits } = await requireHabits();
   const today = todayParis();
@@ -109,7 +109,7 @@ export default async function DefisPage({
       <nav aria-label="Onglets des défis" className="flex rounded-full bg-sable p-1">
         {[
           { id: "en-cours", label: "Mes défis", href: "/defis" },
-          { id: "catalogue", label: "Gestes à essayer", href: "/defis?onglet=catalogue" },
+          { id: "catalogue", label: "Défis à lancer", href: "/defis?onglet=catalogue" },
         ].map((t) => (
           <Link
             key={t.id}
@@ -127,14 +127,6 @@ export default async function DefisPage({
       {garde ? (
         <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
           Noté pour cette semaine : +{POINTS.maintien} pousses !
-        </p>
-      ) : null}
-      {valide ? (
-        <p role="status" className="animate-pousse-pop rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#402a16]">
-          Validé ! Tes pousses et ton CO₂ évité sont comptés.
-          <span className="block text-xs font-semibold">
-            Ajoute une photo ou un collègue témoin la prochaine fois : +5 pousses.
-          </span>
         </p>
       ) : null}
       {cree ? (
@@ -173,7 +165,7 @@ export default async function DefisPage({
           ) : (
             <div className="card flex flex-col gap-2 text-center">
               <p className="font-display text-lg font-bold">Aucun défi en cours</p>
-              <p className="text-sm text-brun">Choisis un geste adapté à ton bilan et essaie-le quelques jours, seul, en duel ou en équipe.</p>
+              <p className="text-sm text-brun">Choisis une action adaptée à ton bilan et essaie-le quelques jours, seul, en duel ou en équipe.</p>
             </div>
           )}
 
@@ -250,7 +242,7 @@ export default async function DefisPage({
             </section>
           ) : null}
 
-          <Link href="/duels" className="self-center text-sm font-bold text-sapin underline underline-offset-2">Tous mes duels ›</Link>
+          <Link href="/duels" className="self-center text-sm font-bold text-sapin underline underline-offset-2">Mes duels · défier un collègue ›</Link>
         </>
       ) : (
         <>
@@ -269,7 +261,7 @@ export default async function DefisPage({
             ))}
           </div>
           <p className="text-sm text-brun">
-            Triés par impact pour toi. Lance un défi sur plusieurs jours, ou enregistre simplement le geste avec le
+            Triés par impact pour toi. Lance un défi sur plusieurs jours, ou enregistre simplement l&apos;action avec le
             bouton + quand tu le fais.
           </p>
           {[...eligible].sort((a, b) => b.e.maxKg - a.e.maxKg).map(({ t, e }) => {
@@ -283,12 +275,11 @@ export default async function DefisPage({
                   <h2 className="mt-1 font-bold">{t.title}</h2>
                   <Link href={`/informer/geste/${t.id}`} className="text-xs font-bold underline underline-offset-2">Pourquoi et comment</Link>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    <span className="chip bg-peche">+{t.pointsPerUnit} pousses avec preuve</span>
+                    <span className="chip bg-peche">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
                     <span className="chip bg-sauge">
                       −{e.minKg === e.maxKg ? formatKg(e.minKg) : `${formatKg(e.minKg)} à ${formatKg(e.maxKg)}`} CO₂ par {t.unit.one}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-brun">Preuve : {t.proofHint.toLowerCase()}</p>
                 </div>
                 <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-argile text-white">
                   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
@@ -324,7 +315,7 @@ export default async function DefisPage({
                 <h2 className="font-display text-lg font-bold">Pour aller plus loin</h2>
                 <p className="text-xs text-terre">
                   {alreadySober
-                    ? "Tu as déjà adopté l'essentiel des gestes du quotidien : voici ce qui pèse encore dans ton bilan."
+                    ? "Tu as déjà adopté l'essentiel des actions du quotidien : voici ce qui pèse encore dans ton bilan."
                     : "Des défis plus exigeants, qui rapportent plus de pousses."}
                 </p>
               </div>
@@ -338,7 +329,7 @@ export default async function DefisPage({
                     <h3 className="mt-1 font-bold">{t.title}</h3>
                     {t.pitch ? <p className="mt-1 text-xs leading-relaxed text-brun">{t.pitch}</p> : null}
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      <span className="chip bg-peche">+{t.pointsPerUnit} pousses avec preuve</span>
+                      <span className="chip bg-peche">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
                       <span className="chip bg-sauge">
                         −{e.minKg === e.maxKg ? formatKg(e.minKg) : `${formatKg(e.minKg)} à ${formatKg(e.maxKg)}`} CO₂ par {t.unit.one}
                       </span>

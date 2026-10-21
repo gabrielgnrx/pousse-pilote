@@ -49,11 +49,12 @@ export default function MethodologiePage() {
           n&apos;envoie jamais de chiffre de CO₂.
         </p>
       </Section>
-      <Section title="Preuves et plafonds">
+      <Section title="Déclaration et plafonds">
         <p>
-          Chaque validation a un niveau de preuve : photo prise dans l&apos;application, confirmation
-          d&apos;un collègue, ou les deux. Sans preuve, la validation compte pour toi mais n&apos;est pas
-          publiée. Si le collègue ne confirme pas, la validation est annulée.
+          Une action s&apos;enregistre en un tap avec le bouton +, sans preuve : elle rapporte ses pousses
+          tout de suite et compte dans tes défis et tes duels. Seuls les achats via une appli durable
+          demandent le reçu, qui reste privé. Publier une action dans le fil avec une photo est un choix,
+          qui rapporte 5 pousses de plus.
         </p>
         <p>
           Plafonds : 2 trajets domicile-travail et 2 repas par jour, 3 vêtements par jour, une semaine de
@@ -62,7 +63,7 @@ export default function MethodologiePage() {
       </Section>
       <Section title="Défis expert">
         <p>
-          Pour celles et ceux qui ont déjà adopté les gestes du quotidien, des défis plus exigeants visent
+          Pour celles et ceux qui ont déjà adopté les actions du quotidien, des défis plus exigeants visent
           les postes qui restent : repas végétalien au lieu de végétarien (0,31 kg par repas), vacances en
           train au lieu d&apos;un aller-retour long-courrier (12 000 km d&apos;avion remplacés par 2 000 km
           de TGV, soit environ 1,99 t), réparer son smartphone (80,2 kg) ou son ordinateur (193 kg) au lieu
@@ -73,18 +74,18 @@ export default function MethodologiePage() {
       <Section title="Deux chiffres, deux rôles">
         <p>
           <strong>Les pousses servent à jouer.</strong> C&apos;est le seul chiffre du classement, individuel
-          comme par équipe. Seules les validations avec preuve (photo ou collègue témoin) en rapportent : défi du
-          quotidien 10 pousses par unité, train 30, défis expert de 15 à 150, plus 5 de bonus de preuve. Sans
-          preuve, le CO₂ évité est compté mais pas les pousses. Garder le cap sur une habitude bas carbone déjà
+          comme par équipe. Chaque action enregistrée en rapporte : action du quotidien 10 pousses, train 30,
+          actions expert de 15 à 150 ; les petites actions qui n&apos;évitent pas de CO₂ pour toi, 5 par jour au
+          plus ; 5 de plus si tu la publies avec une photo. Garder le cap sur une habitude bas carbone déjà
           acquise : 10 pousses, pour 2 habitudes par semaine au plus ; les trois quêtes du jour, tirées chaque
-          matin selon ton profil : 15 ; une série de 3, 7, 14 ou 30 jours actifs (défi, habitude, bravo, scan) :
+          matin selon ton profil : 15 ; une série de 3, 7, 14 ou 30 jours actifs (action, habitude, bravo, scan) :
           10, 25, 50 ou 100 ; un meilleur choix au scanner : 5, trois fois par jour ; un collègue qui relève un
-          défi depuis ta publication : 15 ; confirmer le défi d&apos;un collègue : 3.
+          défi depuis ta publication : 15.
         </p>
         <p>
           <strong>Les kg de CO₂ évités mesurent l&apos;impact déclaré.</strong> Les actions sont déclarées par
           chacun sans vérification ; ils restent stricts (seulement ce que
-          tes défis changent par rapport à ton bilan) et ne servent pas à gagner : ils alimentent
+          tes actions changent par rapport à ton bilan) et ne servent pas à gagner : ils alimentent
           l&apos;objectif commun de l&apos;entreprise, par défaut 30 kg par participant sur la durée du pilote.
         </p>
         <p>

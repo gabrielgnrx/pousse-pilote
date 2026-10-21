@@ -56,7 +56,7 @@ export type ExploitKey = "serie30" | "expert" | "collectif" | "duel" | "inspire"
 export const RARES: Rare[] = [
   { key: "chene", name: "Chêne", how: "30 jours actifs d'affilée", shape: "arbre", color: "#4f7a35", accent: "#6b4a2b", exploit: "serie30" },
   { key: "sequoia", name: "Séquoia", how: "Un défi expert réussi", shape: "arbre", color: "#3d6b4a", accent: "#9a4a2e", exploit: "expert" },
-  { key: "baobab", name: "Baobab", how: "Un défi collectif atteint avec l'entreprise", shape: "arbre", color: "#8aa24f", accent: "#a88a6a", exploit: "collectif" },
+  { key: "baobab", name: "Baobab", how: "Un défi d'équipe réussi", shape: "arbre", color: "#8aa24f", accent: "#a88a6a", exploit: "collectif" },
   { key: "rosier", name: "Rosier", how: "Un duel réussi", shape: "fleur", color: "#d6527a", accent: "#4f7a35", exploit: "duel" },
   { key: "saule", name: "Saule", how: "Un collègue a relevé ton défi", shape: "arbre", color: "#a6c27a", accent: "#7a6a4a", exploit: "inspire" },
   { key: "orchidee", name: "Orchidée", how: "Graine mystère", shape: "fleur", color: "#c77dd6", accent: "#f2e06b" },

@@ -3,6 +3,7 @@ import { todayParis } from "@/lib/dates";
 import { actionItems } from "@/lib/actions-catalog";
 import { ActionPicker } from "./ActionPicker";
 import { getDuels } from "@/lib/game/data.ts";
+import { duelCountsFor } from "@/lib/game/labels.ts";
 import { countsForTeam, type Boost } from "@/lib/boosts";
 import type { TeamWeek } from "@/lib/team";
 
@@ -51,7 +52,7 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
       boosts[i.key] = { kind: "equipe", mult: 2, label: "Compte pour le défi d'équipe" };
       continue;
     }
-    const d = duels.find((x) => x.status === "active" && x.template_id === i.templateId);
+    const d = duels.find((x) => x.status === "active" && duelCountsFor(x, i.templateId));
     if (d) boosts[i.key] = { kind: "duel", mult: 1.5, label: `Compte pour ton duel contre ${d.other_name}` };
   }
   // Tes habitudes : d'abord les défis en cours, puis ce que tu fais souvent ;

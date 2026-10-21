@@ -5,9 +5,9 @@ import { signOut, updatePreferences } from "./actions";
 import { DeleteAccount } from "./DeleteAccount";
 import { SubmitButton } from "@/components/ui";
 import { getEngagement } from "@/lib/engagement-data";
+import { levelFor } from "@/lib/co2/engagement.ts";
 import { RecentGains } from "@/components/RecentGains";
 import { PhoneCard } from "./PhoneCard";
-import { InstallPrompt } from "@/components/InstallPrompt";
 import type { Footprint } from "@/lib/co2/footprint.ts";
 
 const FP_PARTS: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
@@ -31,6 +31,7 @@ export default async function ProfilPage() {
       .limit(1)
       .maybeSingle<{ total_kg: number; by_category: Footprint["byCategory"] }>(),
   ]);
+  const level = levelFor(e.points.total);
 
   return (
     <>
@@ -43,6 +44,29 @@ export default async function ProfilPage() {
           <p className="text-sm text-terre">{user.email}</p>
         </div>
       </section>
+
+      <Link href="/jardin" className="flex flex-col gap-2 rounded-[20px] bg-[#2f5b36] p-4 text-[#f7f1e3]">
+        <span className="flex items-baseline justify-between gap-2">
+          <span className="font-display text-lg font-bold">Niveau {level.index + 1} · {level.name}</span>
+          <span className="text-sm font-bold text-[#cfe3c4]">{e.points.total.toLocaleString("fr-FR")} pousses</span>
+        </span>
+        <span
+          className="h-2.5 overflow-hidden rounded-full bg-white/[0.18]"
+          role="progressbar"
+          aria-label={level.next ? `Vers le niveau ${level.next.name}` : "Niveau maximum"}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(level.progress * 100)}
+        >
+          <span className="block h-full rounded-full bg-abricot" style={{ width: `${Math.max(3, level.progress * 100)}%` }} />
+        </span>
+        <span className="flex items-center justify-between gap-2 text-[13px]">
+          <span className="text-[#ddebd3]">
+            {level.next ? `Encore ${level.next.missing.toLocaleString("fr-FR")} pour devenir ${level.next.name}` : "Niveau maximum atteint"}
+          </span>
+          <span className="shrink-0 font-bold">Mon jardin ›</span>
+        </span>
+      </Link>
 
       {fp ? (
         <Link href="/bilan" className="card flex flex-col gap-2">
@@ -66,7 +90,7 @@ export default async function ProfilPage() {
             ))}
           </div>
           {e.kgAvoided > 0 ? (
-            <span className="rounded-xl bg-[#e3edd9] px-3 py-2 text-[13px] font-bold text-[#22502c]">−{formatKg(e.kgAvoided)} évités grâce à tes gestes</span>
+            <span className="rounded-xl bg-[#e3edd9] px-3 py-2 text-[13px] font-bold text-[#22502c]">−{formatKg(e.kgAvoided)} évités grâce à tes actions</span>
           ) : null}
           <span className="text-sm font-bold underline underline-offset-2">Le détail et comment le réduire ›</span>
         </Link>
@@ -74,7 +98,6 @@ export default async function ProfilPage() {
 
       <nav aria-label="Mon espace" className="flex flex-col overflow-hidden rounded-[20px] border border-encre/10 bg-papier">
         {[
-          { href: "/jardin", label: "Mon jardin" },
           { href: "/notifications", label: "Notifications" },
           { href: "/regles", label: "Le barème des pousses" },
         ].map((l, i) => (
@@ -106,7 +129,7 @@ export default async function ProfilPage() {
               l: `Collègues inspirés${e.influence.challenges > 0 ? ` (${e.influence.challenges} défi${e.influence.challenges > 1 ? "s" : ""})` : ""}`,
               v: e.points.influence,
             },
-            { l: "Témoin pour un collègue", v: e.points.temoin },
+            ...(e.points.temoin ? [{ l: "Témoin pour un collègue (ancien barème)", v: e.points.temoin }] : []),
             { l: "Quêtes du jour et séries", v: e.points.bonus },
             { l: "Meilleurs choix au scanner", v: e.points.scan },
             { l: "Quiz, graines, défis d'équipe et duels", v: e.points.jeu },
@@ -172,7 +195,6 @@ export default async function ProfilPage() {
         <Link href="/methodologie" className="font-bold underline">Méthodologie de calcul</Link>
       </section>
 
-      <InstallPrompt />
       <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
         <span className="flex-1">
           <span className="block text-sm font-bold">30 secondes pour améliorer Pousse ?</span>

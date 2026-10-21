@@ -28,7 +28,7 @@ export function CompanyHero({ pulse }: { pulse: CompanyPulse }) {
       <span className="text-[11px] font-bold tracking-[0.08em] text-[#cfe3c4] uppercase">Ensemble chez {pulse.name}</span>
       <span className="flex items-baseline gap-2">
         <span className="font-display text-[40px] leading-none font-bold tabular-nums">{formatKg(kg)}</span>
-        <span className="text-sm font-semibold text-[#ddebd3]">de CO₂ évités</span>
+        <span className="text-sm font-semibold text-[#ddebd3]">de CO₂ évités (déclaré)</span>
       </span>
       {Number(pulse.today_kg) > 0 || active > 0 ? (
         <span className="self-start rounded-full bg-[#cfe3c4] px-2.5 py-1 text-xs font-bold text-[#1e4527]">

@@ -125,7 +125,7 @@ export function ActionPicker({
       <div className="flex flex-col gap-1">
         <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">Une action, aujourd&apos;hui</p>
         <h1 className="font-display text-2xl font-bold">Qu&apos;as-tu fait de bien ?</h1>
-        <p className="text-sm text-terre">Un geste perso, un tap, des pousses tout de suite. Le CO₂ vient de ton bilan.</p>
+        <p className="text-sm text-terre">Une action, un tap, des pousses tout de suite. Le CO₂ vient de ton bilan.</p>
       </div>
 
       <label className="flex h-12 items-center gap-2 rounded-2xl border-[1.5px] border-[#c7b78c] bg-papier px-4">
@@ -197,7 +197,7 @@ export function ActionPicker({
 
       <p className="text-center text-xs text-terre">
         Pas de preuve demandée, sauf le reçu pour les achats via une appli. Un plafond par jour s&apos;applique (2 trajets, 2 repas…) pour que le compteur de
-        l&apos;entreprise reste juste. Les gestes à 0 kg rapportent 5 pousses par jour au plus, tous confondus.
+        l&apos;entreprise reste juste. Les actions à 0 kg rapportent 5 pousses par jour au plus, tous confondus.
       </p>
 
       {receiptFor && byKey[receiptFor] ? (
