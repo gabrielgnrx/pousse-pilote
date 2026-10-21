@@ -13,7 +13,7 @@ import { getDuels, getQuiz, getWeeklyGoal } from "@/lib/game/data.ts";
 import { QuizPopup } from "@/components/QuizPopup";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
-import { cancelChallenge, reportPost, toggleCheer } from "./actions";
+import { cancelChallenge, reportPost, setFeedSharing, toggleCheer } from "./actions";
 import { ActiveChallenges } from "@/components/ActiveChallenges";
 import { DuelStrip } from "@/components/DuelStrip";
 import { formatDay, todayParis } from "@/lib/dates";
@@ -54,7 +54,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
   if (teamOnly) postsQuery = postsQuery.eq("team_id", profile.team_id as string);
 
   const today = todayParis();
-  const [{ data: posts }, { data: myReports }, cookieStore, { data: teamWeek }, { data: mine }, quiz] = await Promise.all([
+  const [{ data: posts }, { data: myReports }, cookieStore, { data: teamWeek }, { data: mine }, quiz, { data: challengeEvents }] = await Promise.all([
     postsQuery.order("created_at", { ascending: false }).limit(30).returns<Post[]>(),
     supabase.from("reports").select("validation_id").eq("user_id", user.id),
     cookies(),
@@ -67,6 +67,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       .gte("ends_on", today)
       .order("ends_on"),
     getQuiz(supabase),
+    supabase.rpc("company_challenge_feed", { p_team_only: teamOnly }),
   ]);
   // Mes défis en cours, avec leur avancée et le duel qui leur est lié.
   const challengeIds = (mine ?? []).map((c) => c.id as string);
@@ -100,6 +101,28 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
     ? await supabase.storage.from(PROOF_BUCKET).createSignedUrls(photoPaths, 3600)
     : { data: [] as { path: string | null; signedUrl: string }[] };
   const photoUrl = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+
+  // Le fil : les actions enregistrées et les défis lancés ou réussis, du plus récent au plus ancien.
+  type ChallengeEvent = {
+    id: string;
+    user_id: string;
+    display_name: string;
+    team_name: string | null;
+    template_id: string;
+    variant: string;
+    target: number;
+    done: number;
+    status: string;
+    event: "lance" | "reussi";
+    at: string;
+    duel_with: string | null;
+    ends_on: string;
+  };
+  const events = (challengeEvents ?? []) as ChallengeEvent[];
+  const timeline = [
+    ...(posts ?? []).map((p) => ({ kind: "action" as const, at: p.created_at, p })),
+    ...events.map((e) => ({ kind: "defi" as const, at: e.at, e })),
+  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   const reported = new Set((myReports ?? []).map((r) => r.validation_id));
 
   return (
@@ -134,6 +157,21 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
 
       <ActiveChallenges items={activeChallenges} cancel={cancelChallenge} />
 
+      {!profile.feed_choice_at ? (
+        <section aria-labelledby="partage" className="flex flex-col gap-2.5 rounded-[18px] border-2 border-sapin bg-papier p-4">
+          <h2 id="partage" className="font-display text-lg font-bold">Nouveau : le fil montre tout ce que vous faites</h2>
+          <p className="text-sm text-brun">
+            Tes actions et tes défis (lancés, réussis) apparaissent dans le fil de l&apos;entreprise, pour que tes collègues
+            puissent t&apos;encourager ou essayer aussi. Rien de ce que tu as fait avant n&apos;est publié, et tes reçus
+            d&apos;achat restent privés. Tu peux changer d&apos;avis dans ton profil.
+          </p>
+          <form action={setFeedSharing} className="flex gap-2">
+            <button name="share" value="oui" className="btn-dark min-h-11 flex-1 text-sm">D&apos;accord, je partage</button>
+            <button name="share" value="non" className="btn-ghost min-h-11 flex-1 text-sm">Garder pour moi</button>
+          </form>
+        </section>
+      ) : null}
+
       <div id="publications" className="mt-0.5 flex scroll-mt-4 items-center justify-between gap-2">
         <h2 className="font-display text-xl font-bold">Fil d&apos;actu</h2>
         {profile.team_id ? (
@@ -157,17 +195,76 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         ) : null}
       </div>
 
-      {(posts ?? []).length === 0 ? (
+      {(posts ?? []).length === 0 && events.length === 0 ? (
         <section className="flex flex-col gap-3 rounded-[18px] bg-papier p-4 text-center">
           <p className="font-display text-lg font-bold">Le fil est encore calme</p>
           <p className="text-sm text-brun">
-            Enregistre une action avec le bouton + puis publie-la avec une photo : tes collègues suivront.
+            Enregistre une action avec le bouton + : elle apparaît ici, et tes collègues suivront.
           </p>
           <Link href="/agir" className="btn-dark">Enregistrer une action</Link>
         </section>
       ) : null}
 
-      {(posts ?? []).map((p) => {
+      {timeline.map((item) => {
+        if (item.kind === "defi") {
+          const e = item.e;
+          const t = TEMPLATE_BY_ID[e.template_id];
+          const mine = e.user_id === user.id;
+          const name = mine ? "Toi" : e.display_name;
+          const title = t ? actionTitle(t.id, e.variant) : "Défi";
+          const won = e.event === "reussi";
+          return (
+            <article key={`defi-${e.id}-${e.event}`} className={`flex flex-col gap-2.5 rounded-[18px] p-3.5 ${won ? "bg-[#e3edd9]" : "bg-papier"}`}>
+              <div className="flex items-center gap-2.5">
+                <Link
+                  href={mine ? "/jardin" : `/jardin/${e.user_id}`}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-encre"
+                  style={{ background: avatarColor(e.user_id) }}
+                  aria-label={`Jardin de ${name}`}
+                >
+                  {e.display_name.charAt(0).toUpperCase()}
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">
+                    {name}
+                    {e.team_name ? ` · ${e.team_name}` : ""}
+                  </p>
+                  <p className="truncate text-xs text-[#5e5240]">
+                    {won ? (mine ? "as réussi un défi" : "a réussi un défi") : mine ? "as lancé un défi" : "a lancé un défi"} · {relativeTime(e.at)}
+                  </p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold uppercase ${e.duel_with ? "bg-sapin text-sapin-clair" : "bg-sable text-brun"}`}>
+                  {e.duel_with ? "Duel" : "Défi"}
+                </span>
+              </div>
+              <p className="text-[15px] leading-snug font-bold">
+                {won ? "Objectif atteint : " : ""}
+                {title}, {e.target} {t ? (e.target > 1 ? t.unit.many : t.unit.one) : "fois"}
+                {e.duel_with ? ` · en duel contre ${e.duel_with}` : ""}
+              </p>
+              {!won ? (
+                <div className="flex items-center gap-2 text-xs text-terre">
+                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-trait">
+                    <span className="block h-full rounded-full bg-sapin" style={{ width: `${Math.min(100, (e.done / Math.max(1, e.target)) * 100)}%` }} />
+                  </span>
+                  <span className="font-bold">{Math.min(e.done, e.target)}/{e.target}</span>
+                  <span>· jusqu&apos;au {formatDay(e.ends_on, "short")}</span>
+                </div>
+              ) : null}
+              {!mine && t ? (
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={`/defis/nouveau/${t.id}?variante=${e.variant}`}
+                    className="flex h-10 items-center rounded-xl border border-[#cdbf9f] px-3.5 text-[13px] font-semibold"
+                  >
+                    Je relève aussi
+                  </Link>
+                </div>
+              ) : null}
+            </article>
+          );
+        }
+        const p = item.p;
         const t = TEMPLATE_BY_ID[p.template_id];
         const postCheers = (cheers ?? []).filter((c) => c.validation_id === p.id);
         const cheered = postCheers.some((c) => c.user_id === user.id);

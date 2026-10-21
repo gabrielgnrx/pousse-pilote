@@ -224,7 +224,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
 
         {action.receipt ? (
           <div className="flex w-full flex-col gap-2">
-            <p className="rounded-2xl bg-sable px-3 py-2 text-xs text-brun">Ton reçu reste privé : il ne part pas dans le fil et il est effacé après 90 jours.</p>
+            <p className="rounded-2xl bg-sable px-3 py-2 text-xs text-brun">Ton reçu reste privé : tes collègues ne le voient jamais, et il est effacé après 90 jours.</p>
             <button ref={primary} type="button" onClick={finish} className="btn-dark min-h-12 px-3">Super !</button>
           </div>
         ) : publishing ? (
@@ -240,7 +240,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
         ) : (
           <div className="flex w-full gap-2">
             <button type="button" onClick={() => setPublishing(true)} className="btn-ghost min-h-12 flex-1 px-3 text-sm">
-              Publier avec photo
+              Ajouter une photo · +5
             </button>
             <button ref={primary} type="button" onClick={finish} className="btn-dark min-h-12 flex-1 px-3">
               {c && !challengeDone ? "Je continue !" : "Super !"}

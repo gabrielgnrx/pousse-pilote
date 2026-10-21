@@ -2,6 +2,17 @@
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/session";
 
+/** Le choix de partager (ou non) ses actions et ses défis dans le fil, une fois pour toutes. */
+export async function setFeedSharing(form: FormData) {
+  const { supabase, user } = await requireProfile();
+  await supabase
+    .from("profiles")
+    .update({ share_feed: form.get("share") === "oui", feed_choice_at: new Date().toISOString() })
+    .eq("id", user.id);
+  revalidatePath("/fil");
+  revalidatePath("/profil");
+}
+
 export async function toggleCheer(form: FormData) {
   const { supabase, user } = await requireProfile();
   const id = String(form.get("validation"));

@@ -23,15 +23,13 @@ export function ValidateForm({
   const [units, setUnits] = useState(1);
   const [photoName, setPhotoName] = useState<string>();
   const [witness, setWitness] = useState("");
-  const [visibility, setVisibility] = useState<"company" | "private">("company");
   const proofLevel = (photoName ? 1 : 0) + (witness ? 1 : 0);
-  const willPublish = proofLevel > 0 && visibility === "company";
 
   return (
     <form action={action} className="flex flex-col gap-5">
       <input type="hidden" name="challenge" value={challengeId} />
       <input type="hidden" name="units" value={units} />
-      <input type="hidden" name="visibility" value={visibility} />
+      <input type="hidden" name="visibility" value="company" />
 
       {maxUnits > 1 ? (
         <fieldset className="flex flex-col gap-2">
@@ -100,29 +98,13 @@ export function ValidateForm({
         <textarea name="caption" rows={2} maxLength={280} placeholder="Raconte ta journée en une phrase" className="input resize-none" />
       </label>
 
-      <fieldset className="card flex flex-col gap-2">
-        <legend className="sr-only">Partage</legend>
-        <p className="font-display font-bold">Partager dans le fil de ton entreprise ?</p>
-        <p className="text-xs text-brun">Rien n&apos;est publié sans ton accord, ni sans preuve.</p>
-        {[
-          { id: "company" as const, label: "Mes collègues", sub: "Visible dans le fil interne" },
-          { id: "private" as const, label: "Garder pour moi", sub: "Compté dans tes défis, non publié" },
-        ].map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            aria-pressed={visibility === o.id}
-            onClick={() => setVisibility(o.id)}
-            className={`flex min-h-12 flex-col justify-center rounded-xl border-2 px-3 text-left ${visibility === o.id ? "border-sapin bg-sauge" : "border-transparent bg-creme"}`}
-          >
-            <span className="text-sm font-bold">{o.label}</span>
-            <span className="text-xs text-terre">{o.sub}</span>
-          </button>
-        ))}
-      </fieldset>
+      <p className="text-xs text-terre">
+        Ta validation apparaît dans le fil de l&apos;entreprise si tu as accepté le partage (réglable dans ton profil). Avec une
+        photo ou un collègue témoin : +5 pousses.
+      </p>
 
       <FormError message={state.error} />
-      <SubmitButton pendingLabel="Validation…">{willPublish ? "Valider et publier" : "Valider sans publier"}</SubmitButton>
+      <SubmitButton pendingLabel="Validation…">{proofLevel > 0 ? "Valider avec preuve" : "Valider"}</SubmitButton>
     </form>
   );
 }

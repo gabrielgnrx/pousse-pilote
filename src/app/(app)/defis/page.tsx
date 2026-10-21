@@ -180,8 +180,7 @@ export default async function DefisPage({
         <p role="status" className="animate-pousse-pop rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#402a16]">
           Validé ! Tes pousses et ton CO₂ évité sont comptés.
           <span className="block text-xs font-semibold">
-            Sans preuve, la validation reste privée. Ajoute une photo ou un collègue la prochaine fois : +5 pousses et
-            elle apparaît dans le fil.
+            Ajoute une photo ou un collègue témoin la prochaine fois : +5 pousses.
           </span>
         </p>
       ) : null}

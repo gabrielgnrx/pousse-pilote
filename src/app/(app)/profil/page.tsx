@@ -107,6 +107,10 @@ export default async function ProfilPage() {
           <input name="display_name" defaultValue={profile.display_name} maxLength={40} className="input" />
         </label>
         <label className="flex items-start gap-3 text-sm">
+          <input type="checkbox" name="share_feed" defaultChecked={profile.share_feed} className="mt-0.5 size-5 accent-sapin" />
+          <span>Mes actions et mes défis apparaissent dans le fil de l&apos;entreprise (jamais mes reçus d&apos;achat).</span>
+        </label>
+        <label className="flex items-start gap-3 text-sm">
           <input type="checkbox" name="consent_team_stats" defaultChecked={profile.consent_team_stats} className="mt-0.5 size-5 accent-sapin" />
           <span>Mes défis comptent dans les totaux anonymes de mon équipe.</span>
         </label>

@@ -10,6 +10,9 @@ export interface Profile {
   display_name: string;
   consent_team_stats: boolean;
   consent_feedback: boolean;
+  /** Mes actions et défis apparaissent dans le fil (après un choix daté, feed_choice_at). */
+  share_feed: boolean;
+  feed_choice_at: string | null;
   created_at: string;
 }
 

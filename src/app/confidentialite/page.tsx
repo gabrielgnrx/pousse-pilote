@@ -16,8 +16,9 @@ export default function ConfidentialitePage() {
       </Section>
       <Section title="Ce que voient tes collègues">
         <p>
-          Ton prénom et ton équipe, et les défis que tu choisis de publier dans le fil interne. Rien
-          n&apos;est publié sans ton accord.
+          Ton prénom et ton équipe, et, si tu l&apos;acceptes, tes actions et tes défis dans le fil interne. Ce
+          choix t&apos;est demandé une fois et se change à tout moment dans ton profil ; rien de ce que tu as fait
+          avant n&apos;est rendu public. Tes reçus d&apos;achat ne sont jamais visibles par tes collègues.
         </p>
       </Section>
       <Section title="Ce que fait Pousse de tes données">

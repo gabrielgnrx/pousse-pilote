@@ -27,7 +27,18 @@ export async function GET(request: NextRequest) {
     .lt("created_at", limit)
     .limit(500);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!old?.length) return NextResponse.json({ purged: 0 });
+  // Les reçus d'achat aussi : 90 jours, puis effacés.
+  const { data: receipts } = await admin
+    .from("validations")
+    .select("id, receipt_path")
+    .not("receipt_path", "is", null)
+    .lt("created_at", limit)
+    .limit(500);
+  if (receipts?.length) {
+    await admin.storage.from(PROOF_BUCKET).remove(receipts.map((v) => v.receipt_path as string));
+    await admin.from("validations").update({ receipt_path: null }).in("id", receipts.map((v) => v.id));
+  }
+  if (!old?.length) return NextResponse.json({ purged: 0, receipts: receipts?.length ?? 0 });
 
   await admin.storage.from(PROOF_BUCKET).remove(old.map((v) => v.proof_photo_path as string));
   await admin
@@ -35,5 +46,5 @@ export async function GET(request: NextRequest) {
     .update({ proof_photo_path: null })
     .in("id", old.map((v) => v.id));
 
-  return NextResponse.json({ purged: old.length });
+  return NextResponse.json({ purged: old.length, receipts: receipts?.length ?? 0 });
 }
