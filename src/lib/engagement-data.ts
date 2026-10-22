@@ -164,7 +164,7 @@ export async function getTeamRanking(supabase: SupabaseClient, since: string | n
   return { teams, mine: mineIndex >= 0 ? { rank: mineIndex + 1, row: teams[mineIndex] } : null };
 }
 
-export type QuestKey = "preuve" | "defi" | "expert" | "lancer" | "scan" | "meilleur_choix" | "bravo" | "cap" | "quiz";
+export type QuestKey = "preuve" | "defi" | "expert" | "lancer" | "scan" | "meilleur_choix" | "bravo" | "quiz";
 
 /** La graine mystère du jour : à ouvrir, ou déjà ouverte (avec ce qu'elle a donné). */
 export type SeedState = { state: "ready" } | { state: "opened"; plant: string | null; points: number } | null;
