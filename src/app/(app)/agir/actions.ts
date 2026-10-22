@@ -40,6 +40,8 @@ export type LogResult = { ok: true; action: LoggedAction } | { ok: false; error:
 
 const ERRORS: Record<string, string> = {
   cap_reached: "Déjà compté aujourd'hui : au-delà du plafond du jour, rien n'est compté. Reviens demain !",
+  week_cap_reached:
+    "Plafond de la semaine atteint, d'après ton bilan (2 trajets par jour de bureau déclaré, 5 jours de télétravail, 3 achats d'occasion). Rendez-vous lundi !",
   unknown_action: "Cette action n'existe pas.",
   teletravail_conflict: "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.",
   receipt_required: "Joins ton justificatif (reçu, billet ou facture) pour valider cette action.",

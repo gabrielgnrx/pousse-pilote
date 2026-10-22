@@ -124,7 +124,7 @@ export default async function ProfilPage() {
         <ul className="flex flex-col text-sm">
           {[
             { l: "Défis validés", v: e.points.defis },
-            { l: "Habitudes gardées", v: e.points.maintien },
+            ...(e.points.maintien ? [{ l: "Habitudes gardées (ancien barème)", v: e.points.maintien }] : []),
             {
               l: `Collègues inspirés${e.influence.challenges > 0 ? ` (${e.influence.challenges} défi${e.influence.challenges > 1 ? "s" : ""})` : ""}`,
               v: e.points.influence,

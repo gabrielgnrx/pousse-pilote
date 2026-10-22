@@ -199,6 +199,7 @@ psql -d pousse_test -f supabase/tests/scenario_duels.sql
 psql -d pousse_test -f supabase/tests/scenario_nature.sql
 psql -d pousse_test -f supabase/tests/scenario_coherence.sql
 psql -d pousse_test -f supabase/tests/scenario_equite_points.sql
+psql -d pousse_test -f supabase/tests/scenario_anti_triche.sql
 ```
 
 La banque du quiz (`0015_quiz_banque.sql`) est générée : `node scripts/generate-quiz.ts > supabase/migrations/0015_quiz_banque.sql`.

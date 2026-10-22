@@ -1,6 +1,6 @@
 /**
  * Le jeu et l'impact, deux axes séparés :
- *   - le jeu = les points (défis, garder le cap, influence, témoin), seul chiffre du classement ;
+ *   - le jeu = les pousses (actions, défis, quêtes, influence), seul chiffre du classement ;
  *   - l'impact = les kg de CO₂ évités, strict, qui alimente l'objectif collectif de l'entreprise.
  * Les habitudes à garder doivent rester identiques à kept_habits (0005_engagement.sql),
  * le barème à 0006_points.sql.
@@ -35,7 +35,6 @@ export const POINT_RULES: { label: string; points: string }[] = [
   { label: "Actions expert : repas végétalien ; réparation et vacances en train avec justificatif", points: "+15 à +150" },
   { label: "Petits gestes (escaliers, gourde…) et actions qui ne remplacent rien dans ton bilan, tous confondus", points: "5 par jour au plus" },
   { label: "Publier une action dans le fil avec une photo", points: "+5" },
-  { label: "Garder le cap sur une habitude (2 récompensées par semaine)", points: "+10" },
   { label: "Les 3 quêtes du jour réussies", points: "+15" },
   { label: "Série de jours actifs : 3, 7, 14, 30 jours", points: "+10, +25, +50, +100" },
   { label: "Scanner : choisir une alternative mieux notée (3 par jour)", points: "+5" },

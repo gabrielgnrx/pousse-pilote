@@ -198,8 +198,9 @@ export function ActionPicker({
       </Link>
 
       <p className="text-center text-xs text-terre">
-        Pas de preuve demandée, sauf un justificatif privé pour les achats via une appli, le train, les vacances en train et les réparations. Un plafond par jour s&apos;applique (2 trajets, 2 repas…) pour que le compteur de
-        l&apos;entreprise reste juste. Les actions à 0 kg rapportent 5 pousses par jour au plus, tous confondus.
+        Pas de preuve demandée, sauf un justificatif privé pour les achats via une appli, le train, les vacances en train et les
+        réparations. Des plafonds gardent le compteur de l&apos;entreprise juste : 2 trajets et 2 repas par jour, et chaque semaine
+        2 trajets par jour de bureau déclaré dans ton bilan. Les petits gestes rapportent 5 pousses par jour au plus, tous confondus.
       </p>
 
       {receiptFor && byKey[receiptFor] ? (

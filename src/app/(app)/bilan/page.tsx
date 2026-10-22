@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { nextBilanAllowed } from "@/lib/bilan-lock";
 import { redirect } from "next/navigation";
 import { requireHabits } from "@/lib/session";
 import { computeFootprint, type BilanAnswers, type Footprint } from "@/lib/co2/footprint.ts";
@@ -20,7 +21,7 @@ const tonnes = (kg: number) => (kg / 1000).toLocaleString("fr-FR", { maximumFrac
 export default async function BilanPage() {
   const { supabase, user, habits } = await requireHabits();
 
-  const [{ data: fp }, { data: validated }] = await Promise.all([
+  const [{ data: fp }, { data: validated }, { data: firstFp }] = await Promise.all([
     supabase
       .from("footprints")
       .select("answers, total_kg, by_category, created_at")
@@ -29,6 +30,13 @@ export default async function BilanPage() {
       .limit(1)
       .maybeSingle<{ answers: BilanAnswers; total_kg: number; by_category: Footprint["byCategory"]; created_at: string }>(),
     supabase.from("validations").select("kg").eq("user_id", user.id).eq("status", "valid"),
+    supabase
+      .from("footprints")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle<{ created_at: string }>(),
   ]);
   if (!fp) redirect("/questionnaire");
 
@@ -41,6 +49,7 @@ export default async function BilanPage() {
   const planKg = plan.reduce((s, p) => s + p.kgYear, 0);
   const nextBilan = new Date(fp.created_at);
   nextBilan.setDate(nextBilan.getDate() + 90);
+  const nextAllowed = nextBilanAllowed(firstFp?.created_at ?? null, fp.created_at);
 
   return (
     <>
@@ -63,7 +72,8 @@ export default async function BilanPage() {
           ))}
         </div>
         <p className="mt-3 text-xs leading-relaxed">
-          Moyenne française : environ 9 t. Objectif des accords de Paris : 2 t par personne en 2050.
+          Un bilan partiel : à ne pas comparer tel quel à la moyenne française (8 à 9 t, bilan complet).
+          Objectif des accords de Paris : 2 t par personne en 2050.
         </p>
       </section>
 
@@ -76,11 +86,27 @@ export default async function BilanPage() {
           </li>
         ))}
       </ul>
-      <p className="-mt-2 text-xs leading-relaxed text-terre">
-        Estimation basse : l&apos;électricité, les loisirs et les achats autres que les vêtements et
-        l&apos;électronique ne sont pas encore comptés.
-        {assumptions.length ? ` ${assumptions.join(" ")}` : ""}
-      </p>
+      <section className="card flex flex-col gap-2 text-sm leading-relaxed" aria-labelledby="perimetre">
+        <h2 id="perimetre" className="font-display text-lg font-bold">Ce que ce bilan compte, et ce qu&apos;il ne compte pas</h2>
+        <p>
+          <strong>Compté :</strong> tes trajets, l&apos;avion, tes repas, l&apos;eau en bouteille, le chauffage, les
+          vêtements et l&apos;électronique neufs, plus une part fixe de 1 t pour les services publics.
+        </p>
+        <p>
+          <strong>Pas compté :</strong> l&apos;électricité hors chauffage, l&apos;équipement de la maison
+          (meubles, électroménager), les loisirs, les sorties et la plupart des autres achats. Dans l&apos;étude
+          Citepa et ABC de 2023, faite avec Nos Gestes Climat, les biens d&apos;équipement et les loisirs pèsent à eux
+          seuls environ 16 % de l&apos;empreinte moyenne d&apos;un Français : ce bilan n&apos;en compte qu&apos;une partie.
+        </p>
+        <p className="text-xs text-terre">
+          C&apos;est volontaire : Pousse se concentre sur ce que tu peux changer avec des actions concrètes.
+          {assumptions.length ? ` ${assumptions.join(" ")}` : ""}
+        </p>
+        <a href="https://nosgestesclimat.fr" target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">
+          Mesurer ton empreinte complète avec Nos Gestes Climat (ADEME) <span aria-hidden="true">↗</span>
+          <span className="sr-only"> (nouvel onglet)</span>
+        </a>
+      </section>
 
       {kept.length ? (
         <section className="flex flex-col gap-3 rounded-[20px] bg-sauge p-4 text-[#2e3a22]">
@@ -101,10 +127,10 @@ export default async function BilanPage() {
             ))}
           </ul>
           <p className="text-xs leading-relaxed">
-            Ce chiffre est une comparaison, pas une réduction : il n&apos;est pas ajouté à ton CO₂ évité. Confirme
-            ces habitudes chaque semaine dans « Défis » : +10 pousses par habitude, pour toi et ton équipe.
+            Ce chiffre est une comparaison, pas une réduction : il n&apos;est pas ajouté à ton CO₂ évité. Ces
+            bonnes habitudes rapportent quand même leurs pousses : enregistre-les avec le bouton + quand tu les fais.
           </p>
-          <Link href="/defis" className="btn-dark text-sm">Garder le cap</Link>
+          <Link href="/agir" className="btn-dark text-sm">Enregistrer une action</Link>
         </section>
       ) : null}
 
@@ -187,7 +213,9 @@ export default async function BilanPage() {
       </section>
 
       <div className="flex gap-3">
-        <Link href="/questionnaire" className="btn-ghost flex-1 text-sm">Refaire mon bilan</Link>
+        <Link href="/questionnaire" className="btn-ghost flex-1 text-sm">
+          {nextAllowed ? `Nouveau bilan le ${formatInstant(nextAllowed.toISOString(), "short")}` : "Refaire mon bilan"}
+        </Link>
         <Link href="/methodologie" className="btn-ghost flex-1 text-sm">Comment c&apos;est calculé</Link>
       </div>
     </>

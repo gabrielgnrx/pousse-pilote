@@ -65,7 +65,12 @@ export async function saveBilan(answersJson: string): Promise<{ error?: string }
     total_kg: footprint.totalKg,
     by_category: footprint.byCategory,
   });
-  if (fpError) return { error: "Impossible d'enregistrer ton bilan. Réessaie." };
+  if (fpError) {
+    if (fpError.message.includes("bilan_locked")) {
+      return { error: "Ton bilan a déjà été fait il y a moins de 30 jours : il se refait une fois par mois au plus." };
+    }
+    return { error: "Impossible d'enregistrer ton bilan. Réessaie." };
+  }
 
   const { error: hError } = await supabase
     .from("habits")

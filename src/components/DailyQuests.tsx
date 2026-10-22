@@ -11,7 +11,6 @@ const QUESTS: Record<QuestKey, { label: string; href: string }> = {
   scan: { label: "Scanne un produit", href: "/scanner" },
   meilleur_choix: { label: "Choisis un produit mieux noté au scanner", href: "/scanner" },
   bravo: { label: "Encourage un collègue dans le fil", href: "/fil#publications" },
-  cap: { label: "Garde le cap sur une habitude", href: "/defis" },
   quiz: { label: "Termine le quiz du jour (10 questions)", href: "/quiz" },
 };
 

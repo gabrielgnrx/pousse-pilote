@@ -59,8 +59,14 @@ export default function MethodologiePage() {
           qui rapporte 5 pousses de plus.
         </p>
         <p>
-          Plafonds : 2 trajets domicile-travail et 2 repas par jour, 3 vêtements par jour, une semaine de
-          chauffage à la fois. Un même trajet ne compte que pour un défi.
+          Plafonds du jour : 2 trajets domicile-travail et 2 repas, 3 vêtements, une semaine de chauffage à la
+          fois. Plafonds de la semaine, calés sur ton bilan : 2 trajets par jour de bureau déclaré, 5 jours de
+          télétravail, 3 achats d&apos;occasion. Un même trajet ne compte que pour un défi.
+        </p>
+        <p>
+          Le bilan se refait une fois tous les 30 jours au plus (avec 24 h pour corriger le premier) : on ne
+          peut pas l&apos;ajuster pour gonfler son CO₂ évité. Un défi ne se modifie plus une fois lancé, il
+          s&apos;annule seulement.
         </p>
       </Section>
       <Section title="Défis expert">
@@ -78,9 +84,9 @@ export default function MethodologiePage() {
           <strong>Les pousses servent à jouer.</strong> C&apos;est le seul chiffre du classement, individuel
           comme par équipe. Chaque action enregistrée en rapporte : action du quotidien 10 pousses, train 30,
           actions expert de 15 à 150 ; les petites actions qui n&apos;évitent pas de CO₂ pour toi, 5 par jour au
-          plus ; 5 de plus si tu la publies avec une photo. Garder le cap sur une habitude bas carbone déjà
-          acquise : 10 pousses, pour 2 habitudes par semaine au plus ; les trois quêtes du jour, tirées chaque
-          matin selon ton profil : 15 ; une série de 3, 7, 14 ou 30 jours actifs (action, habitude, bravo, scan) :
+          plus ; 5 de plus si tu la publies avec une photo. Une bonne habitude déjà acquise rapporte ses pousses
+          à chaque action, comme un changement ; les trois quêtes du jour, tirées chaque
+          matin selon ton profil : 15 ; une série de 3, 7, 14 ou 30 jours actifs (action, bravo, scan) :
           10, 25, 50 ou 100 ; un meilleur choix au scanner : 5, trois fois par jour ; un collègue qui relève un
           défi depuis ta publication : 15.
         </p>
@@ -96,6 +102,25 @@ export default function MethodologiePage() {
           moyenne de l&apos;entreprise) ÷ (membres + 3). Les équipes de moins de 5 membres ne sont pas classées. « Ce que tes habitudes évitent déjà », dans le bilan,
           compare tes habitudes à la voiture thermique seule et à des repas avec viande : c&apos;est une
           information, qui ne compte ni dans les pousses ni dans le CO₂ évité.
+        </p>
+      </Section>
+      <Section title="Pour l'entreprise : comment parler du CO₂ évité">
+        <p>
+          Le chiffre de CO₂ évité est une <strong>estimation déclarative</strong> : les salariés déclarent leurs
+          actions, sans vérification (sauf un justificatif privé pour le train, les vacances en train, les
+          réparations et les achats via une appli). Chaque action est convertie avec les facteurs de
+          l&apos;ADEME, et ne compte que si elle remplace une habitude déclarée dans le bilan.
+        </p>
+        <p>
+          Ce n&apos;est donc ni une mesure, ni un chiffre audité : il ne remplace pas un bilan d&apos;émissions de
+          l&apos;entreprise (BEGES, Bilan Carbone) et ne doit pas être présenté comme une réduction de ses
+          émissions. Formulation recommandée : « X kg de CO₂ évités selon les déclarations des participants
+          (estimation, facteurs ADEME) ».
+        </p>
+        <p>
+          Le bilan personnel est lui aussi partiel : il ne compte pas l&apos;électricité hors chauffage,
+          l&apos;équipement de la maison, les loisirs ni la plupart des achats. Pour une empreinte complète, voir
+          Nos Gestes Climat (ADEME).
         </p>
       </Section>
       <Section title="Les facteurs utilisés">

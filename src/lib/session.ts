@@ -112,6 +112,12 @@ export function sqlErrorMessage(message: string | undefined): string {
       return "Cette équipe n'existe pas.";
     case "cap_reached":
       return "Plafond du jour atteint pour ce type de défi : reviens demain.";
+    case "week_cap_reached":
+      return "Plafond de la semaine atteint, d'après ton bilan. Rendez-vous lundi !";
+    case "challenge_locked":
+      return "Un défi ne se modifie plus après son lancement : tu peux seulement l'annuler.";
+    case "bilan_locked":
+      return "Ton bilan se refait une fois tous les 30 jours au plus.";
     case "not_eligible":
       return "Ce défi ne remplace aucune de tes habitudes déclarées.";
     case "challenge_closed":
