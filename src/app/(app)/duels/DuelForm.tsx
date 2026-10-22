@@ -16,7 +16,7 @@ export function DuelForm({
   const [state, action, pending] = useActionState(challengeDuel, {});
   return (
     <form action={action} className="card flex flex-col gap-3" aria-labelledby="nouveau-duel">
-      <h2 id="nouveau-duel" className="font-display text-lg font-bold">Défier un collègue</h2>
+      <h2 id="nouveau-duel" className="font-display text-lg">Défier un collègue</h2>
       <label className="flex flex-col gap-1 text-sm font-semibold">
         Qui ?
         <select name="opponent" required defaultValue={defaultOpponent ?? ""} className="input">
@@ -31,7 +31,7 @@ export function DuelForm({
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(DUEL_KINDS).map(([k, v]) => (
             <label key={k} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-creme px-3 text-sm has-[:checked]:bg-sauge has-[:checked]:font-bold">
-              <input type="radio" name="kind" value={k} defaultChecked={k === (defaultKind ?? "repas")} className="accent-[#3b4a2c]" />
+              <input type="radio" name="kind" value={k} defaultChecked={k === (defaultKind ?? "repas")} className="accent-[#1f5134]" />
               {v.label}
             </label>
           ))}

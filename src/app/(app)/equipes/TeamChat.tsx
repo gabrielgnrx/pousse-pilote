@@ -14,7 +14,7 @@ export interface ChatMessage {
   at: string;
 }
 
-const AVATAR = ["#b9d3e8", "#d7e3c8", "#f6d9a8", "#e3c9e8", "#ecddbb", "#f0a97b"];
+const AVATAR = ["#b9d3e8", "#d7e3c8", "#f6d9a8", "#e3c9e8", "#ece6d6", "#e8a27c"];
 const colorOf = (name: string) => AVATAR[[...name].reduce((s, c) => s + c.charCodeAt(0), 0) % AVATAR.length];
 const time = (iso: string) =>
   new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).replace(":", " h ");
@@ -24,8 +24,8 @@ const left = (min: number) => (min >= 60 ? `${Math.floor(min / 60)} h ${String(m
 
 function PousseAvatar() {
   return (
-    <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-[#2f5b36]">
-      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cfe3c4" strokeWidth="2.2" strokeLinecap="round">
+    <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-[#1f5134]">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8dcc4" strokeWidth="2.2" strokeLinecap="round">
         <path d="M12 21v-9" />
         <path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" />
         <path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" />
@@ -101,17 +101,17 @@ export function TeamChat({
     if (d === lastDay) return null;
     lastDay = d;
     return (
-      <span className="self-center text-[11px] font-bold tracking-[0.08em] text-[#5e5240] uppercase">{d}</span>
+      <span className="self-center text-[11px] font-bold tracking-[0.08em] text-[#5b6458] uppercase">{d}</span>
     );
   };
 
   const voteBubble = (
     <div className="flex items-end gap-2">
       <PousseAvatar />
-      <div className="flex flex-1 flex-col gap-2 rounded-[16px_16px_16px_4px] bg-[#2f5b36] p-3 text-[#f7f1e3]">
+      <div className="flex flex-1 flex-col gap-2 rounded-[16px_16px_16px_4px] bg-[#1f5134] p-3 text-[#f6f3ea]">
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-sm font-bold">Quel défi pour l&apos;équipe cette semaine ?</span>
-          <span className="text-[11px] font-bold whitespace-nowrap text-abricot">
+          <span className="text-[11px] font-bold whitespace-nowrap text-feuille">
             {voteOpen ? `Fin à 14 h · ${left(minutesLeft)}` : "Vote clos"}
           </span>
         </div>
@@ -140,7 +140,7 @@ export function TeamChat({
             </button>
           );
         })}
-        <span className="text-[11px] text-[#cfe3c4]">
+        <span className="text-[11px] text-[#c8dcc4]">
           Vote ouvert le lundi de 9 h à 14 h · {week.voters} vote{week.voters > 1 ? "s" : ""} sur {week.members}
           {voteOpen ? " · tu peux changer d'avis jusqu'à la fin" : ""}
         </span>
@@ -151,23 +151,23 @@ export function TeamChat({
   return (
     <section aria-label="Chat de l'équipe" className="-mx-4 flex flex-col">
       {chosen && week.target ? (
-        <Link href={chosen.href} className="mx-4 mb-1 flex flex-col gap-2 rounded-[18px] border-2 border-[#8fa77b] bg-papier px-3.5 py-3">
+        <Link href={chosen.href} className="mx-4 mb-1 flex flex-col gap-2 rounded-[22px] bg-peche px-4 py-3.5 text-[#3a1606] shadow-[inset_0_-4px_0_var(--color-peche-fonce)]">
           <span className="flex items-baseline justify-between gap-2">
-            <span className="text-xs font-bold tracking-[0.08em] text-[#22502c] uppercase">Défi de la semaine</span>
-            <span className="text-xs text-terre">jusqu&apos;à dimanche</span>
+            <span className="text-xs font-semibold text-argile-fonce">Défi de la semaine · épinglé</span>
+            <span className="text-xs text-argile-fonce">jusqu&apos;à dimanche</span>
           </span>
-          <span className="text-[15px] font-bold">
+          <span className="font-display text-lg">
             {week.target} {chosen.unit} pour l&apos;équipe
           </span>
           <span className="flex items-center gap-2.5">
-            <span className="h-2 flex-1 overflow-hidden rounded-full bg-[#e6dcc6]">
-              <span className="block h-2 rounded-full bg-[#2f5b36] transition-[width] duration-1000" style={{ width: `${Math.max(pct, (week.progress ?? 0) > 0 ? 3 : 0)}%` }} />
+            <span className="h-2 flex-1 overflow-hidden rounded-full bg-peche-fonce">
+              <span className="block h-2 rounded-full bg-argile transition-[width] duration-1000" style={{ width: `${Math.max(pct, (week.progress ?? 0) > 0 ? 3 : 0)}%` }} />
             </span>
             <span className="text-[13px] font-semibold">
               {week.progress ?? 0}/{week.target} · toi : {week.mine ?? 0}
             </span>
           </span>
-          <span className="text-xs text-terre">
+          <span className="text-xs text-[#6b2f15]">
             {pct >= 100
               ? "Objectif atteint : +50 pousses pour chaque contributeur !"
               : "Chaque action qui y compte rapporte double. Lundi de 9 h à 14 h, le vote du prochain défi s'ouvre ici."}
@@ -175,14 +175,14 @@ export function TeamChat({
         </Link>
       ) : null}
       {week.gained > 0 ? (
-        <p role="status" className="animate-pousse-pop mx-4 mb-2 rounded-2xl bg-abricot px-4 py-2.5 text-sm font-bold text-[#402a16]">
+        <p role="status" className="animate-pousse-pop mx-4 mb-2 rounded-2xl bg-abricot px-4 py-2.5 text-sm font-bold text-[#3a1606]">
           Défi d&apos;équipe réussi : +{week.gained} pousses pour toi !
         </p>
       ) : null}
 
       <div className="flex min-h-[40dvh] flex-col gap-3 px-4 pt-3 pb-24">
         {week.phase === "upcoming" ? (
-          <p className="self-center rounded-full bg-sable px-3 py-1 text-xs font-semibold text-[#5e5240]">
+          <p className="self-center rounded-full bg-sable px-3 py-1 text-xs font-semibold text-[#5b6458]">
             Le vote du défi de la semaine ouvre ce lundi à 9 h
           </p>
         ) : null}
@@ -204,10 +204,10 @@ export function TeamChat({
               {dayChip(m.at)}
               {m.mine ? (
                 <div className="flex flex-col items-end pl-12">
-                  <span className="flex flex-col gap-0.5 rounded-[16px_16px_4px_16px] bg-[#2f5b36] px-3 py-2 text-[#f7f1e3]">
+                  <span className="flex flex-col gap-0.5 rounded-[20px_20px_6px_20px] bg-sapin px-3 py-2 text-[#f6f3ea]">
                     <span className="sr-only">Toi, </span>
                     <span className="text-sm leading-snug whitespace-pre-wrap">{m.body}</span>
-                    <span className="self-end text-[10px] text-[#cfe3c4]">{time(m.at)}</span>
+                    <span className="self-end text-[10px] text-[#c8dcc4]">{time(m.at)}</span>
                   </span>
                 </div>
               ) : (
@@ -219,8 +219,8 @@ export function TeamChat({
                       {m.author.charAt(0).toUpperCase()}
                     </span>
                   )}
-                  <div className={`flex min-w-0 flex-col gap-0.5 rounded-[16px_16px_16px_4px] px-3 py-2 ${m.fromPousse ? "bg-sauge text-sapin" : "bg-papier"}`}>
-                    <span className="flex items-center gap-1 text-xs font-bold text-[#5e5240]">
+                  <div className={`flex min-w-0 flex-col gap-0.5 rounded-[20px_20px_20px_6px] border border-trait px-3 py-2 ${m.fromPousse ? "bg-sauge text-sapin" : "bg-papier"}`}>
+                    <span className="flex items-center gap-1 text-xs font-bold text-[#5b6458]">
                       {m.author} · {time(m.at)}
                       {!m.fromPousse ? (
                         <button
@@ -228,7 +228,7 @@ export function TeamChat({
                           onClick={() => setMenu(menu === m.id ? null : m.id)}
                           aria-expanded={menu === m.id}
                           aria-label={`Options du message de ${m.author}`}
-                          className="-my-2 -mr-2 flex size-8 items-center justify-center rounded-full text-[#8c7a55]"
+                          className="-my-2 -mr-2 flex size-8 items-center justify-center rounded-full text-[#5b6458]"
                         >
                           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
                         </button>
@@ -239,7 +239,7 @@ export function TeamChat({
                       <button
                         type="button"
                         onClick={() => run(() => reportTeamMessage(m.id), () => setMenu(null))}
-                        className="self-start rounded-full border border-[#cdbf9f] px-3 py-1.5 text-xs font-bold text-argile-fonce"
+                        className="self-start rounded-full border border-[#d8d0bd] px-3 py-1.5 text-xs font-bold text-argile-fonce"
                       >
                         Signaler ce message
                       </button>
@@ -272,9 +272,9 @@ export function TeamChat({
           type="submit"
           disabled={pending || !draft.trim()}
           aria-label="Envoyer"
-          className="flex size-[46px] items-center justify-center rounded-full bg-[#2f5b36] disabled:opacity-50"
+          className="flex size-[46px] items-center justify-center rounded-full bg-[#1f5134] disabled:opacity-50"
         >
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f7f1e3" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15" /><path d="m13 6 6 6-6 6" /></svg>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f6f3ea" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15" /><path d="m13 6 6 6-6 6" /></svg>
         </button>
       </form>
       {error ? (

@@ -39,15 +39,15 @@ export default async function DuelsPage({
   return (
     <>
       <div>
-        <h1 className="font-display text-2xl font-bold">Duels</h1>
+        <h1 className="font-display text-2xl">Duels</h1>
         <p className="mt-1 text-sm text-terre">Quelqu&apos;un d&apos;une autre équipe, une action, 7 jours. {DUEL_STAKES}</p>
       </div>
-      {sp.lance ? <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">Défi envoyé ! Il a 3 jours pour l&apos;accepter.</p> : null}
-      {sp.accepte ? <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">C&apos;est parti pour 7 jours !</p> : null}
+      {sp.lance ? <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#1f5134]">Défi envoyé ! Il a 3 jours pour l&apos;accepter.</p> : null}
+      {sp.accepte ? <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#1f5134]">C&apos;est parti pour 7 jours !</p> : null}
       {sp.erreur ? <p role="alert" className="rounded-2xl bg-peche px-4 py-3 text-sm font-bold">Ce duel n&apos;est plus disponible.</p> : null}
 
       {invites.map((d) => (
-        <section key={d.id} className="flex flex-col gap-3 rounded-[20px] bg-abricot p-4 text-[#402a16]">
+        <section key={d.id} className="flex flex-col gap-3 rounded-[20px] bg-abricot p-4 text-[#3a1606]">
           <p className="text-sm">
             <strong>{d.other_name}</strong>{d.other_team ? ` (${d.other_team})` : ""} te défie : <strong>{d.target} × {duelUnits(d, actionTitle)}</strong> en 7 jours.
           </p>

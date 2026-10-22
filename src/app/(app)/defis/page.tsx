@@ -121,7 +121,7 @@ export default async function DefisPage({
       </nav>
 
       {cree ? (
-        <p role="status" className="animate-pousse-pop rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
+        <p role="status" className="animate-pousse-pop rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#1f5134]">
           Défi lancé ! Il est juste en dessous : enregistre chaque fois que tu le fais avec le bouton +.
         </p>
       ) : null}
@@ -134,7 +134,7 @@ export default async function DefisPage({
           <DuelStrip duels={duels.filter((d) => d.status === "pending" && d.role === "opponent")} />
 
           {teamWeek?.chosen ? (
-            <Link href="/equipes" className="flex flex-col gap-2 rounded-[20px] bg-peche p-4 text-[#402a16]">
+            <Link href="/equipes" className="flex flex-col gap-2.5 rounded-[24px] bg-peche p-4 text-[#3a1606] shadow-[inset_0_-4px_0_var(--color-peche-fonce)]">
               <span className="flex items-center justify-between">
                 <span className="rounded-full bg-argile px-2.5 py-0.5 text-[11px] font-bold text-white uppercase">Équipe · {fmtMult(MODES.equipe.mult)}</span>
                 <span className="text-xs">jusqu&apos;à dimanche</span>
@@ -142,7 +142,7 @@ export default async function DefisPage({
               <span className="font-bold">
                 {teamWeek.target} {TEAM_KINDS[teamWeek.chosen].unit} pour l&apos;équipe
               </span>
-              <span className="h-2.5 overflow-hidden rounded-full bg-[#ecd3b4]">
+              <span className="h-2.5 overflow-hidden rounded-full bg-peche-fonce">
                 <span className="block h-full rounded-full bg-argile" style={{ width: `${Math.min(100, ((teamWeek.progress ?? 0) / Math.max(1, teamWeek.target ?? 1)) * 100)}%` }} />
               </span>
               <span className="text-xs">
@@ -155,14 +155,14 @@ export default async function DefisPage({
             <ActiveChallenges items={activeChallenges} cancel={cancelChallenge} />
           ) : (
             <div className="card flex flex-col gap-2 text-center">
-              <p className="font-display text-lg font-bold">Aucun défi en cours</p>
+              <p className="font-display text-lg">Aucun défi en cours</p>
               <p className="text-sm text-brun">Choisis une action adaptée à ton bilan et essaie-la quelques jours, seul, en duel ou en équipe.</p>
             </div>
           )}
 
           <Link
             href="/defis?onglet=catalogue"
-            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#8fa77b] text-[15px] font-bold text-[#22502c]"
+            className="btn-dark min-h-[52px]"
           >
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
             Lancer un défi
@@ -172,14 +172,14 @@ export default async function DefisPage({
 
           {succeeded.length ? (
             <section className="flex flex-col gap-2" aria-labelledby="reussis">
-              <h2 id="reussis" className="font-display text-lg font-bold">Défis réussis</h2>
+              <h2 id="reussis" className="font-display text-lg">Défis réussis</h2>
               <ul className="flex flex-col gap-1.5">
                 {succeeded.map((c) => {
                   const t = TEMPLATE_BY_ID[c.template_id];
                   return (
-                    <li key={c.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#e3edd9] px-4 py-2.5">
-                      <span className="text-sm font-bold text-[#22502c]">{t ? actionTitle(t.id, c.variant) : "Défi"}</span>
-                      <span className="shrink-0 text-xs font-bold text-[#22502c]">{formatKg(progress.get(c.id)?.kg ?? 0)} évités</span>
+                    <li key={c.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#e4eddc] px-4 py-2.5">
+                      <span className="text-sm font-bold text-[#1f5134]">{t ? actionTitle(t.id, c.variant) : "Défi"}</span>
+                      <span className="shrink-0 text-xs font-bold text-[#1f5134]">{formatKg(progress.get(c.id)?.kg ?? 0)} évités</span>
                     </li>
                   );
                 })}
@@ -220,13 +220,13 @@ export default async function DefisPage({
                   <h2 className="mt-1 font-bold">{t.title}</h2>
                   <Link href={`/informer/geste/${t.id}`} className="text-xs font-bold underline underline-offset-2">Pourquoi et comment</Link>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    <span className="chip bg-peche">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
-                    <span className="chip bg-sauge">
+                    <span className="chip bg-peche text-argile-fonce">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
+                    <span className="chip bg-sauge text-sapin">
                       −{e.minKg === e.maxKg ? formatKg(e.minKg) : `${formatKg(e.minKg)} à ${formatKg(e.maxKg)}`} CO₂ par {t.unit.one}
                     </span>
                   </div>
                 </div>
-                <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-argile text-white">
+                <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
                   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                 </Link>
               </article>
@@ -235,19 +235,19 @@ export default async function DefisPage({
 
           <section className="flex flex-col gap-3">
             <div className="mt-2">
-              <h2 className="font-display text-lg font-bold">Achats via une appli durable</h2>
+              <h2 className="font-display text-lg">Achats via une appli durable</h2>
               <p className="text-xs text-terre">30 pousses l&apos;achat, avec ton reçu ou ta confirmation de commande (gardé privé).</p>
             </div>
             {APP_TEMPLATES.map((t) => (
-              <article key={t.id} className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
+              <article key={t.id} className="flex items-center gap-3 rounded-[22px] bg-peche p-4 shadow-[inset_0_-4px_0_var(--color-peche-fonce)]">
                 <div className="flex-1">
                   <span className="label">{CATEGORY_LABEL[t.category]} · reçu obligatoire</span>
                   <h3 className="mt-1 font-bold">{t.title}</h3>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    <span className="chip bg-creme">+{t.pointsPerUnit} pousses par achat</span>
+                    <span className="chip bg-creme text-encre">+{t.pointsPerUnit} pousses par achat</span>
                   </div>
                 </div>
-                <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-argile text-white">
+                <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
                   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                 </Link>
               </article>
@@ -257,7 +257,7 @@ export default async function DefisPage({
           {expert.length ? (
             <section className="flex flex-col gap-3">
               <div className="mt-2">
-                <h2 className="font-display text-lg font-bold">Pour aller plus loin</h2>
+                <h2 className="font-display text-lg">Pour aller plus loin</h2>
                 <p className="text-xs text-terre">
                   {alreadySober
                     ? "Tu as déjà adopté l'essentiel des actions du quotidien : voici ce qui pèse encore dans ton bilan."
@@ -265,22 +265,22 @@ export default async function DefisPage({
                 </p>
               </div>
               {expert.map(({ t, e }) => (
-                <article key={t.id} className="flex items-center gap-3 rounded-[20px] border-2 border-sapin bg-papier p-4">
+                <article key={t.id} className="flex items-center gap-3 rounded-[22px] bg-sapin p-4 text-sapin-clair shadow-[inset_0_-5px_0_var(--color-sapin-fonce)] [&_.label]:text-[#c8dcc4] [&_p]:text-[#c8dcc4]">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="label">{CATEGORY_LABEL[t.category]}</span>
-                      <span className="chip bg-sapin px-2 py-0.5 text-[10px] tracking-wide text-sapin-clair uppercase">Expert</span>
+                      <span className="chip bg-feuille px-2 py-0.5 text-[11px] tracking-wide text-encre uppercase">Expert</span>
                     </div>
                     <h3 className="mt-1 font-bold">{t.title}</h3>
                     {t.pitch ? <p className="mt-1 text-xs leading-relaxed text-brun">{t.pitch}</p> : null}
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      <span className="chip bg-peche">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
-                      <span className="chip bg-sauge">
+                      <span className="chip bg-peche text-argile-fonce">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
+                      <span className="chip bg-sauge text-sapin">
                         −{e.minKg === e.maxKg ? formatKg(e.minKg) : `${formatKg(e.minKg)} à ${formatKg(e.maxKg)}`} CO₂ par {t.unit.one}
                       </span>
                     </div>
                   </div>
-                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-sapin text-sapin-clair">
+                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
                     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                   </Link>
                 </article>
@@ -291,7 +291,7 @@ export default async function DefisPage({
           {alreadyDoing.length ? (
             <section className="flex flex-col gap-3">
               <div className="mt-2">
-                <h2 className="font-display text-lg font-bold">Tu le fais déjà</h2>
+                <h2 className="font-display text-lg">Tu le fais déjà</h2>
                 <p className="text-xs text-terre">
                   Pas de CO₂ en plus dans ton bilan, mais ces bonnes habitudes rapportent autant de pousses qu&apos;un changement.
                 </p>
@@ -302,11 +302,11 @@ export default async function DefisPage({
                     <span className="label">{CATEGORY_LABEL[t.category]}</span>
                     <h3 className="mt-1 font-bold">{t.title}</h3>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      <span className="chip bg-peche">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
-                      <span className="chip bg-sable">0 kg en plus</span>
+                      <span className="chip bg-peche text-argile-fonce">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
+                      <span className="chip bg-sable text-brun">0 kg en plus</span>
                     </div>
                   </div>
-                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-argile text-white">
+                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
                     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                   </Link>
                 </article>
@@ -316,12 +316,12 @@ export default async function DefisPage({
 
           {notForYou.length ? (
             <section className="flex flex-col gap-2">
-              <h2 className="mt-2 font-display text-base font-bold">Pas proposés pour toi</h2>
+              <h2 className="mt-2 font-display text-base">Pas proposés pour toi</h2>
               <p className="-mt-1 text-xs text-terre">
                 Ils remplacent une habitude que tu n&apos;as pas déclarée : ils ne rapporteraient aucun CO₂ réel.
               </p>
               {notForYou.map(({ t, e }) => (
-                <div key={t.id} className="rounded-2xl border-[1.5px] border-dashed border-[#c7b78c] px-4 py-3">
+                <div key={t.id} className="rounded-2xl border-[1.5px] border-dashed border-[#d8d0bd] px-4 py-3">
                   <p className="text-sm font-bold text-brun">{t.title}</p>
                   <p className="text-xs text-terre">{e.reason}</p>
                 </div>

@@ -38,7 +38,7 @@ export default async function DuelFromChallengePage({ params }: { params: Promis
       </Link>
       <div className="-mt-2">
         <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">Passer en duel · {fmtMult(MODES.duel.mult)}</p>
-        <h1 className="font-display text-2xl font-bold">{t.title}</h1>
+        <h1 className="font-display text-2xl">{t.title}</h1>
       </div>
       <p className="card text-sm leading-relaxed">
         Ton adversaire et toi avez 7 jours pour faire {target} {target > 1 ? t.unit.many : t.unit.one} chacun, à partir de son

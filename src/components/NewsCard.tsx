@@ -18,7 +18,7 @@ export function NewsCard({ item }: { item: NewsItem }) {
         ) : null}
         <div className="flex flex-col gap-2 p-4">
           <div className="flex items-center gap-2">
-            <span className="chip bg-sauge">
+            <span className="chip bg-sauge text-sapin">
               <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M12 22V11" /><path d="M12 11c0-4 3-7 8-7 0 5-3 7-8 7Z" /><path d="M12 14c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" /></svg>
               Bonne nouvelle
             </span>
@@ -26,7 +26,7 @@ export function NewsCard({ item }: { item: NewsItem }) {
               {item.source} · {relativeTime(item.publishedAt)}
             </span>
           </div>
-          <h2 className="font-display text-lg leading-snug font-bold group-hover:underline">{item.title}</h2>
+          <h2 className="font-display text-lg leading-snug group-hover:underline">{item.title}</h2>
           {item.excerpt ? <p className="text-sm leading-relaxed text-brun">{item.excerpt}</p> : null}
           <span className="text-sm font-bold text-argile-fonce">
             Lire sur {item.source}

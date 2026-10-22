@@ -13,7 +13,7 @@ function CodeStep({ state, onRestart }: { state: JoinState; onRestart: () => voi
   const [verify, action] = useActionState<VerifyState, FormData>(verifyCode, {});
   return (
     <section className="mt-6 flex flex-col gap-4">
-      <h1 className="font-display text-3xl font-bold">Vérifie ta boîte mail</h1>
+      <h1 className="font-display text-3xl">Vérifie ta boîte mail</h1>
       <p className="text-[15px] leading-relaxed text-brun">
         Un e-mail vient d&apos;être envoyé à <strong>{state.sentTo}</strong>
         {state.companyName ? (
@@ -111,7 +111,7 @@ function RequestForm({
             <input type="hidden" name="mode" value={mode} />
             {mode === "join" ? (
               <>
-                <h1 className="font-display text-3xl leading-tight font-bold">Ton entreprise participe au défi climat</h1>
+                <h1 className="font-display text-3xl leading-tight">Ton entreprise participe au défi climat</h1>
                 <p className="text-[15px] leading-relaxed text-brun">
                   8 semaines pour réduire ton empreinte avec tes collègues. Participation volontaire : ton employeur
                   ne voit jamais tes données personnelles.
@@ -123,7 +123,7 @@ function RequestForm({
               </>
             ) : (
               <>
-                <h1 className="font-display text-3xl leading-tight font-bold">Bon retour !</h1>
+                <h1 className="font-display text-3xl leading-tight">Bon retour !</h1>
                 <p className="text-[15px] leading-relaxed text-brun">
                   Ton adresse suffit : on t&apos;envoie un e-mail pour te connecter sur cet appareil.
                 </p>

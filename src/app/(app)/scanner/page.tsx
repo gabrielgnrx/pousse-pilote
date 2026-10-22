@@ -34,7 +34,7 @@ export default async function ScannerPage() {
   return (
     <>
       <div>
-        <h1 className="font-display text-2xl font-bold">Scanner</h1>
+        <h1 className="font-display text-2xl">Scanner</h1>
         <p className="mt-1 text-sm text-terre">
           L&apos;impact d&apos;un produit en un scan, et de meilleures options dans le même rayon.
         </p>
@@ -42,7 +42,7 @@ export default async function ScannerPage() {
 
       <Scanner />
 
-      <p className="rounded-2xl bg-peche px-4 py-3 text-sm text-[#5a4324]">
+      <p className="rounded-2xl bg-peche px-4 py-3 text-sm text-[#3f4a3c]">
         <strong>+5 pousses</strong> chaque fois que tu choisis une alternative mieux notée, jusqu&apos;à 3 fois par
         jour{swapsToday ? ` (${Math.min(3, swapsToday)}/3 aujourd'hui)` : ""}.
       </p>

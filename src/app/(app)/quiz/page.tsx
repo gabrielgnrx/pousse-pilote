@@ -16,7 +16,7 @@ export default async function QuizPage() {
         S&apos;informer
       </Link>
       <div>
-        <h1 className="font-display text-2xl font-bold">Quiz du jour</h1>
+        <h1 className="font-display text-2xl">Quiz du jour</h1>
         <p className="mt-1 text-sm text-terre">10 questions difficiles, jamais déjà posées. +1 pousse par bonne réponse, +5 de bonus à 8/10.</p>
       </div>
       {quiz ? <QuizCard initial={quiz} /> : <p className="card text-sm">Le quiz n&apos;a pas pu se charger. Réessaie dans un instant.</p>}

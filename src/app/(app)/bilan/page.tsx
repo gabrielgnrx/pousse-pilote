@@ -9,7 +9,7 @@ import { headStartKgYear, keptHabits, remainingBigItems } from "@/lib/co2/engage
 import { formatInstant } from "@/lib/dates";
 
 const CATEGORIES: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
-  { key: "transport", label: "Transports", color: "#f0a97b" },
+  { key: "transport", label: "Transports", color: "#e8a27c" },
   { key: "alimentation", label: "Alimentation", color: "#b5c890" },
   { key: "logement", label: "Chauffage", color: "#e9c9a3" },
   { key: "consommation", label: "Vêtements et électronique", color: "#8fa06a" },
@@ -54,7 +54,7 @@ export default async function BilanPage() {
   return (
     <>
       <div>
-        <h1 className="font-display text-2xl font-bold">Ton bilan carbone</h1>
+        <h1 className="font-display text-2xl">Ton bilan carbone</h1>
         <p className="mt-1 text-sm text-terre">
           Calculé le {formatInstant(fp.created_at)} avec
           les facteurs de l&apos;ADEME.
@@ -63,7 +63,7 @@ export default async function BilanPage() {
 
       <section className="rounded-[20px] bg-sapin p-5 text-sapin-clair">
         <p className="flex items-baseline gap-2">
-          <span className="font-display text-5xl font-bold">{tonnes(fp.total_kg)}</span>
+          <span className="font-display text-5xl">{tonnes(fp.total_kg)}</span>
           <span className="text-sm">t CO₂e par an (estimation)</span>
         </p>
         <div className="mt-4 flex h-3.5 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
@@ -82,12 +82,12 @@ export default async function BilanPage() {
           <li key={c.key} className="flex items-center gap-3 px-4 py-3">
             <span className="size-3.5 rounded" style={{ background: c.color }} aria-hidden="true" />
             <span className="flex-1 text-sm font-semibold">{c.label}</span>
-            <span className="font-display font-bold">{formatKg(fp.by_category[c.key])}</span>
+            <span className="font-display">{formatKg(fp.by_category[c.key])}</span>
           </li>
         ))}
       </ul>
       <section className="card flex flex-col gap-2 text-sm leading-relaxed" aria-labelledby="perimetre">
-        <h2 id="perimetre" className="font-display text-lg font-bold">Ce que ce bilan compte, et ce qu&apos;il ne compte pas</h2>
+        <h2 id="perimetre" className="font-display text-lg">Ce que ce bilan compte, et ce qu&apos;il ne compte pas</h2>
         <p>
           <strong>Compté :</strong> tes trajets, l&apos;avion, tes repas, l&apos;eau en bouteille, le chauffage, les
           vêtements et l&apos;électronique neufs, plus une part fixe de 1 t pour les services publics.
@@ -109,9 +109,9 @@ export default async function BilanPage() {
       </section>
 
       {kept.length ? (
-        <section className="flex flex-col gap-3 rounded-[20px] bg-sauge p-4 text-[#2e3a22]">
+        <section className="flex flex-col gap-3 rounded-[20px] bg-sauge p-4 text-[#1f5134]">
           <div>
-            <h2 className="font-display text-lg font-bold">Ce que tu fais déjà</h2>
+            <h2 className="font-display text-lg">Ce que tu fais déjà</h2>
             {headStartYear >= 1 ? (
               <p className="mt-1 text-sm leading-snug">
                 Tes habitudes évitent déjà environ <strong>{formatKg(headStartYear)} par an</strong> par rapport à
@@ -136,7 +136,7 @@ export default async function BilanPage() {
 
       {bigItems.length ? (
         <section className="card flex flex-col gap-2">
-          <h2 className="font-display text-lg font-bold">Tes plus gros postes restants</h2>
+          <h2 className="font-display text-lg">Tes plus gros postes restants</h2>
           <p className="-mt-1 text-xs text-terre">Là où il reste le plus à gagner, d&apos;après tes réponses.</p>
           <ul className="flex flex-col divide-y divide-encre/10">
             {bigItems.map((b) => {
@@ -162,42 +162,42 @@ export default async function BilanPage() {
       ) : null}
 
       <section className="card flex flex-col gap-3">
-        <h2 className="font-display text-lg font-bold">Ta trajectoire</h2>
+        <h2 className="font-display text-lg">Ta trajectoire</h2>
         <div className="flex gap-3">
           <div className="flex-1">
             <p className="text-xs text-terre">Déjà évité avec tes défis</p>
-            <p className="font-display text-2xl font-bold">{formatKg(avoided)}</p>
+            <p className="font-display text-2xl">{formatKg(avoided)}</p>
             <p className="text-xs text-terre">soit {carKmEquivalent(avoided)} km en voiture</p>
           </div>
           {plan.length ? (
             <div className="flex-1 border-l border-encre/10 pl-3">
               <p className="text-xs text-terre">Si tu suis ton plan</p>
-              <p className="font-display text-2xl font-bold">
+              <p className="font-display text-2xl">
                 {tonnes(fp.total_kg)} → {tonnes(fp.total_kg - planKg)} t
               </p>
             </div>
           ) : null}
         </div>
-        <p className="rounded-xl bg-sauge px-3 py-2 text-sm font-semibold text-[#2e3a22]">
+        <p className="rounded-xl bg-sauge px-3 py-2 text-sm font-semibold text-[#1f5134]">
           Prochain bilan conseillé : {formatInstant(nextBilan)}
         </p>
       </section>
 
       <section className="flex flex-col gap-3">
         <div>
-          <h2 className="font-display text-lg font-bold">Ton plan d&apos;action</h2>
+          <h2 className="font-display text-lg">Ton plan d&apos;action</h2>
           <p className="text-xs text-terre">Les actions qui réduisent le plus ton empreinte, calculés sur tes réponses.</p>
         </div>
         {plan.map((p, i) => (
           <article key={p.templateId} className="card flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-full bg-sapin font-display text-sm font-bold text-sapin-clair">
+              <span className="flex size-7 items-center justify-center rounded-full bg-sapin font-display text-sm text-sapin-clair">
                 {i + 1}
               </span>
-              <h3 className="flex-1 font-display font-bold">{p.title}</h3>
+              <h3 className="flex-1 font-display">{p.title}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="chip bg-sauge">−{formatKg(p.kgYear)} CO₂ / an</span>
+              <span className="chip bg-sauge text-sapin">−{formatKg(p.kgYear)} CO₂ / an</span>
               <span className="chip bg-creme font-semibold">{p.basis}</span>
             </div>
             <Link href={`/defis/nouveau/${p.templateId}?variante=${p.variant}`} className="btn-primary mt-1">

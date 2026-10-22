@@ -83,15 +83,15 @@ export function ProgressHud({
   const title = path === "/equipes" ? (teamName ? `QG ${teamName}` : "QG de l'équipe") : found;
 
   return (
-    <header className="flex items-center gap-2.5 px-4 pt-3.5 pb-3">
+    <header className="flex items-center gap-2.5 px-5 pt-4 pb-3.5">
       {withBack ? (
         <button
           type="button"
           onClick={() => (window.history.length > 1 ? router.back() : router.push("/fil"))}
           aria-label="Retour"
-          className="-mr-1 flex size-10 shrink-0 items-center justify-center rounded-full bg-sable"
+          className="-mr-1 flex size-11 shrink-0 items-center justify-center rounded-full border border-trait bg-papier"
         >
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2a2015" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f2a1e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5" />
             <path d="m11 6-6 6 6 6" />
           </svg>
@@ -103,13 +103,13 @@ export function ProgressHud({
         className="relative size-11 shrink-0"
       >
         <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" className="absolute inset-0">
-          <circle cx="22" cy="22" r="19" fill="none" stroke="#e6dcc6" strokeWidth="4" />
+          <circle cx="22" cy="22" r="19" fill="none" stroke="#e3dccb" strokeWidth="4" />
           <circle
             cx="22"
             cy="22"
             r="19"
             fill="none"
-            stroke="#2f6b3a"
+            stroke="#1f5134"
             strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray={RING}
@@ -118,32 +118,32 @@ export function ProgressHud({
             className="transition-[stroke-dashoffset] duration-1000"
           />
         </svg>
-        <span className="absolute inset-[6px] flex items-center justify-center rounded-full bg-abricot font-display text-[15px] font-bold text-[#402a16]">
+        <span className="absolute inset-[6px] flex items-center justify-center rounded-full bg-[#e9c9a8] font-display text-[16px] text-[#4a2a12]">
           {initial}
         </span>
-        <span className="absolute -right-1 -bottom-0.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#f4e8d0] bg-sapin px-1 text-[11px] font-bold text-sapin-clair">
+        <span className="absolute -right-1 -bottom-0.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-creme bg-sapin px-1 text-[11px] font-bold text-sapin-clair">
           {level.index + 1}
         </span>
       </Link>
 
-      <p className="min-w-0 flex-1 truncate font-display text-2xl font-bold">{title}</p>
+      <p className="min-w-0 flex-1 truncate font-display text-2xl">{title}</p>
 
       <Link
         href="/profil#pousses"
         aria-label={`${total} pousses, série de ${streak} jour${streak > 1 ? "s" : ""} d'affilée`}
-        className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-sable px-3 text-sm font-bold text-encre"
+        className="flex h-10 shrink-0 items-center gap-2 rounded-full border border-trait bg-papier px-3 text-sm font-semibold text-encre"
       >
         <span className="flex items-center gap-1 tabular-nums">
-          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2f6b3a" strokeWidth="2" strokeLinecap="round">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1f5134" strokeWidth="2" strokeLinecap="round">
             <path d="M12 21v-9" />
             <path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" />
             <path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" />
           </svg>
           {pousses.toLocaleString("fr-FR")}
         </span>
-        <span aria-hidden="true" className="h-4 w-px bg-[#cdbf9f]" />
+        <span aria-hidden="true" className="h-4 w-px bg-[#d8d0bd]" />
         <span className="flex items-center gap-1">
-          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill={streak > 0 ? "#f0a97b" : "none"} stroke="#c15f2c" strokeWidth="2">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill={streak > 0 ? "#e8a27c" : "none"} stroke="#b4532a" strokeWidth="2">
             <path d="M12 2c2 4-2 5-2 8a4 4 0 1 0 8 0c0-2-1-3-2-4 1 3-1 4-2 3 1-2-1-3-2-7Z" />
           </svg>
           {streak} j
@@ -152,9 +152,9 @@ export function ProgressHud({
       <Link
         href="/notifications"
         aria-label={notifications ? `Notifications, ${notifications} nouvelle${notifications > 1 ? "s" : ""}` : "Notifications"}
-        className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-sable"
+        className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-trait bg-papier"
       >
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a4030" strokeWidth="1.8">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3f4a3c" strokeWidth="1.8">
           <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.7 21a2 2 0 0 1-3.4 0" />
         </svg>

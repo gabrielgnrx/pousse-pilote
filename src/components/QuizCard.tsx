@@ -30,8 +30,8 @@ export function QuizCard({ initial }: { initial: Quiz }) {
   return (
     <section id="quiz" className="card flex scroll-mt-4 flex-col gap-3 py-3.5" aria-labelledby="quiz-titre">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="quiz-titre" className="font-display text-base font-bold">Quiz du jour</h2>
-        <span className="chip bg-peche">
+        <h2 id="quiz-titre" className="font-display text-base">Quiz du jour</h2>
+        <span className="chip bg-peche text-argile-fonce">
           {finished ? `${quiz.score}/${quiz.total}` : `Question ${Math.min(position, quiz.total)}/${quiz.total} · ${quiz.score} juste${quiz.score > 1 ? "s" : ""}`}
         </span>
       </div>
@@ -61,7 +61,7 @@ export function QuizCard({ initial }: { initial: Quiz }) {
                 <li
                   key={i}
                   className={`flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-sm ${
-                    isAnswer ? "bg-sauge font-bold text-[#2e3a22]" : isWrongPick ? "bg-peche line-through" : "bg-creme opacity-60"
+                    isAnswer ? "bg-sauge font-bold text-[#1f5134]" : isWrongPick ? "bg-peche line-through" : "bg-creme opacity-60"
                   }`}
                 >
                   <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full border-2 border-terre/40 text-xs font-bold">
@@ -107,7 +107,7 @@ export function QuizCard({ initial }: { initial: Quiz }) {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="font-display text-3xl font-bold">
+          <p className="font-display text-3xl">
             {quiz.score}/{quiz.total}
           </p>
           <p className="text-sm text-brun">

@@ -8,10 +8,11 @@ import { getEngagement } from "@/lib/engagement-data";
 import { levelFor } from "@/lib/co2/engagement.ts";
 import { RecentGains } from "@/components/RecentGains";
 import { PhoneCard } from "./PhoneCard";
+import { Mascot } from "@/components/Mascot";
 import type { Footprint } from "@/lib/co2/footprint.ts";
 
 const FP_PARTS: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
-  { key: "transport", label: "Transports", color: "#f0a97b" },
+  { key: "transport", label: "Transports", color: "#e8a27c" },
   { key: "alimentation", label: "Alimentation", color: "#b5c890" },
   { key: "logement", label: "Chauffage", color: "#e9c9a3" },
   { key: "consommation", label: "Achats", color: "#8fa06a" },
@@ -36,43 +37,44 @@ export default async function ProfilPage() {
   return (
     <>
       <section className="flex items-center gap-4">
-        <span className="flex size-16 items-center justify-center rounded-full bg-abricot font-display text-2xl font-bold text-[#402a16]">
+        <span className="flex size-16 items-center justify-center rounded-full bg-[#e9c9a8] font-display text-2xl text-[#4a2a12]">
           {profile.display_name.charAt(0).toUpperCase()}
         </span>
         <div>
-          <h1 className="font-display text-2xl font-bold">{profile.display_name}</h1>
+          <h1 className="font-display text-2xl">{profile.display_name}</h1>
           <p className="text-sm text-terre">{user.email}</p>
         </div>
       </section>
 
-      <Link href="/jardin" className="flex flex-col gap-2 rounded-[20px] bg-[#2f5b36] p-4 text-[#f7f1e3]">
-        <span className="flex items-baseline justify-between gap-2">
-          <span className="font-display text-lg font-bold">Niveau {level.index + 1} · {level.name}</span>
-          <span className="text-sm font-bold text-[#cfe3c4]">{e.points.total.toLocaleString("fr-FR")} pousses</span>
+      <Link href="/jardin" className="relative flex flex-col gap-2.5 overflow-hidden rounded-[28px_28px_28px_10px] bg-sapin p-5 text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]">
+        <Mascot size={64} grown className="absolute top-3 right-4" />
+        <span className="relative flex flex-col gap-1 pr-24">
+          <span className="text-[13px] font-semibold text-[#c8dcc4]">Niveau {level.index + 1} · {level.name}</span>
+          <span className="font-display text-[40px] leading-none">{e.points.total.toLocaleString("fr-FR")} <span className="font-sans text-[15px] text-[#dfe9da]">pousses</span></span>
         </span>
         <span
-          className="h-2.5 overflow-hidden rounded-full bg-white/[0.18]"
+          className="relative h-2.5 overflow-hidden rounded-full bg-sapin-fonce"
           role="progressbar"
           aria-label={level.next ? `Vers le niveau ${level.next.name}` : "Niveau maximum"}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(level.progress * 100)}
         >
-          <span className="block h-full rounded-full bg-abricot" style={{ width: `${Math.max(3, level.progress * 100)}%` }} />
+          <span className="block h-full rounded-full bg-feuille" style={{ width: `${Math.max(3, level.progress * 100)}%` }} />
         </span>
         <span className="flex items-center justify-between gap-2 text-[13px]">
-          <span className="text-[#ddebd3]">
+          <span className="text-[#dfe9da]">
             {level.next ? `Encore ${level.next.missing.toLocaleString("fr-FR")} pour devenir ${level.next.name}` : "Niveau maximum atteint"}
           </span>
-          <span className="shrink-0 font-bold">Mon jardin ›</span>
+          <span className="shrink-0 font-semibold text-feuille">Mon jardin ›</span>
         </span>
       </Link>
 
       {fp ? (
         <Link href="/bilan" className="card flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="font-display text-lg font-bold">Mon bilan</span>
-            <span className="font-display text-lg font-bold">
+            <span className="font-display text-lg">Mon bilan</span>
+            <span className="font-display text-lg">
               {(Number(fp.total_kg) / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} t/an
             </span>
           </div>
@@ -90,13 +92,13 @@ export default async function ProfilPage() {
             ))}
           </div>
           {e.kgAvoided > 0 ? (
-            <span className="rounded-xl bg-[#e3edd9] px-3 py-2 text-[13px] font-bold text-[#22502c]">−{formatKg(e.kgAvoided)} évités grâce à tes actions</span>
+            <span className="self-start rounded-full bg-sauge px-3 py-1.5 text-[13px] font-semibold text-sapin">−{formatKg(e.kgAvoided)} évités grâce à tes actions</span>
           ) : null}
-          <span className="text-sm font-bold underline underline-offset-2">Le détail et comment le réduire ›</span>
+          <span className="text-sm font-semibold text-sapin">Le détail et comment le réduire ›</span>
         </Link>
       ) : null}
 
-      <nav aria-label="Mon espace" className="flex flex-col overflow-hidden rounded-[20px] border border-encre/10 bg-papier">
+      <nav aria-label="Mon espace" className="flex flex-col overflow-hidden rounded-[22px] border border-trait bg-papier">
         {[
           { href: "/notifications", label: "Notifications" },
           { href: "/regles", label: "Le barème des pousses" },
@@ -114,7 +116,7 @@ export default async function ProfilPage() {
           <Link href="/regles" className="text-xs font-bold underline underline-offset-2">Le barème</Link>
         </div>
         <p>
-          <span className="font-display text-4xl font-bold">{e.points.total}</span>
+          <span className="font-display text-4xl">{e.points.total}</span>
           <span className="ml-1.5 text-sm font-semibold">pousses depuis le début</span>
           <span className="block text-xs text-terre">
             dont {e.week.points} cette semaine
@@ -151,11 +153,11 @@ export default async function ProfilPage() {
         <p className="label">Ton impact · la planète</p>
         <div className="flex gap-4">
           <p className="flex-1">
-            <span className="block font-display text-2xl font-bold">{formatKg(e.kgAvoided)}</span>
+            <span className="block font-display text-2xl">{formatKg(e.kgAvoided)}</span>
             <span className="text-xs text-terre">de CO₂ évités par tes défis</span>
           </p>
           <p className="flex-1">
-            <span className="block font-display text-2xl font-bold">{doneChallenges ?? 0}</span>
+            <span className="block font-display text-2xl">{doneChallenges ?? 0}</span>
             <span className="text-xs text-terre">défi{(doneChallenges ?? 0) > 1 ? "s" : ""} réussi{(doneChallenges ?? 0) > 1 ? "s" : ""}</span>
           </p>
         </div>
@@ -198,7 +200,7 @@ export default async function ProfilPage() {
       <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
         <span className="flex-1">
           <span className="block text-sm font-bold">30 secondes pour améliorer Pousse ?</span>
-          <span className="block text-xs text-[#5a4324]">3 questions sur ta semaine</span>
+          <span className="block text-xs text-[#3f4a3c]">3 questions sur ta semaine</span>
         </span>
         <span className="btn-primary min-h-10 px-4 text-sm">Répondre</span>
       </Link>

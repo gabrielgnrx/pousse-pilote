@@ -6,7 +6,7 @@ export default async function AvisPage() {
   return (
     <>
       <div>
-        <h1 className="font-display text-2xl font-bold">Ta semaine avec Pousse</h1>
+        <h1 className="font-display text-2xl">Ta semaine avec Pousse</h1>
         <p className="mt-1 text-sm text-terre">
           3 questions, 30 secondes. Lues par l&apos;équipe Pousse uniquement, jamais par ton employeur.
         </p>

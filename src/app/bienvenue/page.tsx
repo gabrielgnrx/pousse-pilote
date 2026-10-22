@@ -24,7 +24,7 @@ export default async function BienvenuePage() {
   if (!code || !company) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-6 py-10">
-        <h1 className="font-display text-3xl font-bold">Code d&apos;entreprise introuvable</h1>
+        <h1 className="font-display text-3xl">Code d&apos;entreprise introuvable</h1>
         <p className="text-brun">Recommence depuis la page d&apos;accueil avec le code fourni par ton entreprise.</p>
         <Link href="/rejoindre" className="btn-primary">Saisir le code</Link>
       </main>

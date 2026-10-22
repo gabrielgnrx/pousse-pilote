@@ -14,7 +14,7 @@ export function FeedbackForm() {
   if (state.sent) {
     return (
       <section className="flex flex-col items-center gap-3 pt-10 text-center">
-        <p className="font-display text-2xl font-bold">Merci !</p>
+        <p className="font-display text-2xl">Merci !</p>
         <p className="max-w-xs text-sm text-brun">Tes réponses aident à construire la suite de Pousse.</p>
         <Link href="/fil" className="btn-dark mt-2 w-full">Retour au fil</Link>
       </section>

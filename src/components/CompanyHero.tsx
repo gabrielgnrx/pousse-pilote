@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatKg } from "@/lib/co2/challenges.ts";
+import { Mascot } from "@/components/Mascot";
 
 export interface CompanyPulse {
   name: string;
@@ -22,38 +23,47 @@ export function CompanyHero({ pulse }: { pulse: CompanyPulse }) {
   const pct = goal > 0 ? Math.min(100, (kg / goal) * 100) : 0;
   const left = Math.max(0, goal - kg);
   const active = Number(pulse.active_today);
+  const rank =
+    pulse.team_rank && pulse.team_size && pulse.team_size > 1 ? (pulse.team_rank === 1 ? "1er" : `${pulse.team_rank}e`) : null;
 
   return (
-    <Link href="/equipes/classement" className="flex flex-col gap-3 rounded-[22px] bg-[#2f5b36] p-4 text-[#f7f1e3]">
-      <span className="text-[11px] font-bold tracking-[0.08em] text-[#cfe3c4] uppercase">Ensemble chez {pulse.name}</span>
-      <span className="flex items-baseline gap-2">
-        <span className="font-display text-[40px] leading-none font-bold tabular-nums">{formatKg(kg)}</span>
-        <span className="text-sm font-semibold text-[#ddebd3]">de CO₂ évités (déclaré)</span>
+    <Link
+      href="/equipes/classement"
+      className="relative flex flex-col gap-3 overflow-hidden rounded-[32px_32px_32px_12px] bg-sapin p-5 text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]"
+    >
+      <Mascot size={88} className="absolute top-3.5 right-3.5" />
+      <span className="relative text-[13px] font-semibold text-[#c8dcc4]">Ensemble chez {pulse.name}</span>
+      <span className="relative flex flex-col gap-0.5 pr-24">
+        <span className="font-display text-[46px] leading-none tabular-nums">{formatKg(kg)}</span>
+        <span className="text-[15px] text-[#dfe9da]">de CO₂ évités ensemble (déclaré)</span>
       </span>
-      {Number(pulse.today_kg) > 0 || active > 0 ? (
-        <span className="self-start rounded-full bg-[#cfe3c4] px-2.5 py-1 text-xs font-bold text-[#1e4527]">
-          +{formatKg(Number(pulse.today_kg))} aujourd&apos;hui · {active} collègue{active > 1 ? "s" : ""} actif{active > 1 ? "s" : ""}
+      <span className="relative flex flex-col gap-2">
+        <span className="flex justify-between text-[13px] text-[#dfe9da]">
+          <span>{left > 0 ? `Encore ${formatKg(left)} avant l'objectif` : "Objectif atteint !"}</span>
+          <span className="font-semibold text-white">{formatKg(goal)}</span>
         </span>
-      ) : null}
-      <span className="flex flex-col gap-1.5">
         <span
-          className="h-2.5 overflow-hidden rounded-full bg-white/[0.18]"
+          className="h-2.5 overflow-hidden rounded-full bg-sapin-fonce"
           role="progressbar"
           aria-label={`Objectif de l'entreprise : ${formatKg(goal)}`}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(pct)}
         >
-          <span className="block h-full rounded-full bg-[#cfe3c4] transition-[width] duration-1000" style={{ width: `${Math.max(pct, kg > 0 ? 3 : 0)}%` }} />
-        </span>
-        <span className="flex justify-between text-xs text-[#ddebd3]">
-          <span>{left > 0 ? `Plus que ${formatKg(left)} avant l'objectif` : "Objectif atteint !"}</span>
-          <span className="font-bold">{formatKg(goal)}</span>
+          <span className="block h-full rounded-full bg-feuille transition-[width] duration-1000" style={{ width: `${Math.max(pct, kg > 0 ? 3 : 0)}%` }} />
         </span>
       </span>
-      <span className="rounded-[14px] bg-black/[0.18] px-3 py-2.5 text-[13px]">
-        Dont <strong className="text-[#f7f1e3]">{formatKg(Number(pulse.my_kg))} grâce à toi</strong>
-        {pulse.team_rank && pulse.team_size && pulse.team_size > 1 ? ` · ${pulse.team_rank === 1 ? "1er" : `${pulse.team_rank}e`} de ton équipe` : ""}
+      <span className="relative grid grid-cols-2 gap-2">
+        <span className="flex flex-col rounded-2xl bg-sapin-fonce px-3 py-2.5">
+          <span className="text-lg font-bold">+{formatKg(Number(pulse.today_kg))}</span>
+          <span className="text-xs text-[#c8dcc4]">
+            aujourd&apos;hui · {active} actif{active > 1 ? "s" : ""}
+          </span>
+        </span>
+        <span className="flex flex-col rounded-2xl bg-creme px-3 py-2.5 text-encre">
+          <span className="text-lg font-bold">{formatKg(Number(pulse.my_kg))}</span>
+          <span className="text-xs text-terre">ta part{rank ? ` · ${rank} de ton équipe` : ""}</span>
+        </span>
       </span>
     </Link>
   );

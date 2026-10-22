@@ -22,34 +22,34 @@ export function ActiveChallenges({ items, cancel }: { items: ActiveChallenge[]; 
   const [confirm, setConfirm] = useState<string | null>(null);
   if (!items.length) return null;
   return (
-    <section className="flex flex-col gap-2" aria-labelledby="mes-defis">
-      <h2 id="mes-defis" className="font-display text-xl font-bold">Mes défis en cours</h2>
+    <section className="flex flex-col gap-3" aria-labelledby="mes-defis">
+      <h2 id="mes-defis" className="font-display text-xl">Mes défis en cours</h2>
       {items.map((c) => {
         const pct = Math.min(100, (c.done / c.target) * 100);
         return (
-          <article key={c.id} className="flex flex-col gap-2 rounded-[18px] bg-papier p-3.5">
+          <article key={c.id} className="flex flex-col gap-3 rounded-[24px] bg-papier p-4 shadow-[0_8px_28px_rgba(31,42,30,0.06)]">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <span className={`mb-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${c.duel ? "bg-sapin text-sapin-clair" : "bg-sable text-brun"}`}>
+                <span className={`mb-1.5 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${c.duel ? "bg-sapin text-sapin-clair" : "bg-sable text-brun"}`}>
                   {c.duel ? "Duel · ×1,5" : "Seul · ×1"}
                 </span>
-                <p className="text-[15px] leading-snug font-bold">{c.title}</p>
-                <p className="text-xs text-[#5e5240]">
+                <p className="font-display text-lg leading-snug">{c.title}</p>
+                <p className="text-[13px] text-terre">
                   {c.done}/{c.target} {c.target > 1 ? c.unit.many : c.unit.one} · jusqu&apos;au {c.endsOn}
                 </p>
               </div>
               {c.duel ? (
                 <span className="shrink-0 rounded-full bg-peche px-2 py-1 text-xs font-bold text-argile-fonce">
-                  {c.duel.status === "pending" ? `Duel envoyé à ${c.duel.other}` : `⚔ ${c.duel.other} : ${Math.min(c.duel.theirs, c.target)}`}
+                  {c.duel.status === "pending" ? `Duel envoyé à ${c.duel.other}` : `${c.duel.other} : ${Math.min(c.duel.theirs, c.target)}`}
                 </span>
               ) : null}
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-[#e6dcc6]">
-              <div className="h-2 rounded-full bg-[#2f6b3a]" style={{ width: `${Math.max(pct, c.done > 0 ? 3 : 0)}%` }} />
+            <div className="h-2.5 overflow-hidden rounded-full bg-sable">
+              <div className="h-2.5 rounded-full bg-sapin" style={{ width: `${Math.max(pct, c.done > 0 ? 3 : 0)}%` }} />
             </div>
             {confirm === c.id ? (
               <div className="flex flex-col gap-2 rounded-xl bg-peche p-3">
-                <p className="text-sm font-semibold text-[#5a4324]">
+                <p className="text-sm font-semibold text-[#3f4a3c]">
                   Annuler ce défi ?{" "}
                   {c.duel
                     ? "Le duel, lui, continue : pour garder ta mise de 10 pousses, il faudra quand même atteindre l'objectif."
@@ -58,20 +58,20 @@ export function ActiveChallenges({ items, cancel }: { items: ActiveChallenge[]; 
                 <div className="flex gap-2">
                   <form action={cancel} className="flex-1">
                     <input type="hidden" name="challenge" value={c.id} />
-                    <button type="submit" className="btn-primary min-h-10 w-full text-sm">Oui, annuler</button>
+                    <button type="submit" className="btn-dark min-h-11 w-full text-sm">Oui, annuler</button>
                   </form>
-                  <button type="button" onClick={() => setConfirm(null)} className="btn-ghost min-h-10 flex-1 text-sm">Garder</button>
+                  <button type="button" onClick={() => setConfirm(null)} className="btn-ghost min-h-11 flex-1 text-sm">Garder</button>
                 </div>
               </div>
             ) : (
               <div className="flex gap-2">
-                <Link href={c.href ?? "/agir"} className="flex h-10 flex-1 items-center justify-center rounded-xl bg-[#2f5b36] text-[13px] font-bold text-[#f7f1e3]">
+                <Link href={c.href ?? "/agir"} className="btn-primary min-h-[46px] flex-1">
                   Je l&apos;ai fait
                 </Link>
                 <button
                   type="button"
                   onClick={() => setConfirm(c.id)}
-                  className="flex h-10 items-center rounded-xl border border-[#cdbf9f] px-3.5 text-[13px] font-semibold"
+                  className="flex min-h-[46px] items-center rounded-2xl border border-trait px-3.5 text-[13px] font-medium text-terre"
                 >
                   Annuler le défi
                 </button>

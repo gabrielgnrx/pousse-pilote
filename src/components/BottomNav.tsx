@@ -61,12 +61,12 @@ function TabLink({ t, path }: { t: Tab; path: string }) {
       <Link
         href={t.href}
         aria-current={active ? "page" : undefined}
-        className={`flex min-w-14 flex-col items-center gap-1 py-1 ${active ? "text-sapin" : "text-terre"}`}
+        className={`flex min-h-11 min-w-14 flex-col items-center justify-center gap-0.5 ${active ? "text-white" : "text-[#c3cfbe]"}`}
       >
         <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
           {t.icon}
         </svg>
-        <span className={`text-[11px] ${active ? "font-bold" : "font-semibold"}`}>{t.label}</span>
+        <span className={`text-[11px] ${active ? "font-semibold" : "font-medium"}`}>{t.label}</span>
       </Link>
     </li>
   );
@@ -78,9 +78,9 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigation principale"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-encre/10 bg-papier pb-[env(safe-area-inset-bottom)]"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-[calc(env(safe-area-inset-bottom)+14px)]"
     >
-      <ul className="mx-auto flex h-[72px] max-w-md items-center px-1">
+      <ul className="pointer-events-auto mx-auto flex h-[66px] max-w-md items-center rounded-full bg-nuit px-1.5 shadow-[0_12px_30px_rgba(31,42,30,0.25)]">
         {LEFT.map((t) => (
           <TabLink key={t.href} t={t} path={path} />
         ))}
@@ -89,7 +89,7 @@ export function BottomNav() {
             href="/agir"
             aria-label="Enregistrer une action"
             aria-current={recording ? "page" : undefined}
-            className="-mt-7 flex size-[60px] items-center justify-center rounded-full border-4 border-papier bg-sapin text-sapin-clair shadow-lg shadow-sapin/25 transition active:scale-95"
+            className="-mt-7 flex size-[60px] items-center justify-center rounded-[22px] bg-feuille text-encre shadow-[inset_0_-5px_0_var(--color-feuille-fonce),0_10px_20px_rgba(31,42,30,0.3)] transition active:translate-y-px"
           >
             <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
               <path d="M12 5v14M5 12h14" />

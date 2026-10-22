@@ -79,7 +79,7 @@ export function NewChallengeForm({
       {inspiredBy ? (
         <>
           <input type="hidden" name="via" value={inspiredBy.id} />
-          <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-[#2e3a22]">
+          <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-[#1f5134]">
             Tu relèves ce défi grâce à <strong>{inspiredBy.name}</strong> : ta première validation lui
             rapportera 15 pousses.
           </p>
@@ -143,7 +143,7 @@ export function NewChallengeForm({
               checked={mode === m.id}
               disabled={m.disabled}
               onChange={() => chooseMode(m.id)}
-              className="mt-0.5 size-5 shrink-0 accent-[#2f5b36]"
+              className="mt-0.5 size-5 shrink-0 accent-[#1f5134]"
             />
             <span className="flex flex-1 flex-col gap-1">
               <span className="flex justify-between text-[15px] font-bold">
@@ -172,7 +172,7 @@ export function NewChallengeForm({
                 ))}
               </select>
             </label>
-            <p className="text-xs leading-relaxed text-[#5a4324]">
+            <p className="text-xs leading-relaxed text-[#3f4a3c]">
               Vous avez 7 jours pour faire {target} {target > 1 ? template.unit.many : template.unit.one} chacun. Refuser ne lui coûte rien.
             </p>
           </div>
@@ -185,7 +185,7 @@ export function NewChallengeForm({
         <div className="flex items-center justify-between rounded-2xl bg-sable p-3">
           <button type="button" aria-label="Diminuer l'objectif" onClick={() => setTarget((n) => Math.max(template.minTarget, n - 1))} className="flex size-11 items-center justify-center rounded-full bg-creme text-2xl font-bold">−</button>
           <div className="text-center">
-            <div className="font-display text-3xl font-bold">{target}</div>
+            <div className="font-display text-3xl">{target}</div>
             <div className="text-xs text-terre">{target > 1 ? template.unit.many : template.unit.one}</div>
           </div>
           <button type="button" aria-label="Augmenter l'objectif" onClick={() => setTarget((n) => Math.min(duel ? 10 : 100, n + 1))} className="flex size-11 items-center justify-center rounded-full bg-creme text-2xl font-bold">+</button>
@@ -207,7 +207,7 @@ export function NewChallengeForm({
       ) : null}
 
       {mode === "equipe" ? (
-        <section className="rounded-2xl bg-peche p-4 text-[#402a16]">
+        <section className="rounded-2xl bg-peche p-4 text-[#3a1606]">
           <p className="text-xs font-bold tracking-wider uppercase">Défi d&apos;équipe</p>
           <p className="mt-1 text-sm leading-snug">
             Ta proposition passe en tête du vote de lundi (9 h – 14 h) dans le QG. Si l&apos;équipe la choisit, chaque action qui
@@ -219,7 +219,7 @@ export function NewChallengeForm({
         <p className="text-xs font-bold tracking-wider uppercase">Si tu réussis · calculé, non modifiable</p>
         <div className="mt-2 flex gap-4">
           <div className="flex-1">
-            <p className="font-display text-2xl font-bold">
+            <p className="font-display text-2xl">
               +{Math.round(target * template.pointsPerUnit * (duel ? MODES.duel.mult : 1)) + (duel ? BONUS.duelSeul : BONUS.seul)} pousses
             </p>
             <p className="text-xs">
@@ -228,7 +228,7 @@ export function NewChallengeForm({
             </p>
           </div>
           <div className="flex-1">
-            <p className="font-display text-2xl font-bold">{formatKg(total)}</p>
+            <p className="font-display text-2xl">{formatKg(total)}</p>
             <p className="text-xs">de CO₂ évités pour l&apos;entreprise (déclaré)</p>
           </div>
         </div>

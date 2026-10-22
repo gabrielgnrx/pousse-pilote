@@ -29,7 +29,7 @@ interface Post {
   team: { name: string } | null;
 }
 
-const AVATAR = ["#b9d3e8", "#f0a97b", "#d7e3c8", "#f6d9a8", "#e3c9e8", "#ecddbb"];
+const AVATAR = ["#b9d3e8", "#e8a27c", "#d7e3c8", "#f6d9a8", "#e3c9e8", "#ece6d6"];
 const avatarColor = (id: string) => AVATAR[parseInt(id.replace(/-/g, "").slice(-2), 16) % AVATAR.length];
 
 export default async function FilPage({ searchParams }: { searchParams: Promise<{ publie?: string; vue?: string }> }) {
@@ -96,13 +96,13 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
     <>
       <h1 className="sr-only">Accueil</h1>
       {publie ? (
-        <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#2e3a22]">
+        <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#1f5134]">
           Publié ! Tes collègues peuvent maintenant t&apos;encourager.
         </p>
       ) : null}
       {showIntro ? <IntroCard /> : null}
       {daily && daily.gained > 0 ? (
-        <p role="status" className="animate-pousse-pop rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#402a16]">
+        <p role="status" className="animate-pousse-pop rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#3a1606]">
           Bonus débloqué : +{daily.gained} pousses{daily.questDone ? " pour tes quêtes du jour" : ""} !
         </p>
       ) : null}
@@ -112,7 +112,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
 
       {!profile.feed_choice_at ? (
         <section aria-labelledby="partage" className="flex flex-col gap-2.5 rounded-[18px] border-2 border-sapin bg-papier p-4">
-          <h2 id="partage" className="font-display text-lg font-bold">Nouveau : le fil montre tout ce que vous faites</h2>
+          <h2 id="partage" className="font-display text-lg">Nouveau : le fil montre tout ce que vous faites</h2>
           <p className="text-sm text-brun">
             Tes actions et tes défis (lancés, réussis) apparaissent dans le fil de l&apos;entreprise, pour que tes collègues
             puissent t&apos;encourager ou essayer aussi. Rien de ce que tu as fait avant n&apos;est publié, et tes reçus
@@ -126,7 +126,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       ) : null}
 
       <div id="publications" className="mt-0.5 flex scroll-mt-4 items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-bold">Fil d&apos;actu</h2>
+        <h2 className="font-display text-[21px]">Fil d&apos;actu</h2>
         {profile.team_id ? (
           <nav aria-label="Filtrer le fil" className="flex gap-1.5">
             {[
@@ -138,7 +138,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                 href={f.href}
                 aria-current={f.on ? "page" : undefined}
                 className={`flex h-[34px] items-center rounded-full px-3 text-xs ${
-                  f.on ? "bg-encre font-bold text-[#f7f1e3]" : "border border-[#cdbf9f] font-semibold text-encre"
+                  f.on ? "bg-encre font-bold text-[#f6f3ea]" : "border border-[#d8d0bd] font-semibold text-encre"
                 }`}
               >
                 {f.label}
@@ -150,7 +150,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
 
       {(posts ?? []).length === 0 && events.length === 0 ? (
         <section className="flex flex-col gap-3 rounded-[18px] bg-papier p-4 text-center">
-          <p className="font-display text-lg font-bold">Le fil est encore calme</p>
+          <p className="font-display text-lg">Le fil est encore calme</p>
           <p className="text-sm text-brun">
             Enregistre une action avec le bouton + : elle apparaît ici, et tes collègues suivront.
           </p>
@@ -167,7 +167,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
           const title = t ? actionTitle(t.id, e.variant) : "Défi";
           const won = e.event === "reussi";
           return (
-            <article key={`defi-${e.id}-${e.event}`} className={`flex flex-col gap-2.5 rounded-[18px] p-3.5 ${won ? "bg-[#e3edd9]" : "bg-papier"}`}>
+            <article key={`defi-${e.id}-${e.event}`} className={`flex flex-col gap-2.5 rounded-[24px] p-4 shadow-[0_8px_28px_rgba(31,42,30,0.06)] ${won ? "bg-sauge" : "bg-papier"}`}>
               <div className="flex items-center gap-2.5">
                 <Link
                   href={mine ? "/jardin" : `/jardin/${e.user_id}`}
@@ -182,7 +182,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                     {name}
                     {e.team_name ? ` · ${e.team_name}` : ""}
                   </p>
-                  <p className="truncate text-xs text-[#5e5240]">
+                  <p className="truncate text-xs text-[#5b6458]">
                     {won ? (mine ? "as réussi un défi" : "a réussi un défi") : mine ? "as lancé un défi" : "a lancé un défi"} · {relativeTime(e.at)}
                   </p>
                 </div>
@@ -208,7 +208,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href={`/defis/nouveau/${t.id}?variante=${e.variant}`}
-                    className="flex h-10 items-center rounded-xl border border-[#cdbf9f] px-3.5 text-[13px] font-semibold"
+                    className="flex h-11 items-center rounded-[14px] border border-trait bg-papier px-3.5 text-sm font-medium"
                   >
                     Je relève aussi
                   </Link>
@@ -226,7 +226,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
         const name = mine ? "Toi" : (p.author?.display_name ?? "Un collègue");
         const title = t ? actionTitle(t.id, p.variant) : "Action";
         return (
-          <article key={p.id} className="flex flex-col gap-2.5 rounded-[18px] bg-papier p-3.5">
+          <article key={p.id} className="flex flex-col gap-3 rounded-[24px] bg-papier p-4 shadow-[0_8px_28px_rgba(31,42,30,0.06)]">
             <div className="flex items-center gap-2.5">
               <Link
                 href={mine ? "/jardin" : `/jardin/${p.user_id}`}
@@ -241,11 +241,11 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                   {name}
                   {p.team?.name ? ` · ${p.team.name}` : ""}
                 </p>
-                <p className="truncate text-xs text-[#5e5240]">
+                <p className="truncate text-xs text-[#5b6458]">
                   {title} · {relativeTime(p.created_at)}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-[#e3edd9] px-2 py-1 text-xs font-bold text-[#22502c]">
+              <span className="shrink-0 rounded-full bg-sauge px-2.5 py-1 text-[13px] font-bold text-sapin">
                 {Number(p.kg) > 0 ? `−${formatKg(Number(p.kg))}` : `+${p.points} pousses`}
               </span>
               {!mine ? (
@@ -255,9 +255,9 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                     type="submit"
                     disabled={reported.has(p.id)}
                     aria-label={reported.has(p.id) ? "Publication signalée" : "Signaler cette publication"}
-                    className="-mr-1.5 flex size-8 items-center justify-center rounded-full text-[#8c7a55]"
+                    className="-mr-1.5 flex size-8 items-center justify-center rounded-full text-[#5b6458]"
                   >
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill={reported.has(p.id) ? "#c15f2c" : "none"} stroke="currentColor" strokeWidth="2"><path d="M4 22V4c4-2 8 2 12 0v10c-4 2-8-2-12 0" /></svg>
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill={reported.has(p.id) ? "#b4532a" : "none"} stroke="currentColor" strokeWidth="2"><path d="M4 22V4c4-2 8 2 12 0v10c-4 2-8-2-12 0" /></svg>
                   </button>
                 </form>
               ) : null}
@@ -279,8 +279,10 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
                 <button
                   type="submit"
                   aria-pressed={cheered}
-                  className={`flex h-10 items-center rounded-xl px-3.5 text-[13px] font-bold ${
-                    cheered ? "bg-[#22502c] text-[#f7f1e3]" : "bg-[#e3edd9] text-[#22502c]"
+                  className={`flex h-11 items-center rounded-[14px] px-3.5 text-sm font-semibold ${
+                    cheered
+                      ? "bg-sapin text-sapin-clair shadow-[inset_0_-3px_0_var(--color-sapin-fonce)]"
+                      : "bg-sauge text-sapin shadow-[inset_0_-3px_0_var(--color-sauge-fonce)]"
                   }`}
                 >
                   Bravo · {postCheers.length}
@@ -289,7 +291,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
               {!mine && t ? (
                 <Link
                   href={GESTES.some((g) => g.id === t.id) ? "/agir" : `/defis/nouveau/${t.id}?variante=${p.variant}&via=${p.id}`}
-                  className="flex h-10 items-center rounded-xl border border-[#cdbf9f] px-3.5 text-[13px] font-semibold"
+                  className="flex h-11 items-center rounded-[14px] border border-trait bg-papier px-3.5 text-sm font-medium"
                 >
                   J&apos;essaie aussi
                 </Link>
@@ -297,7 +299,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
               {!mine && t ? (
                 <Link
                   href={`/duels?avec=${p.user_id}&type=${duelKindForTemplate(t.id)}`}
-                  className="flex h-10 items-center rounded-xl border border-[#cdbf9f] px-3.5 text-[13px] font-semibold"
+                  className="flex h-11 items-center rounded-[14px] border border-trait bg-papier px-3.5 text-sm font-medium"
                   aria-label={`Défier ${name} en duel`}
                 >
                   Défier

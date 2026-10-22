@@ -49,13 +49,13 @@ const PATHS: Record<Theme, React.ReactNode> = {
 };
 
 const COLOR: Record<Theme, string> = {
-  trajets: "#a24e22",
+  trajets: "#8a3c1c",
   repas: "#7a5a12",
-  achats: "#3b4a2c",
-  maison: "#4a4030",
+  achats: "#1f5134",
+  maison: "#3f4a3c",
   voyages: "#1f4a6b",
-  bureau: "#3b4a2c",
-  nature: "#2f6b3a",
+  bureau: "#1f5134",
+  nature: "#1f5134",
 };
 
 export function ThemeIcon({ theme, size = 22, color }: { theme: Theme; size?: number; color?: string }) {

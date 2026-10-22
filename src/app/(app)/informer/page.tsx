@@ -47,46 +47,46 @@ export default async function InformerPage() {
           { href: "#saison", label: "De saison" },
           { href: "#actu", label: "Actus" },
         ].map((c) => (
-          <a key={c.href} href={c.href} className="flex h-9 shrink-0 items-center rounded-full border border-[#cdbf9f] px-3.5 text-[13px] font-semibold">
+          <a key={c.href} href={c.href} className="flex min-h-10 shrink-0 items-center rounded-full border border-trait bg-papier px-3.5 text-sm font-medium">
             {c.label}
           </a>
         ))}
       </nav>
 
-      <Link href="/scanner" className="flex items-center gap-3.5 rounded-[20px] bg-[#2f5b36] p-4 text-[#f7f1e3]">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/[0.14]">
+      <Link href="/scanner" className="flex items-center gap-3.5 rounded-[28px_28px_28px_10px] bg-sapin p-[18px] text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]">
+        <span className="flex size-14 shrink-0 items-center justify-center rounded-[18px] bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
           <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2" />
             <path d="M8 8v8M11 8v8M14 8v8M17 8v8" />
           </svg>
         </span>
         <span className="flex-1">
-          <span className="block text-[17px] font-bold">Scanner un produit</span>
-          <span className="block text-[13px] text-[#ddebd3]">Son impact, son score, une alternative mieux notée</span>
+          <span className="block font-display text-xl">Scanner un produit</span>
+          <span className="block text-sm text-[#c8dcc4]">Son impact, son score, une alternative mieux notée</span>
         </span>
       </Link>
 
       {quiz ? (
-        <Link id="quiz" href="/quiz" className="flex scroll-mt-4 flex-col gap-2 rounded-[20px] bg-[#f6d9a8] p-4 text-[#3d2a0e]">
+        <Link id="quiz" href="/quiz" className="flex scroll-mt-4 flex-col gap-2 rounded-[24px] bg-peche p-4 text-[#3a1606] shadow-[inset_0_-4px_0_var(--color-peche-fonce)]">
           <span className="flex items-center justify-between">
-            <span className="text-xs font-bold tracking-[0.06em] uppercase">Quiz du jour</span>
-            <span className="rounded-full bg-[#2f5b36] px-2 py-0.5 text-xs font-bold text-[#f7f1e3]">jusqu&apos;à 15 pousses</span>
+            <span className="font-display text-xl">Quiz du jour</span>
+            <span className="rounded-full bg-argile px-2.5 py-1 text-xs font-semibold text-white">jusqu&apos;à 15 pousses</span>
           </span>
-          <span className="text-base leading-snug font-bold">
+          <span className="text-[15px] leading-snug text-[#6b2f15]">
             {quiz.current
               ? quiz.answered > 0
                 ? `${quiz.answered}/${quiz.total} répondues · ${quiz.score} juste${quiz.score > 1 ? "s" : ""}`
                 : "10 questions sur ce qui pèse vraiment, chiffres ADEME"
               : `Terminé : ${quiz.score}/${quiz.total}. 10 nouvelles questions demain.`}
           </span>
-          <span className="text-sm font-bold">{quiz.current ? (quiz.answered > 0 ? "Continuer ›" : "Jouer ›") : "Revoir mes réponses ›"}</span>
+          <span className="flex min-h-11 items-center self-start rounded-[14px] bg-argile px-4 text-sm font-semibold text-white shadow-[inset_0_-4px_0_var(--color-argile-fonce)]">{quiz.current ? (quiz.answered > 0 ? "Continuer le quiz" : "Jouer") : "Revoir mes réponses"}</span>
         </Link>
       ) : null}
 
       {fiches.length ? (
         <section id="fiches" className="flex scroll-mt-4 flex-col gap-2" aria-labelledby="fiches-titre">
           <div>
-            <h2 id="fiches-titre" className="font-display text-xl font-bold">Les fiches</h2>
+            <h2 id="fiches-titre" className="font-display text-xl">Les fiches</h2>
             <p className="text-sm text-terre">Pourquoi ça compte et comment s&apos;y prendre, d&apos;après ton bilan.</p>
           </div>
           <ul className="grid grid-cols-2 gap-2.5">
@@ -100,7 +100,7 @@ export default async function InformerPage() {
                     {t.id === featured.id ? "La fiche de la semaine" : `${verbOf(t.id)} · ${CATEGORY_LABEL[t.category]}`}
                   </span>
                   <span className="text-sm leading-snug font-bold">{t.title}</span>
-                  <span className="mt-auto text-[13px] font-bold text-[#22502c]">jusqu&apos;à −{formatKg(e.maxKg)} par {t.unit.one}</span>
+                  <span className="mt-auto text-[13px] font-bold text-[#1f5134]">jusqu&apos;à −{formatKg(e.maxKg)} par {t.unit.one}</span>
                 </Link>
               </li>
             ))}
@@ -109,7 +109,7 @@ export default async function InformerPage() {
       ) : null}
 
       <section id="recettes" className="flex scroll-mt-4 flex-col gap-2" aria-labelledby="recettes-titre">
-        <h2 id="recettes-titre" className="font-display text-xl font-bold">Recettes végé de la semaine</h2>
+        <h2 id="recettes-titre" className="font-display text-xl">Recettes végé de la semaine</h2>
         <ul className="flex flex-col gap-2">
           {recettes.map((r) => (
             <li key={r.id}>
@@ -147,11 +147,11 @@ export default async function InformerPage() {
       </section>
 
       {/* De saison ce mois-ci : ce qu'on met dans son panier. */}
-      <section id="saison" className="flex scroll-mt-4 flex-col gap-3 rounded-[22px] bg-sapin p-4 text-sapin-clair" aria-labelledby="saison-titre">
+      <section id="saison" className="flex scroll-mt-4 flex-col gap-3 rounded-[28px] bg-sapin p-5 text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]" aria-labelledby="saison-titre">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold tracking-wider uppercase opacity-90">Ce mois-ci dans ton panier</p>
-            <h2 id="saison-titre" className="font-display text-2xl leading-tight font-bold">De saison en {MONTHS[month - 1]}</h2>
+            <h2 id="saison-titre" className="font-display text-2xl leading-tight">De saison en {MONTHS[month - 1]}</h2>
           </div>
           <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/10">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V12" /><path d="M12 12C7 12 4 9 4 4c5 0 8 3 8 8Z" /><path d="M12 15c0-4 3-7 8-7 0 4-3 7-8 7Z" /></svg>
@@ -169,7 +169,7 @@ export default async function InformerPage() {
           <p className="text-xs font-bold opacity-90">Fruits</p>
           <ul className="flex flex-wrap gap-1.5">
             {fruits.map((p) => (
-              <li key={p.name} className="rounded-full bg-abricot/90 px-2.5 py-1 text-[13px] font-semibold text-[#402a16]">{p.name}</li>
+              <li key={p.name} className="rounded-full bg-abricot/90 px-2.5 py-1 text-[13px] font-semibold text-[#3a1606]">{p.name}</li>
             ))}
           </ul>
         </div>
@@ -188,7 +188,7 @@ export default async function InformerPage() {
       {/* Les bonnes nouvelles des médias. */}
       <section id="actu" className="flex scroll-mt-4 flex-col gap-3" aria-labelledby="actu-titre">
         <div>
-          <h2 id="actu-titre" className="font-display text-xl font-bold">L&apos;actu qui fait du bien</h2>
+          <h2 id="actu-titre" className="font-display text-xl">L&apos;actu qui fait du bien</h2>
           <p className="text-sm text-terre">Les bonnes nouvelles pour la planète, relayées des médias plusieurs fois par jour.</p>
         </div>
         {news.length ? (

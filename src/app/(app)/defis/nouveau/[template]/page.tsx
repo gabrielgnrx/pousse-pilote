@@ -56,7 +56,7 @@ export default async function NewChallengePage({
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
         Catalogue
       </Link>
-      <h1 className="-mt-2 font-display text-2xl font-bold">{t.title}</h1>
+      <h1 className="-mt-2 font-display text-2xl">{t.title}</h1>
       {firstEligible ? (
         <NewChallengeForm
           template={{ id: t.id, unit: t.unit, variantQuestion: t.variantQuestion, proofHint: t.proofHint, defaultTarget: Math.max(t.defaultTarget, minTarget(t.id)), minTarget: minTarget(t.id), pointsPerUnit: t.pointsPerUnit, source: t.source }}

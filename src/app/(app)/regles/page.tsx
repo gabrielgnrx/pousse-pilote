@@ -7,14 +7,14 @@ export default function ReglesPage() {
   return (
     <>
       <div>
-        <h1 className="font-display text-2xl font-bold">Comment ça marche</h1>
+        <h1 className="font-display text-2xl">Comment ça marche</h1>
         <p className="mt-1 text-sm text-terre">Deux chiffres, deux rôles : les pousses pour jouer, les kg pour la planète.</p>
       </div>
 
       <section className="card flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="chip bg-peche">Le jeu</span>
-          <h2 className="font-display text-lg font-bold">Les pousses</h2>
+          <span className="chip bg-peche text-argile-fonce">Le jeu</span>
+          <h2 className="font-display text-lg">Les pousses</h2>
         </div>
         <p className="text-sm leading-relaxed">
           C&apos;est le seul chiffre qui compte pour le classement. On en gagne avec chaque action
@@ -41,7 +41,7 @@ export default function ReglesPage() {
       <section className="card flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <span className="chip bg-abricot">Pour pimenter</span>
-          <h2 className="font-display text-lg font-bold">Les à-côtés du jeu</h2>
+          <h2 className="font-display text-lg">Les à-côtés du jeu</h2>
         </div>
         <ul className="flex flex-col gap-2 text-sm leading-relaxed">
           <li><strong>Actions et défis.</strong> Une action, c&apos;est ce que tu fais au quotidien, enregistré avec le bouton + :
@@ -68,8 +68,8 @@ export default function ReglesPage() {
 
       <section className="card flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <span className="chip bg-sauge">Gagner ensemble</span>
-          <h2 className="font-display text-lg font-bold">Le classement des équipes</h2>
+          <span className="chip bg-sauge text-sapin">Gagner ensemble</span>
+          <h2 className="font-display text-lg">Le classement des équipes</h2>
         </div>
         <p className="text-sm leading-relaxed">
           Chaque équipe est classée sur ses pousses par personne, pour que les grandes équipes n&apos;écrasent
@@ -83,7 +83,7 @@ export default function ReglesPage() {
       <section className="card flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <span className="chip bg-sapin text-sapin-clair">L&apos;impact</span>
-          <h2 className="font-display text-lg font-bold">Les kg de CO₂ évités</h2>
+          <h2 className="font-display text-lg">Les kg de CO₂ évités</h2>
         </div>
         <p className="text-sm leading-relaxed">
           C&apos;est une estimation, calculée avec les facteurs de l&apos;ADEME à partir de ce que chacun

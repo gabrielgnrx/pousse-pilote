@@ -7,7 +7,7 @@ export function PublicPage({ title, lead, children }: { title: string; lead: str
       <Link href="/" aria-label="Accueil Pousse">
         <Logo />
       </Link>
-      <h1 className="font-display text-3xl font-bold">{title}</h1>
+      <h1 className="font-display text-3xl">{title}</h1>
       <p className="text-[15px] leading-relaxed text-brun">{lead}</p>
       <div className="flex flex-col gap-4">{children}</div>
     </main>
@@ -17,7 +17,7 @@ export function PublicPage({ title, lead, children }: { title: string; lead: str
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="card flex flex-col gap-2 text-sm leading-relaxed">
-      <h2 className="font-display text-lg font-bold">{title}</h2>
+      <h2 className="font-display text-lg">{title}</h2>
       {children}
     </section>
   );

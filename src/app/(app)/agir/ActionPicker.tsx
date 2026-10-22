@@ -83,15 +83,15 @@ export function ActionPicker({
           type="button"
           onClick={() => record(item)}
           disabled={pending}
-          className="flex w-full items-center gap-3 rounded-2xl bg-papier p-3 text-left transition active:scale-[0.98] disabled:opacity-60"
+          className="flex min-h-16 w-full items-center gap-3 rounded-[20px] bg-papier p-3 text-left shadow-[inset_0_-3px_0_var(--color-sable)] transition active:translate-y-px disabled:opacity-60"
         >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sable">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-sauge">
             <ThemeIcon theme={item.theme} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[15px] leading-snug font-bold">{item.title}</span>
+            <span className="block text-[15px] leading-snug font-semibold">{item.title}</span>
             {boost ? (
-              <span className={`mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${boost.kind === "equipe" ? "bg-abricot text-[#402a16]" : "bg-sapin text-sapin-clair"}`}>
+              <span className={`mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${boost.kind === "equipe" ? "bg-abricot text-[#3a1606]" : "bg-sapin text-sapin-clair"}`}>
                 {boost.label} · {fmtMult(boost.mult)}
               </span>
             ) : null}
@@ -124,14 +124,18 @@ export function ActionPicker({
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">Une action, aujourd&apos;hui</p>
-        <h1 className="font-display text-2xl font-bold">Qu&apos;as-tu fait de bien ?</h1>
-        <p className="text-sm text-terre">Une action, un tap, des pousses tout de suite. Le CO₂ vient de ton bilan.</p>
+      <div className="relative flex flex-col gap-1 overflow-hidden rounded-[28px_28px_28px_10px] bg-sapin p-5 text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]">
+        <svg aria-hidden="true" width="150" height="130" viewBox="0 0 170 150" className="absolute -top-5 -right-9">
+          <path d="M30 130C20 70 60 20 150 10c10 70-30 120-120 120Z" fill="#2c6a45" />
+          <path d="M150 10C110 50 70 90 34 128" stroke="#3f7f57" strokeWidth="3" fill="none" />
+        </svg>
+        <p className="relative text-[13px] font-semibold text-[#c8dcc4]">Une action, aujourd&apos;hui</p>
+        <h1 className="relative font-display text-[28px] leading-tight">Qu&apos;as-tu fait de bien ?</h1>
+        <p className="relative text-sm text-[#dfe9da]">Un tap, des pousses tout de suite. Le CO₂ vient de ton bilan.</p>
       </div>
 
-      <label className="flex h-12 items-center gap-2 rounded-2xl border-[1.5px] border-[#c7b78c] bg-papier px-4">
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b5d42" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4-4" /></svg>
+      <label className="flex h-[50px] items-center gap-2 rounded-2xl border border-trait bg-papier px-4">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5b6458" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4-4" /></svg>
         <span className="sr-only">Chercher une action</span>
         <input
           type="search"
@@ -149,7 +153,7 @@ export function ActionPicker({
       {list ? (
         <section className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
-            <h2 className="label">{query ? "Résultats" : THEMES.find((t) => t.id === theme)?.label}</h2>
+            <h2 className="font-display text-[19px] normal-case">{query ? "Résultats" : THEMES.find((t) => t.id === theme)?.label}</h2>
             <button type="button" onClick={() => { setQuery(""); setTheme(null); }} className="text-xs font-bold underline underline-offset-2">
               Tout voir
             </button>
@@ -159,12 +163,12 @@ export function ActionPicker({
       ) : (
         <>
           <section className="flex flex-col gap-2">
-            <h2 className="label">Tes habitudes · un tap suffit</h2>
+            <h2 className="font-display text-[19px] normal-case">Tes habitudes · un tap suffit</h2>
             <ul className="flex flex-col gap-2">{favorites.map((k) => byKey[k]).filter(Boolean).map(row)}</ul>
           </section>
           <section className="flex flex-col gap-2" aria-labelledby="applis">
             <div>
-              <h2 id="applis" className="label">Achats via une appli durable · +30</h2>
+              <h2 id="applis" className="font-display text-[19px]">Achats via une appli durable · +30</h2>
               <p className="text-xs text-terre">Vinted, Leboncoin, Back Market, Too Good To Go… Avec ton reçu, gardé privé.</p>
             </div>
             <ul className="flex flex-col gap-2">
@@ -175,14 +179,14 @@ export function ActionPicker({
             </ul>
           </section>
           <section className="flex flex-col gap-2">
-            <h2 className="label">Ou par thème</h2>
+            <h2 className="font-display text-[19px] normal-case">Ou par thème</h2>
             <div className="flex flex-wrap gap-2">
               {THEMES.map((t) => (
                 <button
                   key={t.id}
                   type="button"
                   onClick={() => setTheme(t.id)}
-                  className="flex h-10 items-center gap-1.5 rounded-full border-[1.5px] border-[#c7b78c] bg-papier px-3.5 text-sm font-semibold"
+                  className="flex min-h-11 items-center gap-1.5 rounded-full border border-trait bg-papier px-3.5 text-sm font-medium"
                 >
                   <ThemeIcon theme={t.id} size={16} />
                   {t.label}
@@ -193,7 +197,7 @@ export function ActionPicker({
         </>
       )}
 
-      <Link href="/defis?onglet=catalogue" className="self-center py-2 text-center text-[13px] font-semibold text-argile-fonce underline underline-offset-2">
+      <Link href="/defis?onglet=catalogue" className="self-center py-2 text-center text-sm font-semibold text-sapin">
         Un objectif sur plusieurs jours ? C&apos;est dans Mon plan
       </Link>
 
@@ -258,7 +262,7 @@ function ReceiptSheet({
             <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">
               {item.templateId.startsWith("appli_") ? "Achat via une appli · reçu obligatoire" : "Justificatif obligatoire"}
             </p>
-            <h2 id="recu-titre" className="font-display text-xl leading-tight font-bold">{t?.title ?? item.title}</h2>
+            <h2 id="recu-titre" className="font-display text-xl leading-tight">{t?.title ?? item.title}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sable">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>

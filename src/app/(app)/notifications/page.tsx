@@ -18,7 +18,7 @@ export default async function NotificationsPage() {
 
   return (
     <>
-      <h1 className="font-display text-2xl font-bold">Notifications</h1>
+      <h1 className="font-display text-2xl">Notifications</h1>
 
       {(alerts ?? []).length ? (
         <section className="flex flex-col gap-1" aria-label="Notifications récentes">

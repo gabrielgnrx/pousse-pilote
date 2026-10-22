@@ -21,7 +21,7 @@ export function WelcomeForm({
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-5 px-6 py-8">
-      <h1 className="font-display text-3xl leading-tight font-bold">Bienvenue chez {companyName}</h1>
+      <h1 className="font-display text-3xl leading-tight">Bienvenue chez {companyName}</h1>
 
       <form action={action} className="flex flex-col gap-5">
         <input type="hidden" name="code" value={code} />

@@ -20,7 +20,7 @@ export default async function SaisonPage({ searchParams }: { searchParams: Promi
         S&apos;informer
       </Link>
       <div>
-        <h1 className="font-display text-2xl font-bold">De saison en {MONTHS[m - 1]}</h1>
+        <h1 className="font-display text-2xl">De saison en {MONTHS[m - 1]}</h1>
         <p className="mt-1 text-sm text-terre">
           Hors saison, beaucoup de fruits et légumes viennent de serres chauffées ou de loin. Les chiffres : kg de CO₂ par kg
           acheté de saison.
@@ -58,7 +58,7 @@ export default async function SaisonPage({ searchParams }: { searchParams: Promi
       ))}
 
       {next.length ? (
-        <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-[#2e3a22]">
+        <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-[#1f5134]">
           <strong>Le mois prochain :</strong> {next.map((p) => p.name.toLowerCase()).join(", ")}.
         </p>
       ) : null}

@@ -8,7 +8,7 @@ export function GardenView({ data, mine }: { data: GardenData; mine: boolean }) 
   return (
     <>
       <div>
-        <h1 className="font-display text-2xl font-bold">{mine ? "Ton jardin" : `Le jardin de ${data.name}`}</h1>
+        <h1 className="font-display text-2xl">{mine ? "Ton jardin" : `Le jardin de ${data.name}`}</h1>
         <p className="mt-1 text-sm text-terre">
           {g.grown} plante{g.grown > 1 ? "s" : ""} sur {g.total}. Chaque type d&apos;action fait pousser une espèce ; les
           exploits et les graines mystère donnent des plantes rares.
@@ -24,7 +24,7 @@ export function GardenView({ data, mine }: { data: GardenData; mine: boolean }) 
           {g.plants.map((p) => (
             <li key={p.key} className={`flex flex-col items-center gap-1 rounded-[18px] border border-encre/10 px-2 py-3 text-center ${p.stage ? "bg-papier" : "bg-creme"}`}>
               <PlantArt shape={p.shape} color={p.color} accent={p.accent} stage={p.stage} label={`${p.name}, ${STAGE_NAMES[p.stage]}`} />
-              <p className="font-display text-base font-bold">{p.name}</p>
+              <p className="font-display text-base">{p.name}</p>
               <p className="text-xs font-semibold">{STAGE_NAMES[p.stage]}</p>
               <p className="text-[11px] leading-snug text-terre">
                 {p.count} {p.grownBy}

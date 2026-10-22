@@ -28,7 +28,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
       </Link>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold">Classement des équipes</h1>
+          <h1 className="font-display text-2xl">Classement des équipes</h1>
           <p className="mt-1 text-sm text-terre">Les pousses par personne : une petite équipe peut battre une grande.</p>
         </div>
         <Link href="/regles" className="mt-1 shrink-0 text-xs font-bold underline underline-offset-2">Comment ça marche ?</Link>
@@ -63,7 +63,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
         <ol className="card flex flex-col divide-y divide-encre/10 p-0">
           {teams.map((t, i) => (
             <li key={t.team_name} className={`flex items-center gap-3 px-4 py-3 ${t.is_mine ? "bg-peche" : ""}`}>
-              <span className="w-6 font-display text-lg font-bold">{i + 1}</span>
+              <span className="w-6 font-display text-lg">{i + 1}</span>
               <div className="flex-1">
                 <p className="font-bold">
                   {t.team_name}
@@ -74,7 +74,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-display text-xl font-bold">{Number(t.points_per_person).toLocaleString("fr-FR")}</p>
+                <p className="font-display text-xl">{Number(t.points_per_person).toLocaleString("fr-FR")}</p>
                 <p className="text-[11px] text-terre">par personne, lissé</p>
               </div>
             </li>
@@ -87,7 +87,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
         <div className="flex-1">
           <p className="text-[11px] font-bold tracking-wider uppercase">Toi, {week ? "cette semaine" : "depuis le début"}</p>
           <p className="mt-1">
-            <span className="font-display text-3xl font-bold">{week ? me.week.points : me.points.total}</span>
+            <span className="font-display text-3xl">{week ? me.week.points : me.points.total}</span>
             <span className="ml-1 text-sm font-semibold">pousses</span>
           </p>
           <p className="text-xs opacity-90">
@@ -97,7 +97,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
         <Link href="/agir" className="btn-primary min-h-11 shrink-0 px-4 text-sm">Gagner des pousses</Link>
       </section>
 
-      <h2 className="mt-1 font-display text-xl font-bold">Toute l&apos;entreprise</h2>
+      <h2 className="mt-1 font-display text-xl">Toute l&apos;entreprise</h2>
       {goal ? (
         <section className="card flex flex-col gap-2">
           <p className="label">L&apos;impact de toute l&apos;entreprise</p>
@@ -105,7 +105,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
         </section>
       ) : null}
 
-      <p className="rounded-2xl bg-sauge px-4 py-3 text-xs leading-relaxed text-[#2e3a22]">
+      <p className="rounded-2xl bg-sauge px-4 py-3 text-xs leading-relaxed text-[#1f5134]">
         Ton employeur voit les totaux par équipe, jamais ton nom ni tes défis. Les équipes de moins de 5
         membres ne sont pas classées. Le score par personne est lissé vers la moyenne de l&apos;entreprise,
         pour qu&apos;une petite équipe ne gagne pas sur un coup de chance.

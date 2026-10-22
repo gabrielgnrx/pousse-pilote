@@ -24,7 +24,7 @@ export default async function Home() {
           <Sprout size={110} />
         </div>
       </div>
-      <h1 className="font-display text-4xl leading-tight font-bold">Moins de CO₂, plus de fun.</h1>
+      <h1 className="font-display text-4xl leading-tight">Moins de CO₂, plus de fun.</h1>
       <p className="text-[15px] leading-relaxed text-brun">
         Calcule ton empreinte pour de vrai, relève des défis avec tes collègues et regarde-la
         fondre, semaine après semaine.

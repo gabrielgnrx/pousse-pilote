@@ -43,7 +43,7 @@ export function Questionnaire({ initial }: { initial?: BilanAnswers }) {
       </div>
 
       <p className="label">{current.category}</p>
-      <h1 className="-mt-3 font-display text-2xl leading-tight font-bold">{current.question}</h1>
+      <h1 className="-mt-3 font-display text-2xl leading-tight">{current.question}</h1>
 
       <div className="flex flex-col gap-5">
         {current.fields.map(({ label, field }) => (
@@ -84,7 +84,7 @@ function FieldInput({
   if (field.kind === "range") {
     return (
       <div className="flex flex-col gap-2">
-        <div className="font-display text-3xl font-bold">
+        <div className="font-display text-3xl">
           {value} {field.unit}
         </div>
         <input

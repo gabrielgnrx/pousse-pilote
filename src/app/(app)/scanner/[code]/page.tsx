@@ -49,7 +49,7 @@ export default async function ProductPage({
       <>
         <Link href="/scanner" className="text-sm font-semibold text-terre">‹ Scanner</Link>
         <section className="card flex flex-col gap-2 text-center">
-          <p className="font-display text-lg font-bold">Produit introuvable</p>
+          <p className="font-display text-lg">Produit introuvable</p>
           <p className="text-sm text-brun">
             Le code {code} n&apos;est pas (encore) dans Open Food Facts, ou le service ne répond pas. Tu peux
             l&apos;ajouter avec l&apos;application Open Food Facts : il sera noté pour tout le monde.
@@ -92,7 +92,7 @@ export default async function ProductPage({
       </Link>
 
       {choix ? (
-        <p role="status" className="animate-pousse-pop -mt-2 rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#402a16]">
+        <p role="status" className="animate-pousse-pop -mt-2 rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#3a1606]">
           Bien joué : +5 pousses pour ce meilleur choix !
         </p>
       ) : null}
@@ -107,7 +107,7 @@ export default async function ProductPage({
             <img src={product.image} alt="" className="size-20 shrink-0 rounded-xl bg-white object-contain" />
           ) : null}
           <div className="min-w-0 flex-1">
-            <h1 className="font-display text-xl leading-snug font-bold">{product.name}</h1>
+            <h1 className="font-display text-xl leading-snug">{product.name}</h1>
             <p className="text-sm text-terre">
               {[product.brand, product.quantity].filter(Boolean).join(" · ")}
             </p>
@@ -135,7 +135,7 @@ export default async function ProductPage({
       {noAlternatives ? null : (
         <section className="flex flex-col gap-3">
           <div>
-            <h2 className="font-display text-lg font-bold">Mieux pour la planète</h2>
+            <h2 className="font-display text-lg">Mieux pour la planète</h2>
             <p className="text-xs text-terre">Dans le même rayon, vendus en France. Choisis-en un : +5 pousses.</p>
           </div>
           {alternatives.length === 0 ? (
@@ -166,11 +166,11 @@ export default async function ProductPage({
                 </Link>
                 <div className="flex items-center gap-2">
                   {a.grade && product.grade ? (
-                    <span className="chip bg-sauge">
+                    <span className="chip bg-sauge text-sapin">
                       {GRADE_LABEL[product.grade]} → {GRADE_LABEL[a.grade]}
                     </span>
                   ) : null}
-                  {delta !== null && delta > 0 ? <span className="chip bg-sauge">−{delta} % de CO₂</span> : null}
+                  {delta !== null && delta > 0 ? <span className="chip bg-sauge text-sapin">−{delta} % de CO₂</span> : null}
                   <span className="flex-1" />
                   {chosen ? (
                     <span className="chip bg-sapin text-sapin-clair">✓ Choisi</span>

@@ -1,17 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Work_Sans } from "next/font/google";
+import { Calistoga, Inter } from "next/font/google";
 import "./globals.css";
 import { SwRegister } from "@/components/SwRegister";
 
-const fraunces = Fraunces({
+const calistoga = Calistoga({
   subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-fraunces",
+  weight: "400",
+  variable: "--font-calistoga",
 });
-const workSans = Work_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-work-sans",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -28,14 +27,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f4e8d0",
+  themeColor: "#f6f3ea",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${fraunces.variable} ${workSans.variable}`}>
+    <html lang="fr" className={`${calistoga.variable} ${inter.variable}`}>
       <body className="min-h-dvh">
         {children}
         <SwRegister />

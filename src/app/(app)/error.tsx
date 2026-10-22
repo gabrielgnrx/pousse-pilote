@@ -12,12 +12,12 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
   return (
     <section role="alert" className="card mt-6 flex flex-col items-center gap-3 py-8 text-center">
       <span className="flex size-14 items-center justify-center rounded-full bg-peche" aria-hidden="true">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a24e22" strokeWidth="2" strokeLinecap="round">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8a3c1c" strokeWidth="2" strokeLinecap="round">
           <path d="M12 8v5M12 16.5v.5" />
           <circle cx="12" cy="12" r="9" />
         </svg>
       </span>
-      <h1 className="font-display text-xl font-bold">Cette page n&apos;a pas pu se charger</h1>
+      <h1 className="font-display text-xl">Cette page n&apos;a pas pu se charger</h1>
       <p className="text-sm text-brun">
         La connexion a peut-être coupé, ou le service est momentanément indisponible. Tes actions déjà enregistrées ne sont
         pas perdues.

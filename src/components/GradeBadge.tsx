@@ -15,7 +15,7 @@ export function GradeBadge({ grade, size = "md" }: { grade: Grade | null; size?:
   const dims = size === "lg" ? "size-16 text-2xl rounded-2xl" : size === "sm" ? "size-8 text-sm rounded-lg" : "size-11 text-lg rounded-xl";
   return (
     <span
-      className={`flex shrink-0 items-center justify-center font-display font-bold ${dims} ${grade ? STYLE[grade] : "bg-trait text-terre"}`}
+      className={`flex shrink-0 items-center justify-center font-display ${dims} ${grade ? STYLE[grade] : "bg-trait text-terre"}`}
       aria-label={grade ? `Green-Score ${GRADE_LABEL[grade]}` : "Green-Score non disponible"}
     >
       {grade ? GRADE_LABEL[grade] : "?"}
