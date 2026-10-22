@@ -11,6 +11,7 @@
 --    encore de contourner les justificatifs et les plafonds en appelant la base directement.
 -- 6. « Un collègue relève ton défi » rapporte de nouveau +15 (une fois par personne et par action),
 --    et la quête « Lance un défi » ne se valide plus avec un défi aussitôt annulé.
+-- 7. Le cactus du jardin pousse avec les bonnes habitudes enregistrées (il poussait avec « Garder le cap »).
 
 -- 1. Défis verrouillés.
 create or replace function public.guard_challenge_update()
@@ -392,3 +393,46 @@ end;
 $$;
 revoke all on function public.log_action(text, text, text) from public;
 grant execute on function public.log_action(text, text, text) to authenticated;
+
+-- 7. Le cactus du jardin.
+create or replace function public.garden(p_user uuid)
+returns jsonb
+language plpgsql stable security definer set search_path = public
+set timezone = 'Europe/Paris'
+as $$
+declare
+  who public.profiles;
+begin
+  select * into who from public.profiles where id = p_user and company_id = public.my_company_id();
+  if not found then
+    raise exception 'not_found';
+  end if;
+  return jsonb_build_object(
+    'name', who.display_name,
+    'counts', jsonb_build_object(
+      'transport', (select coalesce(sum(v.units), 0) from public.validations v join public.challenge_templates t on t.id = v.template_id
+                    where v.user_id = p_user and v.status = 'valid' and t.category = 'transport'),
+      'alimentation', (select coalesce(sum(v.units), 0) from public.validations v join public.challenge_templates t on t.id = v.template_id
+                       where v.user_id = p_user and v.status = 'valid' and t.category = 'alimentation'),
+      'consommation', (select coalesce(sum(v.units), 0) from public.validations v join public.challenge_templates t on t.id = v.template_id
+                       where v.user_id = p_user and v.status = 'valid' and t.category = 'consommation'),
+      'logement', (select coalesce(sum(v.units), 0) from public.validations v join public.challenge_templates t on t.id = v.template_id
+                   where v.user_id = p_user and v.status = 'valid' and t.category = 'logement'),
+      'nature', (select coalesce(sum(v.units), 0) from public.validations v join public.challenge_templates t on t.id = v.template_id
+                 where v.user_id = p_user and v.status = 'valid' and t.category = 'nature'),
+      'scan', (select count(*) from public.product_swaps where user_id = p_user),
+      'cap', (select count(*) from public.habit_checkins where user_id = p_user)
+             + (select count(*) from public.validations v where v.user_id = p_user and v.status = 'valid'
+                and v.kg = 0 and public.is_habit_action(v.template_id)),
+      'bravo', (select count(*) from public.cheers where user_id = p_user),
+      'quiz', (select count(*) from (select day from public.quiz_answers where user_id = p_user and correct group by day having count(*) >= 7) x)),
+    'exploits', jsonb_build_object(
+      'serie30', exists (select 1 from public.points_ledger where user_id = p_user and kind = 'serie' and points = 100),
+      'expert', exists (select 1 from public.user_challenges u join public.challenge_templates t on t.id = u.template_id
+                        where u.user_id = p_user and u.status = 'done' and t.level = 'expert'),
+      'collectif', exists (select 1 from public.points_ledger where user_id = p_user and kind in ('collectif', 'equipe')),
+      'duel', exists (select 1 from public.points_ledger where user_id = p_user and kind = 'duel'),
+      'inspire', exists (select 1 from public.points_ledger where user_id = p_user and kind = 'influence')),
+    'rares', coalesce((select jsonb_agg(plant order by obtained_at) from public.garden_rares where user_id = p_user), '[]'::jsonb));
+end;
+$$;
