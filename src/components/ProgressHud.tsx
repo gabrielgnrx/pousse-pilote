@@ -126,7 +126,7 @@ export function ProgressHud({
         </span>
       </Link>
 
-      <p className="min-w-0 flex-1 truncate font-display text-2xl">{title}</p>
+      <p className={`min-w-0 flex-1 truncate font-display ${withBack ? "text-xl" : "text-2xl"}`}>{title}</p>
 
       <Link
         href="/profil#pousses"
