@@ -550,14 +550,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "company_id": string,"consent_data": boolean,"consent_feedback": boolean,"consent_team_stats": boolean,"created_at": string,"display_name": string,"feed_choice_at": string | null,"id": string,"share_feed": boolean,"team_id": string | null
+                    "company_id": string,"consent_ai": boolean,"consent_data": boolean,"consent_feedback": boolean,"consent_team_stats": boolean,"created_at": string,"display_name": string,"feed_choice_at": string | null,"id": string,"share_feed": boolean,"team_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "company_id": string,"consent_data": boolean,"consent_feedback"?: boolean,"consent_team_stats"?: boolean,"created_at"?: string,"display_name": string,"feed_choice_at"?: string | null,"id": string,"share_feed"?: boolean,"team_id"?: string | null
+                    "company_id": string,"consent_ai"?: boolean,"consent_data": boolean,"consent_feedback"?: boolean,"consent_team_stats"?: boolean,"created_at"?: string,"display_name": string,"feed_choice_at"?: string | null,"id": string,"share_feed"?: boolean,"team_id"?: string | null
                   }
                   Update: {
-                    "company_id"?: string,"consent_data"?: boolean,"consent_feedback"?: boolean,"consent_team_stats"?: boolean,"created_at"?: string,"display_name"?: string,"feed_choice_at"?: string | null,"id"?: string,"share_feed"?: boolean,"team_id"?: string | null
+                    "company_id"?: string,"consent_ai"?: boolean,"consent_data"?: boolean,"consent_feedback"?: boolean,"consent_team_stats"?: boolean,"created_at"?: string,"display_name"?: string,"feed_choice_at"?: string | null,"id"?: string,"share_feed"?: boolean,"team_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1472,6 +1472,11 @@ isOneToOne: false
                            },
 "team_scores":
 { Args: { "p_company": string,"p_since": string }; Returns: {
+              "active": number,"kg": number,"members": number,"points": number,"score": number,"team_id": string,"team_name": string
+            }[]
+                           },
+"team_scores_between":
+{ Args: { "p_company": string,"p_from": string,"p_to": string }; Returns: {
               "active": number,"kg": number,"members": number,"points": number,"score": number,"team_id": string,"team_name": string
             }[]
                            },
