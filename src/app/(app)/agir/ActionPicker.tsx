@@ -7,6 +7,8 @@ import { logAction, logActionWithReceipt, type LoggedAction } from "./actions";
 import { boostedPoints, fmtMult, type Boost } from "@/lib/boosts";
 import { TEMPLATE_BY_ID } from "@/lib/co2/challenges.ts";
 import { ActionDone } from "./ActionDone";
+import { NaturalEntry } from "./NaturalEntry";
+import type { Habits } from "@/lib/co2/footprint.ts";
 import { ThemeIcon } from "./ThemeIcon";
 
 const normalize = (s: string) =>
@@ -20,6 +22,7 @@ export function ActionPicker({
   inChallenge,
   boosts,
   openReceipt,
+  habits,
 }: {
   items: ActionItem[];
   favorites: string[];
@@ -28,6 +31,7 @@ export function ActionPicker({
   inChallenge: string[];
   boosts: Record<string, Boost>;
   openReceipt: string | null;
+  habits: Habits;
 }) {
   const [query, setQuery] = useState("");
   const [theme, setTheme] = useState<Theme | null>(null);
@@ -53,11 +57,37 @@ export function ActionPicker({
     }
     setError(null);
     setBusyKey(item.key);
+    // Interface optimiste : la célébration s'ouvre tout de suite avec l'aperçu, la base confirme ensuite.
+    setDone({
+      id: "",
+      title: item.title,
+      theme: item.theme,
+      habit: false,
+      kg: item.kg,
+      points: boostedPoints(item.points, boosts[item.key]),
+      monthCount: 0,
+      monthKg: 0,
+      streak: 0,
+      total: 0,
+      companyKg: null,
+      firstName: "",
+      unit: TEMPLATE_BY_ID[item.templateId]?.unit ?? { one: "fois", many: "fois" },
+      challenge: null,
+      basePoints: item.points,
+      multiplier: 1,
+      boost: null,
+      duel: null,
+      receipt: false,
+      provisional: true,
+    });
     startTransition(async () => {
       const res = await logAction(item.templateId, item.variant);
       setBusyKey(null);
       if (res.ok) setDone(res.action);
-      else setError(res.error);
+      else {
+        setDone(null);
+        setError(res.error);
+      }
     });
   };
 
@@ -131,7 +161,15 @@ export function ActionPicker({
         </svg>
         <p className="relative text-[13px] font-semibold text-[#c8dcc4]">Une action, aujourd&apos;hui</p>
         <h1 className="relative font-display text-[28px] leading-tight">Qu&apos;as-tu fait de bien ?</h1>
-        <p className="relative text-sm text-[#dfe9da]">Un tap, des pousses tout de suite. Le CO₂ vient de ton bilan.</p>
+        <NaturalEntry
+          habits={habits}
+          onProvisional={(a) => {
+            setError(null);
+            setDone(a);
+          }}
+          onLogged={setDone}
+          onFailed={() => setDone(null)}
+        />
       </div>
 
       <label className="flex h-[50px] items-center gap-2 rounded-2xl border border-trait bg-papier px-4">
@@ -163,7 +201,7 @@ export function ActionPicker({
       ) : (
         <>
           <section className="flex flex-col gap-2">
-            <h2 className="font-display text-[19px] normal-case">Tes habitudes · un tap suffit</h2>
+            <h2 className="font-display text-[19px] normal-case">Ou en un tap · tes habitudes</h2>
             <ul className="flex flex-col gap-2">{favorites.map((k) => byKey[k]).filter(Boolean).map(row)}</ul>
           </section>
           <section className="flex flex-col gap-2" aria-labelledby="applis">

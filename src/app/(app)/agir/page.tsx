@@ -79,6 +79,7 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
       inChallenge={inChallenge}
       boosts={boosts}
       openReceipt={ajout && items.some((i) => i.key === ajout && i.requiresReceipt) ? ajout : null}
+      habits={habits}
     />
   );
 }
