@@ -30,10 +30,10 @@ export default async function QGPage({ searchParams }: { searchParams: Promise<{
     profile.team_id
       ? supabase
           .from("team_messages")
-          .select("id, user_id, body, created_at")
+          .select("id, user_id, body, created_at, author_kind")
           .order("created_at", { ascending: false })
           .limit(80)
-          .returns<{ id: string; user_id: string | null; body: string; created_at: string }[]>()
+          .returns<{ id: string; user_id: string | null; body: string; created_at: string; author_kind: string }[]>()
       : Promise.resolve({ data: [] }),
     supabase.from("team_message_reports").select("message_id").eq("user_id", user.id),
     profile.team_id
@@ -68,7 +68,8 @@ export default async function QGPage({ searchParams }: { searchParams: Promise<{
       id: m.id,
       mine: m.user_id === user.id,
       fromPousse: m.user_id === null,
-      author: m.user_id ? (nameOf.get(m.user_id) ?? "Un collègue") : "Pousse",
+      bot: m.author_kind === "animateur",
+      author: m.user_id ? (nameOf.get(m.user_id) ?? "Un collègue") : m.author_kind === "animateur" ? "L'animateur Pousse" : "Pousse",
       body: m.body,
       at: m.created_at,
     }));

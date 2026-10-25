@@ -4,11 +4,14 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { TEAM_KINDS, type TeamWeek } from "@/lib/team";
 import { reportTeamMessage, sendTeamMessage, voteTeamWeek } from "./actions";
+import { Mascot } from "@/components/Mascot";
 
 export interface ChatMessage {
   id: string;
   mine: boolean;
   fromPousse: boolean;
+  /** Message de l'animateur IA : signalé comme venant d'un bot. */
+  bot?: boolean;
   author: string;
   body: string;
   at: string;
@@ -212,7 +215,11 @@ export function TeamChat({
                 </div>
               ) : (
                 <div className="flex items-end gap-2 pr-10">
-                  {m.fromPousse ? (
+                  {m.bot ? (
+                    <span className="flex size-[30px] shrink-0 items-end justify-center overflow-hidden rounded-full bg-sauge">
+                      <Mascot size={26} />
+                    </span>
+                  ) : m.fromPousse ? (
                     <PousseAvatar />
                   ) : (
                     <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full text-xs font-bold text-encre" style={{ background: colorOf(m.author) }}>
@@ -222,6 +229,11 @@ export function TeamChat({
                   <div className={`flex min-w-0 flex-col gap-0.5 rounded-[20px_20px_20px_6px] border border-trait px-3 py-2 ${m.fromPousse ? "bg-sauge text-sapin" : "bg-papier"}`}>
                     <span className="flex items-center gap-1 text-xs font-bold text-[#5b6458]">
                       {m.author} · {time(m.at)}
+                      {m.bot ? (
+                        <span className="chip bg-sapin px-1.5 py-0 text-[10px] text-sapin-clair" title="Message écrit par l'animateur IA de Pousse">
+                          bot
+                        </span>
+                      ) : null}
                       {!m.fromPousse ? (
                         <button
                           type="button"
