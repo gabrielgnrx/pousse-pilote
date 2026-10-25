@@ -66,3 +66,39 @@ jobs:
         run: bash scripts/ci/run.sh test npm test
       - name: Build
         run: bash scripts/ci/run.sh build npm run build
+
+  e2e:
+    # Parcours principal dans un navigateur : pile Supabase locale, application compilée, IA simulée.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      AI_MOCK: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Dépendances
+        run: bash scripts/ci/run.sh install npm install --no-audit --no-fund
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Supabase local
+        run: |
+          bash scripts/ci/run.sh supabase supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime
+          supabase status -o env \
+            --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
+            --override-name auth.anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY \
+            --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY \
+            | grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_ANON_KEY|SUPABASE_SERVICE_ROLE_KEY)=' \
+            | sed 's/="\(.*\)"$/=\1/' >> "$GITHUB_ENV"
+      - name: Build
+        run: bash scripts/ci/run.sh build npm run build
+      - name: Navigateur
+        run: npx playwright install --with-deps chromium
+      - name: Test de bout en bout
+        run: bash scripts/ci/run.sh e2e npx playwright test
