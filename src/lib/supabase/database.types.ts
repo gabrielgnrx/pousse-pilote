@@ -100,6 +100,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"animator_posts": {
+                  Row: {
+                    "created_at": string,"day": string,"id": number,"message_id": string | null,"meta": NonNullable<Json>,"ref": string,"slot": string,"spontaneous": boolean | null,"team_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"day": string,"id"?: never,"message_id"?: string | null,"meta"?: NonNullable<Json>,"ref"?: string,"slot": string,"spontaneous"?: never,"team_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"day"?: string,"id"?: never,"message_id"?: string | null,"meta"?: NonNullable<Json>,"ref"?: string,"slot"?: string,"spontaneous"?: never,"team_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "animator_posts_message_id_fkey"
+      columns: ["message_id"]
+isOneToOne: false
+      referencedRelation: "team_messages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "animator_posts_team_id_fkey"
+      columns: ["team_id"]
+isOneToOne: false
+      referencedRelation: "teams"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"challenge_templates": {
                   Row: {
                     "active": boolean,"cap_group": string,"cap_units": number,"cap_window_days": number,"category": string,"id": string,"level": string,"points_per_unit": number,"requires_receipt": boolean,"title": string
@@ -648,14 +674,14 @@ isOneToOne: false
                   ]
                 },"team_messages": {
                   Row: {
-                    "body": string,"company_id": string,"created_at": string,"hidden": boolean,"id": string,"team_id": string,"user_id": string | null
+                    "author_kind": string,"body": string,"company_id": string,"created_at": string,"hidden": boolean,"id": string,"team_id": string,"user_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "body": string,"company_id": string,"created_at"?: string,"hidden"?: boolean,"id"?: string,"team_id": string,"user_id"?: string | null
+                    "author_kind"?: string,"body": string,"company_id": string,"created_at"?: string,"hidden"?: boolean,"id"?: string,"team_id": string,"user_id"?: string | null
                   }
                   Update: {
-                    "body"?: string,"company_id"?: string,"created_at"?: string,"hidden"?: boolean,"id"?: string,"team_id"?: string,"user_id"?: string | null
+                    "author_kind"?: string,"body"?: string,"company_id"?: string,"created_at"?: string,"hidden"?: boolean,"id"?: string,"team_id"?: string,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -941,6 +967,14 @@ isOneToOne: false
 "alerts_pushed":
 { Args: { "p_gone": (string)[],"p_token": string,"p_users": (string)[] }; Returns: undefined
                            },
+"animator_due":
+{ Args: { "p_now"?: string,"p_token": string }; Returns: {
+              "company_id": string,"context": Json,"ref": string,"slot": string,"team_id": string
+            }[]
+                           },
+"animator_post":
+{ Args: { "p_body": string,"p_meta"?: Json,"p_now"?: string,"p_ref": string,"p_slot": string,"p_team": string,"p_token": string }; Returns: boolean
+                           },
 "answer_duel":
 { Args: { "p_accept": boolean,"p_duel": string }; Returns: {
               "challenge_id": string | null,
@@ -1192,7 +1226,8 @@ isOneToOne: false
                            },
 "post_team_message":
 { Args: { "p_body": string }; Returns: {
-              "body": string,
+              "author_kind": string,
+"body": string,
 "company_id": string,
 "created_at": string,
 "hidden": boolean,
@@ -1306,6 +1341,9 @@ isOneToOne: false
 "team_kind_per_member":
 { Args: { "p_kind": string }; Returns: number
                            },
+"team_rank":
+{ Args: { "p_since": string,"p_team": string }; Returns: Json
+                           },
 "team_scores":
 { Args: { "p_company": string,"p_since": string }; Returns: {
               "active": number,"kg": number,"members": number,"points": number,"score": number,"team_id": string,"team_name": string
@@ -1315,6 +1353,9 @@ isOneToOne: false
 { Args: { "p_since"?: string }; Returns: {
               "active": number,"is_mine": boolean,"kg": number,"participants": number,"points": number,"points_per_person": number,"team_name": string
             }[]
+                           },
+"team_week_kg":
+{ Args: { "p_from": string,"p_team": string,"p_to": string }; Returns: number
                            },
 "tick":
 { Args: Record<PropertyKey, never>; Returns: Json
