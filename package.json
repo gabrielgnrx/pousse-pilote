@@ -12,7 +12,8 @@
     "test": "node --test \"src/**/*.test.ts\"",
     "test:sql": "bash scripts/test-sql.sh",
     "test:e2e": "playwright test",
-    "db:types": "bash scripts/db-types.sh"
+    "db:types": "bash scripts/db-types.sh",
+    "db:demo": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f supabase/seed_demo.sql"
   },
   "engines": {
     "node": ">=22.18"

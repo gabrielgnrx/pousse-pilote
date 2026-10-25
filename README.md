@@ -7,6 +7,60 @@ preuve et les partage dans le fil interne de l'entreprise.
 Stack : Next.js 15 (App Router) · React 19 · Tailwind CSS 4 · Supabase (auth par lien e-mail,
 Postgres, stockage des photos). Pensée mobile d'abord, utilisable sur ordinateur.
 
+## Pousse v2 : programme climat permanent, animé par l'IA
+
+La v2 (branche `v2`, plan et décisions dans `PLAN.md`) ajoute :
+- **le + en langage naturel** : une phrase tapée ou dictée, comprise par l'IA, confirmée par la personne, puis
+  calculée par la base (`log_action_slug`) ;
+- **Mon plan** recalculé chaque lundi, **justificatifs** vérifiés par la vision, **animateur IA** dans le QG,
+  **scanner par photo**, **quiz de la semaine** générés et relus ;
+- **l'espace RSE** (`/entreprise` puis `/admin`) : lancement en self-serve, tableau de bord agrégé (rien sous
+  5 personnes), rapport mensuel rédigé en flux, export PDF (impression) et CSV de la mobilité domicile-travail.
+
+**Règle d'or** : l'IA ne calcule jamais le CO₂. Elle choisit une action d'un catalogue fermé
+(`supabase/data/action_types.json`) ; la base calcule `quantité × facteur` avec la table versionnée
+`emission_factors` (`supabase/data/emission_factors.json`, généré par `node scripts/generate-factors.ts`).
+
+### Variables d'environnement (en plus de la v1)
+
+| Variable | Rôle |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | API Claude, côté serveur seulement (`src/lib/ai/client.ts`, protégé par `server-only`). Sans clé : replis sans IA. |
+| `AI_MOCK=1` | Réponses simulées et déterministes (e2e, démo sans clé). |
+| `SUPABASE_SERVICE_ROLE_KEY` | Vérification des justificatifs (lecture du bucket privé) et purges. |
+
+### Migrations et tâches planifiées
+
+Appliquer toutes les migrations (`supabase db push`). Celles dont la première ligne dit « Supabase
+seulement » (`0032`, `0035`, `0037`) créent la clé des tâches IA dans Vault et programment `pg_cron` :
+plans du lundi, animateur (lundi 9 h et 14 h, milieu de semaine, vendredi), quiz du lundi. Elles appellent
+`https://pousse-pilote.vercel.app` : changer l'URL si le domaine est différent.
+
+| Migration | Contenu |
+| --- | --- |
+| 0026 – 0028 | Facteurs d'émission, catalogue des actions, calcul sur facteurs, fil jamais automatique |
+| 0029 | Socle IA : journal `ai_calls`, quotas, cache |
+| 0030 – 0031 | Publication proposée (photo facultative), Mon plan |
+| 0033 | Justificatifs : verdict seulement, photo effacée |
+| 0034, 0036 | Animateur du QG, quiz de la semaine |
+| 0038 – 0039 | Espace RSE : organisations, agrégats, rapports, export, journal IA de l'admin |
+| 0040 | Refus de l'IA par salarié, appliqué par la base |
+| 0041 | Classement du rapport limité au mois |
+
+### Données de démo
+
+`npm run db:demo` (avec `DATABASE_URL`) crée « Verdure Conseil (démo) » : 3 équipes, 30 salariés,
+4 semaines d'actions passées par le vrai calcul, des messages de QG. Admin : `rse@verdure-demo.fr`.
+À ne jamais jouer en production.
+
+### Tests v2
+
+```bash
+npm test            # calcul, plafonds, parsing des sorties IA (réponses simulées), rapport, CSV
+npm run test:sql    # migrations et scénarios sur PostgreSQL 16 (dont parité TS/SQL du calcul)
+npm run test:e2e    # Playwright : action, confirmation, célébration, publication (Supabase local)
+```
+
 ## Ce que fait l'application
 
 | Écran | Rôle |
@@ -218,17 +272,12 @@ cloisonnement entre entreprises, classement anonyme (équipes de moins de 5 masq
 
 ## État de cette version
 
-Testé :
-- les tests du calcul (`npm test`) et la vérification de types stricte des modules de calcul ;
-- les migrations et le scénario SQL sur PostgreSQL 16 ;
-- la syntaxe de tous les fichiers TypeScript/TSX.
+La CI GitHub (`.github/workflows/ci.yml`) vérifie à chaque commit de `v2` : installation, types Supabase
+régénérés, `typecheck`, `lint`, tests unitaires, tests SQL, `build`, puis le parcours Playwright sur un
+Supabase local avec l'IA simulée.
 
-Pas encore testé (l'environnement de génération n'avait pas accès au registre npm) :
-- `npm install`, `npm run build` et la vérification de types complète avec Next.js et Supabase ;
-- le parcours réel dans un navigateur : envoi du lien e-mail, envoi des photos, rendu des écrans.
-
-À la première installation, lancer `npm run typecheck` puis `npm run build` et corriger les éventuels
-écarts de types liés aux versions exactes des paquets.
+Pas encore vérifié : les appels réels à l'API Claude (aucune clé dans l'environnement de développement),
+l'envoi des e-mails et le rendu sur de vrais téléphones.
 
 ## Limites connues et suites prévues
 
@@ -242,4 +291,4 @@ Pas encore testé (l'environnement de génération n'avait pas accès au registr
   Les valeurs sont bornées en base ; pour la suite, limiter la fréquence des modifications.
 - **Preuve GPS / Strava** : pas encore disponible ; seules la photo et la confirmation d'un collègue existent.
 - **Signalements** : enregistrés dans la table `reports`, à traiter depuis le tableau de bord Supabase.
-- **Côté RH** (tableau de bord, lancement, leviers, Teams/Slack) : prévu dans une seconde étape.
+- **Côté RH** : lancement, tableau de bord et rapport livrés en v2 ; intégrations Teams/Slack à venir.

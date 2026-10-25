@@ -264,3 +264,51 @@ sur un PostgreSQL à date fixe (libfaketime), car les scénarios historiques son
 
 **Numérotation réelle des migrations** : 0026 facteurs (généré), 0027 catalogue des actions (généré),
 0028 calcul sur facteurs + quantités + fil non automatique, 0029 socle IA. Les suivantes décalent d'autant.
+
+---
+
+## 7. Avancement (25/10/2026)
+
+Les 7 étapes de l'ordre de livraison sont codées sur la branche `v2`, une fonctionnalité par commit,
+avec la CI verte (types, lint, tests unitaires, tests SQL, build, e2e Playwright).
+
+| Étape | Livré |
+| --- | --- |
+| 1. Socle | `emission_factors` (39 facteurs) et `action_types` générés depuis `supabase/data/`, moteur `src/lib/co2/engine.ts`, parité TS/SQL (452 cas), `lib/ai/` (client serveur, prompts versionnés, zod, journal `ai_calls`, quotas, cache, mode simulé) |
+| 2. Le + | Saisie libre et dictée, cartes de confirmation éditables, choix sous 0,7 de confiance, célébration, publication proposée |
+| 3. Mon plan | Plan des règles trié par potentiel puis faisabilité, coach IA limité au catalogue, recalcul du lundi (`pg_cron`) |
+| 4. Justificatifs | Vision, verdict seul gardé, photo effacée, 2 renvois possibles |
+| 5. Animateur | Vote du lundi 9 h – 14 h, relance, bilan du vendredi, paliers, météo (Open-Meteo), 1 message spontané par jour et par équipe au plus |
+| 6. Scanner et quiz | Code-barres puis photo → rayon Agribalyse, estimation par catégorie, 3 alternatives ; quiz de la semaine relus contre leur source, 10 pousses par semaine au plus |
+| 7. Admin RSE | `/entreprise` → `/admin` : lancement (organisation, domaine, équipes, lien d'invitation), tableau de bord agrégé (k = 5), rapport mensuel en flux avec contrôle des chiffres, PDF par impression, CSV mobilité |
+| Transverse | Refus de l'IA par salarié (0040, appliqué par la base), mentions IA dans la confidentialité, données de démo (`supabase/seed_demo.sql`) |
+
+### Décisions prises en cours de route
+
+- **Admin sans profil participant** : l'IA de l'espace RSE est journalisée au nom de l'organisation
+  (`admin_ai_log`, `admin_ai_consume`, 5 rapports IA par jour et par organisation).
+- **Rapport** : les chiffres clés sont mis en forme par le code ; l'IA écrit les faits marquants et les
+  recommandations. Si elle cite un nombre absent des agrégats, le texte des règles est enregistré à sa place.
+- **PDF** : vue d'impression du navigateur, pas de bibliothèque PDF (sobriété).
+- **CSV** : `;` et virgule décimale (Excel en français), cellule vide sous 5 personnes, formules neutralisées.
+- **Refus de l'IA** : saisie libre → actions proches à choisir ; plan → règles ; justificatifs non lus →
+  l'action compte pour le CO₂ sans les pousses du justificatif (cohérent avec Q6). L'animateur et le
+  rapport ne reçoivent que des totaux et des marqueurs de prénom, ils restent actifs.
+- **Classement du rapport** : borné au mois du rapport (0041), il mêlait les mois suivants.
+
+### Valeurs non sourcées (inchangé, à faire valider)
+
+- Les 39 facteurs viennent d'Impact CO₂ (ADEME) ; l'identifiant exact dans la Base Empreinte ou
+  Agribalyse reste à relever pour chacun (champ `todo` du JSON).
+- 7 % de chauffage économisé par degré, ~1 t de services communs, 30 semaines de chauffe, 45 semaines
+  travaillées, 12 000 km pour un long-courrier aller-retour, 2 000 km pour des vacances en train,
+  moyennes non pondérées « porc/poulet/poisson » et « métro/RER ».
+
+### Questions ouvertes
+
+1. Les défis d'équipe fondés sur le quiz, les bravos ou le scanner ne sont pas quantifiables en CO₂ : on les
+   garde (pousses seulement) ou on les retire du vote du lundi ?
+2. Mentions légales de l'IA : la page Confidentialité contient « [À COMPLÉTER PAR LE RESPONSABLE DE
+   TRAITEMENT] » pour le sous-traitant (Anthropic) et ses conditions. À rédiger avec la personne responsable.
+3. Météo de l'animateur : Paris par défaut pour toutes les organisations ; ajouter une ville par organisation ?
+4. URL de production codée dans les migrations « Supabase seulement » (`pousse-pilote.vercel.app`).
