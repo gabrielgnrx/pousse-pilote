@@ -2,6 +2,7 @@ import { requireHabits } from "@/lib/session";
 import { todayParis } from "@/lib/dates";
 import { actionItems } from "@/lib/actions-catalog";
 import { ActionPicker } from "./ActionPicker";
+import { ProofToResend, type ProofRow } from "./ProofToResend";
 import { getDuels } from "@/lib/game/data.ts";
 import { duelCountsFor } from "@/lib/game/labels.ts";
 import { countsForTeam, type Boost } from "@/lib/boosts";
@@ -9,13 +10,13 @@ import type { TeamWeek } from "@/lib/team";
 
 export const metadata = { title: "Enregistrer une action · Pousse" };
 
-export default async function AgirPage({ searchParams }: { searchParams: Promise<{ ajout?: string }> }) {
-  const { ajout } = await searchParams;
+export default async function AgirPage({ searchParams }: { searchParams: Promise<{ ajout?: string; justificatif?: string }> }) {
+  const { ajout, justificatif } = await searchParams;
   const { supabase, user, profile, habits } = await requireHabits();
   const today = todayParis();
   const monthStart = `${today.slice(0, 7)}-01`;
 
-  const [{ data: recent }, { data: active }, duels, { data: teamWeek }] = await Promise.all([
+  const [{ data: recent }, { data: active }, duels, { data: teamWeek }, { data: toResend }] = await Promise.all([
     supabase
       .from("validations")
       .select("template_id, variant, day")
@@ -31,6 +32,15 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
       .gte("ends_on", today),
     getDuels(supabase),
     profile.team_id ? supabase.rpc("my_team_week") : Promise.resolve({ data: null }),
+    supabase
+      .from("validations")
+      .select("id, template_id, variant, day")
+      .eq("user_id", user.id)
+      .eq("status", "valid")
+      .eq("proof_status", "needs_review")
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .returns<ProofRow[]>(),
   ]);
 
   const counts: Record<string, number> = {};
@@ -70,7 +80,10 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
     favorites = [...favorites, ...extra];
   }
 
+  const resendStatus = justificatif && !/^[0-9a-f-]{36}$/i.test(justificatif) ? justificatif : null;
   return (
+    <>
+    <ProofToResend rows={toResend ?? []} status={resendStatus} />
     <ActionPicker
       items={items}
       favorites={favorites.map((f) => f.key)}
@@ -79,6 +92,8 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
       inChallenge={inChallenge}
       boosts={boosts}
       openReceipt={ajout && items.some((i) => i.key === ajout && i.requiresReceipt) ? ajout : null}
+      habits={habits}
     />
+    </>
   );
 }

@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main, v2, "v2-*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Valeurs factices : la compilation n'appelle ni Supabase ni l'API Claude.
+      NEXT_PUBLIC_SUPABASE_URL: https://exemple.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: PostgreSQL 16
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-16 >/dev/null
+          sudo mkdir -p /var/tmp/pg && sudo chown postgres /var/tmp/pg
+          sudo -u postgres /usr/lib/postgresql/16/bin/initdb -D /var/tmp/pg/data -A trust -U postgres >/dev/null
+          sudo -u postgres /usr/lib/postgresql/16/bin/pg_ctl -D /var/tmp/pg/data \
+            -o "-p 5432 -c listen_addresses=localhost -k /var/tmp/pg" -l /var/tmp/pg/log -w -t 60 start
+          psql -d postgres -Atc "select version()"
+
+      - name: Dépendances
+        run: bash scripts/ci/run.sh install npm install --no-audit --no-fund
+      - name: Tests SQL
+        run: bash scripts/ci/run.sh test-sql npm run test:sql
+      - name: Types Supabase générés depuis les migrations
+        continue-on-error: true
+        run: bash scripts/ci/run.sh db-types npm run db:types
+
+      # Fichiers générés recommités sur la branche (le poste de développement n'a pas toujours
+      # accès au registre npm ni à Docker).
+      - name: Recommiter les fichiers générés
+        if: github.event_name == 'push'
+        run: bash scripts/ci/run.sh commit bash scripts/ci/commit-generated.sh
+
+      - name: Types
+        run: bash scripts/ci/run.sh typecheck npm run typecheck
+      - name: Lint
+        run: bash scripts/ci/run.sh lint npm run lint
+      - name: Tests unitaires
+        run: bash scripts/ci/run.sh test npm test
+      - name: Build
+        run: bash scripts/ci/run.sh build npm run build
+
+  e2e:
+    # Parcours principal dans un navigateur : pile Supabase locale, application compilée, IA simulée.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      AI_MOCK: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Dépendances
+        run: bash scripts/ci/run.sh install npm install --no-audit --no-fund
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Supabase local
+        run: |
+          bash scripts/ci/run.sh supabase supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime
+          supabase status -o env \
+            --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
+            --override-name auth.anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY \
+            --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY \
+            | grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_ANON_KEY|SUPABASE_SERVICE_ROLE_KEY)=' \
+            | sed 's/="\(.*\)"$/=\1/' >> "$GITHUB_ENV"
+      - name: Build
+        run: bash scripts/ci/run.sh build npm run build
+      - name: Navigateur
+        run: npx playwright install --with-deps chromium
+      - name: Test de bout en bout
+        run: bash scripts/ci/run.sh e2e npx playwright test

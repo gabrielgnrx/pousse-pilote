@@ -3,6 +3,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/session";
 import { getProduct, isBarcode, isBetter } from "@/lib/off";
+import { runTask } from "@/lib/ai/run";
+import { aiDepsFor } from "@/lib/ai/client";
+import { pickCategory, scanPhotoTask } from "@/lib/ai/prompts/scan-photo";
 
 const MESSAGES: Record<string, string> = {
   not_better: "Ce produit n'est pas mieux noté que celui que tu as scanné.",
@@ -34,4 +37,27 @@ export async function chooseAlternative(form: FormData) {
     redirect(`/scanner/${from}?erreur=${encodeURIComponent(MESSAGES[error.message] ?? "Impossible d'enregistrer ton choix.")}`);
   }
   redirect(`/scanner/${from}?choix=${to}`);
+}
+
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
+/**
+ * Scanner par photo, quand il n'y a pas de code-barres : l'IA reconnaît la catégorie (liste fermée),
+ * puis la page de la catégorie affiche l'estimation Agribalyse et des alternatives. La photo n'est pas
+ * gardée : elle sert à cette seule reconnaissance.
+ */
+export async function scanPhoto(form: FormData) {
+  const { supabase, profile } = await requireProfile();
+  if (profile.consent_ai === false) redirect("/scanner?photo=sans-ia");
+  const file = form.get("photo");
+  if (!(file instanceof File) || file.size === 0 || file.size > 5 * 1024 * 1024 || !(PHOTO_TYPES as readonly string[]).includes(file.type)) {
+    redirect("/scanner?photo=format");
+  }
+  const image = { mediaType: (file as File).type as (typeof PHOTO_TYPES)[number], base64: Buffer.from(await (file as File).arrayBuffer()).toString("base64") };
+  const r = await runTask(scanPhotoTask, { image }, aiDepsFor(supabase));
+  if (!r.ok) redirect("/scanner?photo=indisponible");
+  const { sure, choices } = pickCategory(r.data);
+  if (sure) redirect(`/scanner/categorie/${encodeURIComponent(sure)}`);
+  if (choices.length) redirect(`/scanner?photo=choix&c=${choices.map(encodeURIComponent).join(",")}`);
+  redirect("/scanner?photo=inconnu");
 }

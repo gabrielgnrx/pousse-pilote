@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { formatKg } from "@/lib/co2/challenges.ts";
 import { levelFor, weekStart } from "@/lib/co2/engagement.ts";
 import { addDays, todayParis } from "@/lib/dates";
-import { publishAction, type LoggedAction } from "./actions";
+import { publishAction, shareChallengeDone, type LoggedAction } from "./actions";
+import { compressInput } from "@/lib/image/compress";
 import { ThemeIcon } from "./ThemeIcon";
 import { Confetti, Mascot } from "@/components/Mascot";
 import { BONUS, fmtMult } from "@/lib/boosts";
@@ -16,6 +17,7 @@ const DAY_LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
 export function ActionDone({ action, onClose }: { action: LoggedAction; onClose: () => void }) {
   const router = useRouter();
   const [publishing, setPublishing] = useState(false);
+  const [sharedDone, setSharedDone] = useState(false);
   const [state, publish, sending] = useActionState(publishAction, {});
   const primary = useRef<HTMLButtonElement>(null);
   const level = levelFor(action.total);
@@ -106,7 +108,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
           ) : (
             <>
               <h2 id="action-done-title" className="mt-1 font-display text-[28px] leading-tight">
-                Bien joué, {action.firstName} !
+                {action.firstName ? `Bien joué, ${action.firstName} !` : "Bien joué !"}
               </h2>
               <p className="flex items-center gap-1.5 text-[15px] text-[#c8dcc4]">
                 <ThemeIcon theme={action.theme} size={18} color="#c8dcc4" />
@@ -147,7 +149,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
             <div className="animate-pousse-pop flex items-center gap-2.5 rounded-[20px] bg-sauge p-3 shadow-[inset_0_-4px_0_var(--color-sauge-fonce)]">
               <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#a9d18e" stroke="#1f5134" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21v-9" /><path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" /><path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" /></svg>
               <span className="flex flex-col text-sapin">
-                <span className="font-display text-2xl leading-none">+{action.points}</span>
+                <span className="font-display text-2xl leading-none">{action.provisional ? "…" : `+${action.points}`}</span>
                 <span className="text-[13px] font-semibold">
                   pousses
                   {action.multiplier > 1 && action.points > 0 ? ` · ${fmtMult(action.multiplier)} ${action.boost === "equipe" ? "équipe" : "duel"}` : ""}
@@ -158,7 +160,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
               <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#e8a27c" stroke="#8a3c1c" strokeWidth="1.6" strokeLinejoin="round"><path d="M12 2c2 4-2 5-2 8a4 4 0 1 0 8 0c0-2-1-3-2-4 1 3-1 4-2 3 1-2-1-3-2-7Z" /></svg>
               <span className="flex flex-col text-argile-fonce">
                 <span className="font-display text-2xl leading-none">
-                  {action.streak} {action.streak > 1 ? "jours" : "jour"}
+                  {action.provisional ? "…" : `${action.streak} ${action.streak > 1 ? "jours" : "jour"}`}
                 </span>
                 <span className="text-[13px] font-semibold">de série</span>
               </span>
@@ -226,7 +228,9 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
             </section>
           ) : null}
 
-          {c && !challengeDone ? (
+          {action.provisional ? (
+            <p role="status" className="text-center text-sm text-terre">Enregistrement de ton action…</p>
+          ) : c && !challengeDone ? (
             <p className="flex items-center gap-3 rounded-[20px] border border-trait bg-papier px-4 py-3 text-sm">
               <span className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-peche font-display text-lg text-argile-fonce">
                 +{action.duel ? BONUS.duelSeul : BONUS.seul}
@@ -253,29 +257,44 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
             </div>
           )}
 
+          {action.provisional ? null : (
           <p className="rounded-2xl bg-sauge px-4 py-2.5 text-[13px] leading-snug text-sapin">
             {action.monthCount > 1 ? `${action.monthCount} fois ce mois-ci` : "Première fois ce mois-ci"}
             {action.monthKg > 0 ? `, soit ${formatKg(action.monthKg)} évités` : ""}.
             {action.companyKg !== null ? ` L'entreprise en est à ${formatKg(action.companyKg)}.` : ""}
           </p>
+          )}
 
           <div className="mt-auto flex flex-col gap-2 pt-2">
             {action.receipt ? (
-              <>
-                <p className="rounded-2xl bg-sable px-3 py-2 text-[13px] text-brun">Ton reçu reste privé : tes collègues ne le voient jamais, et il est effacé après 90 jours.</p>
-                <button ref={primary} type="button" onClick={finish} className="btn-primary min-h-14 font-display text-[19px] font-normal">
-                  Super !
-                </button>
-              </>
+              <p className="rounded-2xl bg-sable px-3 py-2 text-[13px] text-brun">
+                Ton justificatif reste privé : tes collègues ne le voient jamais, même si tu publies l&apos;action.
+              </p>
+            ) : null}
+            {action.provisional ? (
+              <button type="button" disabled className="btn-primary min-h-14 font-display text-[19px] font-normal">
+                Un instant…
+              </button>
             ) : publishing ? (
               <form action={publish} className="flex w-full flex-col gap-2 rounded-[20px] border border-trait bg-papier p-4 text-left">
                 <input type="hidden" name="validation" value={action.id} />
-                <label className="text-sm font-semibold" htmlFor="photo">Ta photo</label>
-                <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required className="text-sm" />
                 <label className="text-sm font-semibold" htmlFor="caption">Un mot pour tes collègues (facultatif)</label>
                 <input id="caption" name="caption" maxLength={280} className="input" />
+                <label className="text-sm font-semibold" htmlFor="photo">Une photo (facultatif, +5 pousses)</label>
+                <input
+                  id="photo"
+                  name="photo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  className="text-sm"
+                  onChange={(e) => void compressInput(e.currentTarget)}
+                />
                 {state.error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{state.error}</p> : null}
-                <button type="submit" disabled={sending} className="btn-primary">{sending ? "Publication…" : "Publier · +5 pousses"}</button>
+                <button type="submit" disabled={sending} className="btn-primary">{sending ? "Publication…" : "Publier dans le fil"}</button>
+                <button type="button" onClick={() => setPublishing(false)} className="min-h-11 text-[13px] font-semibold text-terre underline underline-offset-2">
+                  Finalement, garder pour moi
+                </button>
               </form>
             ) : (
               <>
@@ -283,8 +302,21 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
                   {c && !challengeDone ? "Je continue !" : "Super !"}
                 </button>
                 <button type="button" onClick={() => setPublishing(true)} className="btn-ghost">
-                  Ajouter une photo · +5 pousses
+                  Publier dans le fil
                 </button>
+                {c && challengeDone ? (
+                  <button
+                    type="button"
+                    disabled={sharedDone}
+                    onClick={async () => {
+                      const r = await shareChallengeDone(c.id);
+                      if (r.ok) setSharedDone(true);
+                    }}
+                    className="btn-ghost"
+                  >
+                    {sharedDone ? "Réussite partagée dans le fil" : "Partager ma réussite de défi"}
+                  </button>
+                ) : null}
               </>
             )}
             <button type="button" onClick={close} className="min-h-11 text-[13px] font-semibold text-terre underline underline-offset-2">

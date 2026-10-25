@@ -7,3 +7,10 @@ out
 next-env.d.ts
 .vercel
 .DS_Store
+
+# Playwright
+playwright-report
+test-results
+
+# Session du test de bout en bout
+e2e/.auth

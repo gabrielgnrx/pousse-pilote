@@ -5,6 +5,16 @@ import { getEngagement } from "@/lib/engagement-data";
 import { PROOF_BUCKET } from "@/lib/constants";
 import { actionTitle, themeOf, type Theme } from "@/lib/actions-catalog";
 import { TEMPLATE_BY_ID, isHabitAction } from "@/lib/co2/challenges.ts";
+import { z } from "zod";
+import { ACTION_SLUGS } from "@/lib/co2/action-types.data.ts";
+import { ACTION_BY_SLUG } from "@/lib/co2/engine.ts";
+import { candidatesFor, interpretItems, ruleParse, type ConfirmCard } from "@/lib/ai/parse/interpret.ts";
+import { parseActionTask } from "@/lib/ai/prompts/parse-action.ts";
+import { runTask } from "@/lib/ai/run.ts";
+import { aiDepsFor } from "@/lib/ai/client";
+import { checkProofNow } from "@/lib/ai/proof/server";
+import { after } from "next/server";
+import { habitsFromRow, type HabitsRow } from "@/lib/session";
 
 export interface LoggedAction {
   id: string;
@@ -25,7 +35,7 @@ export interface LoggedAction {
   firstName: string;
   unit: { one: string; many: string };
   /** Le défi en cours dans lequel l'action compte. */
-  challenge: { target: number; done: number; startsOn: string; endsOn: string; days: string[] } | null;
+  challenge: { id: string; target: number; done: number; startsOn: string; endsOn: string; days: string[] } | null;
   /** Pousses sans multiplicateur, et le multiplicateur appliqué (duel ×1,5, équipe ×2). */
   basePoints: number;
   multiplier: number;
@@ -34,9 +44,98 @@ export interface LoggedAction {
   duel: { otherName: string; mine: number; theirs: number; target: number; endsOn: string; stakes: boolean } | null;
   /** Achat validé avec un reçu (privé, jamais publié). */
   receipt: boolean;
+  /** Unités comptées (2 repas = 2) ; la distance saisie a été ramenée au trajet déclaré. */
+  units?: number;
+  capped?: boolean;
+  /** Aperçu affiché avant la réponse de la base (interface optimiste). */
+  provisional?: boolean;
 }
 
 export type LogResult = { ok: true; action: LoggedAction } | { ok: false; error: string };
+
+// --- Saisie en langage naturel ------------------------------------------------------------------
+
+const RECEIPT_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+export type ParseResponse =
+  | { ok: true; source: "rule" | "ai" | "cache" | "mock"; cards: ConfirmCard[] }
+  | { ok: false; reason: "invalid" | "not_understood" | "unavailable" | "rate_limited" | "ai_off"; cards: ConfirmCard[] };
+
+const textSchema = z.string().trim().min(2).max(300);
+
+/**
+ * Comprend une phrase libre et propose des cartes à confirmer. Rien n'est enregistré ici.
+ * D'abord une règle simple (sans IA), puis l'IA ; en cas d'échec, des propositions par les mots et le
+ * choix manuel. L'IA ne fournit qu'une classification : le CO₂ est calculé par le code puis la base.
+ */
+export async function parseActionText(raw: string): Promise<ParseResponse> {
+  const parsed = textSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, reason: "invalid", cards: [] };
+  const text = parsed.data;
+  const { supabase, user, profile } = await requireProfile();
+  const { data: row } = await supabase.from("habits").select("*").eq("user_id", user.id).maybeSingle<HabitsRow>();
+  const habits = row ? habitsFromRow(row) : null;
+
+  const rule = ruleParse(text);
+  if (rule) return { ok: true, source: "rule", cards: interpretItems(rule, text, habits) };
+
+  // IA refusée par la personne : les actions proches, sans appel (la base le refuserait aussi).
+  const r = profile.consent_ai === false ? ({ ok: false, reason: "disabled" } as const) : await runTask(parseActionTask, text, aiDepsFor(supabase));
+  if (r.ok) {
+    const cards = interpretItems(r.data.actions, text, habits);
+    if (cards.length) return { ok: true, source: r.source, cards };
+  }
+  // Repli : les actions proches, à choisir. Sinon, le choix manuel dans la liste.
+  const suggestions = interpretItems(
+    candidatesFor(text, 3).map((slug) => ({ action: slug, quantity: null, unit: "", confidence: 0 })),
+    text,
+    habits,
+  ).map((c) => ({ ...c, needsChoice: c.needsChoice ?? ("low_confidence" as const) }));
+  const reason = profile.consent_ai === false ? "ai_off" : r.ok ? "not_understood" : r.reason === "rate_limited" ? "rate_limited" : r.reason === "invalid_output" ? "not_understood" : "unavailable";
+  return { ok: false, reason, cards: suggestions.slice(0, 1).map((c) => ({ ...c, candidates: suggestions.map((x) => x.slug) })) };
+}
+
+const confirmSchema = z.object({
+  slug: z.enum(ACTION_SLUGS as [string, ...string[]]),
+  quantity: z.coerce.number().positive().max(10_000).optional(),
+});
+
+/** Enregistre une carte confirmée : la base recalcule tout (CO₂, plafonds, pousses). */
+export async function logParsedAction(form: FormData): Promise<LogResult> {
+  const input = confirmSchema.safeParse({
+    slug: form.get("slug"),
+    quantity: form.get("quantity") === null || form.get("quantity") === "" ? undefined : form.get("quantity"),
+  });
+  if (!input.success) return { ok: false, error: "Vérifie l'action et la quantité avant de valider." };
+  const action = ACTION_BY_SLUG[input.data.slug];
+  const { supabase, user, profile } = await requireProfile();
+
+  let receiptPath: string | null = null;
+  const file = form.get("receipt");
+  if (file instanceof File && file.size > 0) {
+    const ext = RECEIPT_TYPES[file.type];
+    if (!ext) return { ok: false, error: "Justificatif en photo : JPEG, PNG ou WebP (une capture d'écran convient)." };
+    if (file.size > 5 * 1024 * 1024) return { ok: false, error: "Photo trop lourde (5 Mo maximum)." };
+    receiptPath = `${user.id}/recu-${crypto.randomUUID()}.${ext}`;
+    const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(receiptPath, file, { contentType: file.type, upsert: false });
+    if (upload) return { ok: false, error: "Envoi du justificatif impossible. Réessaie." };
+  }
+
+  const { data, error } = await supabase.rpc("log_action_slug", {
+    p_action: action.slug,
+    p_quantity: input.data.quantity ?? null,
+    p_receipt: receiptPath,
+  });
+  if (error || !data) {
+    if (receiptPath) await supabase.storage.from(PROOF_BUCKET).remove([receiptPath]);
+    const code = error?.message ?? "";
+    return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
+  }
+  // Le justificatif est vérifié juste après la réponse : la célébration n'attend pas l'IA.
+  const loggedId = (data as { id?: string; receipt?: boolean }).id;
+  if (loggedId && (data as { receipt?: boolean }).receipt) after(() => checkProofNow(loggedId).then(() => undefined));
+  return describe(supabase, user.id, profile.display_name, data);
+}
 
 const ERRORS: Record<string, string> = {
   cap_reached: "Déjà compté aujourd'hui : au-delà du plafond du jour, rien n'est compté. Reviens demain !",
@@ -46,6 +145,9 @@ const ERRORS: Record<string, string> = {
   teletravail_conflict: "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.",
   receipt_required: "Joins ton justificatif (reçu, billet ou facture) pour valider cette action.",
   invalid_photo: "Ce justificatif n'a pas pu être enregistré. Réessaie.",
+  quantity_out_of_range: "Cette quantité n'est pas possible pour cette action : corrige-la avant de valider.",
+  quantity_required: "Indique la distance avant de valider.",
+  quantity_not_allowed: "Cette action ne prend pas de quantité.",
 };
 
 /** Enregistre une action en un tap, sans preuve. Le CO₂ et les pousses sont calculés par la base. */
@@ -59,7 +161,6 @@ export async function logAction(templateId: string, variant: string): Promise<Lo
   return describe(supabase, user.id, profile.display_name, data);
 }
 
-const RECEIPT_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
 /** Un achat via une appli durable : le reçu est envoyé (privé), puis l'action est enregistrée. */
 export async function logActionWithReceipt(form: FormData): Promise<LogResult> {
@@ -82,6 +183,9 @@ export async function logActionWithReceipt(form: FormData): Promise<LogResult> {
     const code = error?.message ?? "";
     return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
   }
+  // Le justificatif est vérifié juste après la réponse : la célébration n'attend pas l'IA.
+  const loggedId = (data as { id?: string; receipt?: boolean }).id;
+  if (loggedId && (data as { receipt?: boolean }).receipt) after(() => checkProofNow(loggedId).then(() => undefined));
   return describe(supabase, user.id, profile.display_name, data);
 }
 
@@ -99,12 +203,15 @@ async function describe(
     points: number;
     month_count: number;
     month_kg: number;
-    challenge: { target: number; done: number; starts_on: string; ends_on: string; days: string[] } | null;
+    challenge: { id: string; target: number; done: number; starts_on: string; ends_on: string; days: string[] } | null;
     base_points: number;
     multiplier: number;
     boost: "duel" | "equipe" | null;
     duel: { other_name: string; mine: number; theirs: number; target: number; ends_on: string; stakes: boolean } | null;
     receipt: boolean;
+    units?: number;
+    quantity?: number | null;
+    capped?: boolean;
   };
 
   const [me, { data: pulse }] = await Promise.all([
@@ -117,7 +224,7 @@ async function describe(
     ok: true,
     action: {
       id: r.id,
-      title: actionTitle(r.template_id, r.variant),
+      title: titleWithQuantity(r),
       theme: themeOf(r.template_id),
       habit: isHabitAction(r.template_id),
       kg: Number(r.kg),
@@ -131,6 +238,7 @@ async function describe(
       unit: t?.unit ?? { one: "fois", many: "fois" },
       challenge: r.challenge
         ? {
+            id: r.challenge.id,
             target: Number(r.challenge.target),
             done: Number(r.challenge.done),
             startsOn: r.challenge.starts_on,
@@ -152,8 +260,20 @@ async function describe(
           }
         : null,
       receipt: !!r.receipt,
+      units: Number(r.units ?? 1),
+      capped: !!r.capped,
     },
   };
+}
+
+/** Le titre de l'action, avec la distance ou le nombre d'unités quand la personne les a saisis. */
+function titleWithQuantity(r: { template_id: string; variant: string; units?: number; quantity?: number | null }): string {
+  const q = r.quantity === null || r.quantity === undefined ? null : Number(r.quantity);
+  if (r.template_id === "train" && r.variant === "km" && q) return `Train au lieu de l'avion · ${q.toLocaleString("fr-FR")} km`;
+  const base = actionTitle(r.template_id, r.variant);
+  if (["velo", "transports", "covoiturage"].includes(r.template_id) && q) return `${base} · ${q.toLocaleString("fr-FR")} km`;
+  if ((r.units ?? 1) > 1) return `${base} · ×${r.units}`;
+  return base;
 }
 
 const IMAGE_TYPES: Record<string, string> = {
@@ -162,23 +282,25 @@ const IMAGE_TYPES: Record<string, string> = {
   "image/webp": "webp",
 };
 
-/** Ajoute une photo à une action du jour : +5 pousses, et elle part dans le fil. */
+/** Publie une action du jour dans le fil, avec ou sans photo (la photo rapporte +5 pousses). */
 export async function publishAction(_prev: { error?: string }, form: FormData): Promise<{ error?: string }> {
   const { supabase, user } = await requireProfile();
   const validation = String(form.get("validation") ?? "");
   const caption = String(form.get("caption") ?? "").slice(0, 280);
   const photo = form.get("photo");
-  if (!(photo instanceof File) || photo.size === 0) return { error: "Choisis une photo." };
-  const ext = IMAGE_TYPES[photo.type];
-  if (!ext) return { error: "Photo au format JPEG, PNG ou WebP." };
-  if (photo.size > 5 * 1024 * 1024) return { error: "Photo trop lourde (5 Mo maximum)." };
 
-  const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-  const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, photo, {
-    contentType: photo.type,
-    upsert: false,
-  });
-  if (upload) return { error: "Envoi de la photo impossible. Réessaie." };
+  let path: string | null = null;
+  if (photo instanceof File && photo.size > 0) {
+    const ext = IMAGE_TYPES[photo.type];
+    if (!ext) return { error: "Photo au format JPEG, PNG ou WebP." };
+    if (photo.size > 5 * 1024 * 1024) return { error: "Photo trop lourde (5 Mo maximum)." };
+    path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, photo, {
+      contentType: photo.type,
+      upsert: false,
+    });
+    if (upload) return { error: "Envoi de la photo impossible. Réessaie." };
+  }
 
   const { error } = await supabase.rpc("publish_action", {
     p_validation: validation,
@@ -186,7 +308,7 @@ export async function publishAction(_prev: { error?: string }, form: FormData): 
     p_caption: caption,
   });
   if (error) {
-    await supabase.storage.from(PROOF_BUCKET).remove([path]);
+    if (path) await supabase.storage.from(PROOF_BUCKET).remove([path]);
     return {
       error:
         error.message === "nothing_to_publish"
@@ -195,4 +317,35 @@ export async function publishAction(_prev: { error?: string }, form: FormData): 
     };
   }
   redirect("/fil?publie=1");
+}
+
+/** Partage la réussite d'un défi dans le fil, sur demande. */
+export async function shareChallengeDone(challengeId: string): Promise<{ ok: boolean }> {
+  const { supabase } = await requireProfile();
+  if (!/^[0-9a-f-]{36}$/i.test(challengeId)) return { ok: false };
+  const { error } = await supabase.rpc("share_challenge", { p_challenge: challengeId, p_event: "reussi" });
+  return { ok: !error };
+}
+
+/** Envoie une autre photo d'un justificatif « à renvoyer » ; il est vérifié de nouveau aussitôt. */
+export async function resubmitProof(form: FormData): Promise<void> {
+  const { supabase, user } = await requireProfile();
+  const id = String(form.get("validation") ?? "");
+  const file = form.get("receipt");
+  if (!/^[0-9a-f-]{36}$/i.test(id) || !(file instanceof File) || file.size === 0) redirect("/agir?justificatif=erreur");
+  const ext = RECEIPT_TYPES[(file as File).type];
+  if (!ext || (file as File).size > 5 * 1024 * 1024) redirect("/agir?justificatif=format");
+  const { data: current } = await supabase.from("validations").select("receipt_path").eq("id", id).eq("user_id", user.id).maybeSingle<{ receipt_path: string | null }>();
+  const path = `${user.id}/recu-${crypto.randomUUID()}.${ext}`;
+  const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, file as File, { contentType: (file as File).type, upsert: false });
+  if (upload) redirect("/agir?justificatif=erreur");
+  const { error } = await supabase.rpc("resubmit_proof", { p_validation: id, p_receipt: path });
+  if (error) {
+    await supabase.storage.from(PROOF_BUCKET).remove([path]);
+    redirect(`/agir?justificatif=${error.message === "too_many_attempts" ? "essais" : "erreur"}`);
+  }
+  // L'ancienne photo n'est plus utile : effacée tout de suite.
+  if (current?.receipt_path) await supabase.storage.from(PROOF_BUCKET).remove([current.receipt_path]);
+  after(() => checkProofNow(id).then(() => undefined));
+  redirect("/agir?justificatif=envoye");
 }

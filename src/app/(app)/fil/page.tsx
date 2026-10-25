@@ -11,7 +11,7 @@ import { CompanyHero, type CompanyPulse } from "@/components/CompanyHero";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
-import { reportPost, setFeedSharing, toggleCheer } from "./actions";
+import { reportPost, toggleCheer } from "./actions";
 import { formatDay } from "@/lib/dates";
 
 interface Post {
@@ -110,20 +110,6 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       {pulse ? <CompanyHero pulse={pulse as CompanyPulse} /> : null}
       <InstallPrompt />
 
-      {!profile.feed_choice_at ? (
-        <section aria-labelledby="partage" className="flex flex-col gap-2.5 rounded-[18px] border-2 border-sapin bg-papier p-4">
-          <h2 id="partage" className="font-display text-lg">Nouveau : le fil montre tout ce que vous faites</h2>
-          <p className="text-sm text-brun">
-            Tes actions et tes défis (lancés, réussis) apparaissent dans le fil de l&apos;entreprise, pour que tes collègues
-            puissent t&apos;encourager ou essayer aussi. Rien de ce que tu as fait avant n&apos;est publié, et tes reçus
-            d&apos;achat restent privés. Tu peux changer d&apos;avis dans ton profil.
-          </p>
-          <form action={setFeedSharing} className="flex gap-2">
-            <button name="share" value="oui" className="btn-dark min-h-11 flex-1 text-sm">D&apos;accord, je partage</button>
-            <button name="share" value="non" className="btn-ghost min-h-11 flex-1 text-sm">Garder pour moi</button>
-          </form>
-        </section>
-      ) : null}
 
       <div id="publications" className="mt-0.5 flex scroll-mt-4 items-center justify-between gap-2">
         <h2 className="font-display text-[21px]">Fil d&apos;actu</h2>

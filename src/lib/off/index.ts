@@ -87,3 +87,25 @@ export async function getAlternatives(p: Product): Promise<Alternatives> {
   }
   return { products: picked, available: answered || picked.length > 0 };
 }
+
+/**
+ * Les produits d'une catégorie vendus en France (une recherche, mise en cache une journée), pour
+ * l'estimation par catégorie du scanner par photo. Liste vide si le service ne répond pas.
+ */
+export async function getCategoryProducts(tag: string): Promise<Product[] | null> {
+  if (Date.now() < pausedUntil) return null;
+  try {
+    const url =
+      `${BASE}/api/v2/search?categories_tags=${encodeURIComponent(tag)}` +
+      `&countries_tags=en:france&sort_by=unique_scans_n&page_size=50&fields=${FIELDS}`;
+    const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(8000), next: { revalidate: DAY } });
+    if (!res.ok) {
+      if (res.status === 429 || res.status === 503) pausedUntil = Date.now() + 5 * 60_000;
+      return null;
+    }
+    const json = (await res.json()) as { products?: Record<string, unknown>[] };
+    return (json.products ?? []).map((raw) => parseProduct(raw)).filter((x): x is Product => x !== null);
+  } catch {
+    return null;
+  }
+}

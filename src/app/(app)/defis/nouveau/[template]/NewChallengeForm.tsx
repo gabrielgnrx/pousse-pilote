@@ -242,6 +242,13 @@ export function NewChallengeForm({
       </section>
       )}
 
+      {mode !== "equipe" ? (
+        <label className="flex items-start gap-3 rounded-2xl bg-sauge px-4 py-3 text-sm text-sapin">
+          <input type="checkbox" name="share" className="mt-0.5 size-5 accent-sapin" />
+          <span>Annoncer ce défi dans le fil, pour que tes collègues puissent t&apos;encourager.</span>
+        </label>
+      ) : null}
+
       <FormError message={state.error} />
       <SubmitButton pendingLabel="Création…">
         {mode === "equipe" ? "Proposer au vote de lundi" : duel ? "Lancer le défi en duel" : "Lancer le défi seul"}

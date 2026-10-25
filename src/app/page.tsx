@@ -11,7 +11,11 @@ export default async function Home() {
 
   if (user) {
     const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle();
-    if (!profile) redirect("/bienvenue");
+    if (!profile) {
+      // Responsable RSE sans profil de participant : son espace admin.
+      const { data: admin } = await supabase.from("organization_admins").select("company_id").eq("user_id", user.id).limit(1).maybeSingle();
+      redirect(admin ? "/admin" : "/bienvenue");
+    }
     const { data: habits } = await supabase.from("habits").select("user_id").eq("user_id", user.id).maybeSingle();
     redirect(habits ? "/fil" : "/questionnaire");
   }

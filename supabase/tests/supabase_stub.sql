@@ -1,8 +1,10 @@
 -- Imitation minimale de Supabase pour tester les migrations sur un PostgreSQL nu.
 -- Ne pas exécuter sur un vrai projet Supabase.
 
-create role anon nologin;
-create role authenticated nologin;
+-- Rôles communs au serveur : déjà présents si une autre base de test existe.
+do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
+do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
+do $$ begin create role service_role nologin bypassrls; exception when duplicate_object then null; end $$;
 
 create schema auth;
 create table auth.users (id uuid primary key, email text);
