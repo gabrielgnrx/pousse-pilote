@@ -43,3 +43,35 @@ export function supabaseStore(db: RpcClient, cron?: { token: string; companyId: 
     },
   };
 }
+
+/**
+ * Espace admin RSE (migration 0039) : l'admin n'est pas forcément participante, l'appel est journalisé au
+ * nom de l'organisation qu'elle administre (la base le vérifie) et le quota est celui de l'organisation.
+ */
+export function adminStore(db: RpcClient, companyId: string): AiStore {
+  return {
+    async consume(task, _userLimit, orgLimit) {
+      const { data, error } = await db.rpc("admin_ai_consume", { p_company: companyId, p_task: task, p_limit: orgLimit });
+      return !error && data === true;
+    },
+    async cacheGet() {
+      return null;
+    },
+    async cachePut() {},
+    async log(e: LogEntry) {
+      await db.rpc("admin_ai_log", {
+        p_company: companyId,
+        p_task: e.task,
+        p_prompt_version: e.promptVersion,
+        p_model: e.model,
+        p_status: e.status,
+        p_input_tokens: e.usage.inputTokens,
+        p_output_tokens: e.usage.outputTokens,
+        p_cache_read_tokens: e.usage.cacheReadTokens,
+        p_latency_ms: e.latencyMs,
+        p_cost_usd: e.costUsd,
+        p_error_code: e.errorCode ?? null,
+      });
+    },
+  };
+}
