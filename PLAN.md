@@ -1,7 +1,7 @@
 # Pousse v2 · Plan d'implémentation
 
 Rédigé le 25/10/2026 après exploration du dépôt `pousse-pilote` (commit `3f67de5`).
-Statut : **en attente de validation**. Aucun code applicatif n'a été modifié.
+Statut : **validé le 25/10/2026**, avec mes recommandations sur chaque question (voir § 6).
 
 ---
 
@@ -235,3 +235,32 @@ Je validerai chaque ligne contre la source en Phase 1 et je te donnerai la liste
 
 - **Q11.** Le bilan reste le questionnaire maison en 14 questions, ou tu veux brancher Nos Gestes Climat dès la v2 ? (Le README signale une vérification de licence ecoinvent à faire pour un usage commercial.) Ma recommandation : garder le questionnaire maison pour la v2.
 - **Q12.** Branche et livraison : je travaille sur une branche `v2` et je te propose une PR par phase. Je peux pousser cette branche sur GitHub (le dépôt est public) ?
+
+---
+
+## 6. Décisions retenues (25/10/2026)
+
+Gabriel a validé le plan en retenant mes recommandations :
+
+| Question | Décision |
+| --- | --- |
+| Q1 Référence du gain | Référence personnelle : l'habitude déclarée dans le bilan. Règles codées en dur (`reference_rules` dans `supabase/data/action_types.json`, `unit_kg`/`avoided_kg` en base), testées. |
+| Q2 Sortie du LLM | `{ action, quantity, unit, confidence }` où `action` est un slug du catalogue `action_types` (liste fermée). |
+| Q3 Quantités | Trajets domicile-travail plafonnés aux km déclarés ; les autres trajets ne sont pas dans le catalogue (pousses via les petits gestes, 0 kg). |
+| Q4 Confiance | Confirmation par une UI de choix sous 0,7. |
+| Q5 Nom de l'organisation | `companies` / `company_id` gardés en base ; « organisation » dans l'UI admin. |
+| Q6 Justificatif douteux | La personne renvoie une autre photo ; sinon l'action reste comptée sans les pousses. |
+| Q7 Tâches planifiées | Déjà en place : `pg_cron` + `pg_net` dans Supabase (migration 0019, toutes les 5 minutes). Les tâches IA s'y ajoutent. |
+| Q8 Types Supabase | Générés en CI depuis une base rejouée à partir des migrations (`npm run db:types`), recommités automatiquement. |
+| Q9 Clé API | Pas nécessaire pour développer : tout est testé avec des réponses simulées (`AI_MOCK=1`). |
+| Q10 Photos du fil | Purge à 90 jours conservée. Justificatifs : après verdict ou 30 jours. |
+| Q11 Bilan | Questionnaire maison conservé pour la v2. |
+| Q12 Branche | Branche `v2` poussée sur GitHub, une PR par phase. |
+
+**Contrainte d'environnement découverte** : le poste de développement n'accède pas au registre npm.
+La CI GitHub (`.github/workflows/ci.yml`) installe les dépendances, régénère `package-lock.json` et
+les types Supabase, puis lance types, lint, tests unitaires, tests SQL et build. Les tests SQL tournent
+sur un PostgreSQL à date fixe (libfaketime), car les scénarios historiques sont datés.
+
+**Numérotation réelle des migrations** : 0026 facteurs (généré), 0027 catalogue des actions (généré),
+0028 calcul sur facteurs + quantités + fil non automatique, 0029 socle IA. Les suivantes décalent d'autant.
