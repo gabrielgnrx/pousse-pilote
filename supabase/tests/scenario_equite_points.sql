@@ -40,7 +40,13 @@ select pg_temp.check((select (j->>'base_points')::int = 10 from a2), 'second tra
 create temp table a3 as select log_action('escaliers', 'base') as j;
 create temp table a4 as select log_action('gourde', 'base') as j;
 create temp table a5 as select log_action('ecran', 'base') as j;
-select pg_temp.check((select (a3.j->>'base_points')::int = 2 and (a5.j->>'base_points')::int = 0 from a3, a5),
+create temp table a6 as select log_action('antigaspi', 'base') as j;
+-- Le plafond porte sur les pousses déjà gagnées dans la journée (multiplicateur d'équipe compris) :
+-- le total ne dépasse jamais 5 et le quatrième geste ne rapporte plus rien.
+select pg_temp.check((select (a3.j->>'base_points')::int = 2
+                             and (a3.j->>'base_points')::int + (a4.j->>'base_points')::int
+                               + (a5.j->>'base_points')::int + (a6.j->>'base_points')::int <= 5
+                             and (a6.j->>'base_points')::int = 0 from a3, a4, a5, a6),
                      'petits gestes : plafonnés à 5 pousses par jour, tous confondus');
 
 -- 2. Les grosses actions demandent un justificatif.
