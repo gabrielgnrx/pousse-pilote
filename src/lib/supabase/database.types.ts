@@ -620,6 +620,46 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"quiz_week_answers": {
+                  Row: {
+                    "choice": number,"correct": boolean,"created_at": string,"question_id": number,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "choice": number,"correct": boolean,"created_at"?: string,"question_id": number,"user_id": string
+                  }
+                  Update: {
+                    "choice"?: number,"correct"?: boolean,"created_at"?: string,"question_id"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "quiz_week_answers_question_id_fkey"
+      columns: ["question_id"]
+isOneToOne: false
+      referencedRelation: "quiz_week_questions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "quiz_week_answers_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"quiz_week_questions": {
+                  Row: {
+                    "answer": number,"choices": (string)[],"created_at": string,"explanation": string,"id": number,"position": number,"prompt_version": string,"question": string,"source_kind": string,"source_title": string,"source_url": string | null,"week_start": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "answer": number,"choices": (string)[],"created_at"?: string,"explanation": string,"id"?: never,"position": number,"prompt_version": string,"question": string,"source_kind": string,"source_title": string,"source_url"?: string | null,"week_start": string
+                  }
+                  Update: {
+                    "answer"?: number,"choices"?: (string)[],"created_at"?: string,"explanation"?: string,"id"?: never,"position"?: number,"prompt_version"?: string,"question"?: string,"source_kind"?: string,"source_title"?: string,"source_url"?: string | null,"week_start"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"reports": {
                   Row: {
                     "created_at": string,"id": string,"reason": string | null,"user_id": string,"validation_id": string
@@ -1002,6 +1042,9 @@ isOneToOne: false
 "answer_quiz":
 { Args: { "p_choice": number,"p_question": number }; Returns: Json
                            },
+"answer_week_quiz":
+{ Args: { "p_choice": number,"p_question": number }; Returns: Json
+                           },
 "apply_penalty":
 { Args: { "p_company": string,"p_points": number,"p_ref": string,"p_user": string }; Returns: number
                            },
@@ -1280,6 +1323,9 @@ isOneToOne: false
 "quiz_day_ids":
 { Args: { "d": string }; Returns: (number)[]
                            },
+"quiz_week_insert":
+{ Args: { "p_questions": Json,"p_token": string,"p_version": string,"p_week": string }; Returns: number
+                           },
 "record_proof_verdict":
 { Args: { "p_model": string,"p_reason": string,"p_validation": string,"p_verdict": string,"p_version": string }; Returns: Json
                            },
@@ -1407,6 +1453,9 @@ isOneToOne: false
                            },
 "vote_team_week_at":
 { Args: { "p_choice": string,"p_now": string }; Returns: Json
+                           },
+"week_quiz":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "weekly_cap":
 { Args: { "h": Omit<Database["public"]['Tables']["habits"]['Row'], Database["public"]['Tables']["habits"]['ComputedFields']>,"p_template": string }; Returns: number
