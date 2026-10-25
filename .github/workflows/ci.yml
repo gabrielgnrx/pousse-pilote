@@ -14,20 +14,11 @@ concurrency:
 
 jobs:
   app:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       PGHOST: localhost
       PGUSER: postgres
-      PGPASSWORD: postgres
       NEXT_TELEMETRY_DISABLED: "1"
       # Valeurs factices : la compilation n'appelle ni Supabase ni l'API Claude.
       NEXT_PUBLIC_SUPABASE_URL: https://exemple.supabase.co
@@ -40,6 +31,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # Les scénarios SQL historiques sont datés (semaine du lundi 19 octobre 2026) : la base de test
+      # tourne à une date fixe, avec libfaketime, pour que les tests ne dépendent pas du jour.
+      - name: PostgreSQL 16 à date fixe
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-16 faketime >/dev/null
+          sudo mkdir -p /var/tmp/pg && sudo chown postgres /var/tmp/pg
+          sudo -u postgres /usr/lib/postgresql/16/bin/initdb -D /var/tmp/pg/data -A trust -U postgres >/dev/null
+          sudo -u postgres faketime -f "@2026-10-22 08:00:00" /usr/lib/postgresql/16/bin/pg_ctl \
+            -D /var/tmp/pg/data -o "-p 5432 -c listen_addresses=localhost -k /var/tmp/pg" -l /var/tmp/pg/log start
+          psql -d postgres -Atc "select now()"
 
       - name: Dépendances
         run: bash scripts/ci/run.sh install npm install --no-audit --no-fund
