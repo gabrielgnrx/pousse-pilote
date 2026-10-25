@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main, v2, "v2-*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Valeurs factices : la compilation n'appelle ni Supabase ni l'API Claude.
+      NEXT_PUBLIC_SUPABASE_URL: https://exemple.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Dépendances
+        run: bash scripts/ci/run.sh install npm install --no-audit --no-fund
+      - name: Tests SQL
+        run: bash scripts/ci/run.sh test-sql npm run test:sql
+      - name: Types Supabase générés depuis les migrations
+        continue-on-error: true
+        run: bash scripts/ci/run.sh db-types npm run db:types
+
+      # Fichiers générés recommités sur la branche (le poste de développement n'a pas toujours
+      # accès au registre npm ni à Docker).
+      - name: Recommiter les fichiers générés
+        if: github.event_name == 'push'
+        run: |
+          if [ -n "$(git status --porcelain -- package-lock.json src/lib/supabase/database.types.ts)" ]; then
+            git config user.name "pousse-ci"
+            git config user.email "ci@pousse.invalid"
+            git add package-lock.json src/lib/supabase/database.types.ts
+            git commit -m "chore: fichiers générés à jour (CI)"
+            git push
+          fi
+
+      - name: Types
+        run: bash scripts/ci/run.sh typecheck npm run typecheck
+      - name: Lint
+        run: bash scripts/ci/run.sh lint npm run lint
+      - name: Tests unitaires
+        run: bash scripts/ci/run.sh test npm test
+      - name: Build
+        run: bash scripts/ci/run.sh build npm run build
