@@ -168,14 +168,14 @@ isOneToOne: false
                   ]
                 },"companies": {
                   Row: {
-                    "created_at": string,"email_domain": string | null,"id": string,"join_code": string,"name": string,"pilot_start": string,"pilot_weeks": number
+                    "created_at": string,"created_by": string | null,"email_domain": string | null,"id": string,"join_code": string,"name": string,"pilot_start": string,"pilot_weeks": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"email_domain"?: string | null,"id"?: string,"join_code": string,"name": string,"pilot_start"?: string,"pilot_weeks"?: number
+                    "created_at"?: string,"created_by"?: string | null,"email_domain"?: string | null,"id"?: string,"join_code": string,"name": string,"pilot_start"?: string,"pilot_weeks"?: number
                   }
                   Update: {
-                    "created_at"?: string,"email_domain"?: string | null,"id"?: string,"join_code"?: string,"name"?: string,"pilot_start"?: string,"pilot_weeks"?: number
+                    "created_at"?: string,"created_by"?: string | null,"email_domain"?: string | null,"id"?: string,"join_code"?: string,"name"?: string,"pilot_start"?: string,"pilot_weeks"?: number
                   }
                   Relationships: [
                     
@@ -384,6 +384,26 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"monthly_reports": {
+                  Row: {
+                    "company_id": string,"content": NonNullable<Json>,"created_at": string,"month": string,"prompt_version": string | null,"source": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"content": NonNullable<Json>,"created_at"?: string,"month": string,"prompt_version"?: string | null,"source": string
+                  }
+                  Update: {
+                    "company_id"?: string,"content"?: NonNullable<Json>,"created_at"?: string,"month"?: string,"prompt_version"?: string | null,"source"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "monthly_reports_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"mystery_seeds": {
                   Row: {
                     "day": string,"opened_at": string | null,"points": number,"reward": string | null,"user_id": string
@@ -401,6 +421,26 @@ isOneToOne: true
       columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"organization_admins": {
+                  Row: {
+                    "company_id": string,"created_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"created_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "company_id"?: string,"created_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "organization_admins_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
       referencedColumns: ["id"]
     }
                   ]
@@ -979,6 +1019,29 @@ isOneToOne: false
             "active_days":
 { Args: { "p_user": string }; Returns: string[]
                            },
+"admin_add_teams":
+{ Args: { "p_company": string,"p_teams": (string)[] }; Returns: number
+                           },
+"admin_ai_consume":
+{ Args: { "p_company": string,"p_limit": number,"p_task": string }; Returns: boolean
+                           },
+"admin_ai_log":
+{ Args: { "p_cache_read_tokens"?: number,"p_company": string,"p_cost_usd"?: number,"p_error_code"?: string,"p_input_tokens"?: number,"p_latency_ms"?: number,"p_model": string,"p_output_tokens"?: number,"p_prompt_version": string,"p_status": string,"p_task": string }; Returns: undefined
+                           },
+"admin_dashboard":
+{ Args: { "p_company": string }; Returns: Json
+                           },
+"admin_mobility_csv":
+{ Args: { "p_company": string,"p_from": string,"p_to": string }; Returns: {
+              "kg_avoided": number,"km": number,"mode": string,"month": string,"people": number,"trips": number
+            }[]
+                           },
+"admin_report_data":
+{ Args: { "p_company": string,"p_month": string }; Returns: Json
+                           },
+"admin_save_report":
+{ Args: { "p_company": string,"p_content": Json,"p_month": string,"p_source": string,"p_version": string }; Returns: undefined
+                           },
 "ai_cache_get":
 { Args: { "p_key": string }; Returns: Json
                            },
@@ -1014,6 +1077,9 @@ isOneToOne: false
                            },
 "animator_post":
 { Args: { "p_body": string,"p_meta"?: Json,"p_now"?: string,"p_ref": string,"p_slot": string,"p_team": string,"p_token": string }; Returns: boolean
+                           },
+"anonymize_text":
+{ Args: { "p_names": (string)[],"p_text": string }; Returns: string
                            },
 "answer_duel":
 { Args: { "p_accept": boolean,"p_duel": string }; Returns: {
@@ -1126,6 +1192,9 @@ isOneToOne: false
               "kg": number,"participants": number
             }[]
                            },
+"create_organization":
+{ Args: { "p_email_domain": string,"p_name": string,"p_teams": (string)[] }; Returns: Json
+                           },
 "cron_key_named":
 { Args: { "p_name": string,"p_token": string }; Returns: boolean
                            },
@@ -1179,6 +1248,9 @@ isOneToOne: false
 "is_habit_action":
 { Args: { "p_template": string }; Returns: boolean
                            },
+"is_org_admin":
+{ Args: { "p_company": string }; Returns: boolean
+                           },
 "join_company":
 { Args: { "p_code": string,"p_consent_feedback": boolean,"p_consent_team_stats": boolean,"p_display_name": string,"p_team": string }; Returns: undefined
                            },
@@ -1211,6 +1283,11 @@ isOneToOne: false
                            },
 "member_points":
 { Args: { "p_since": string,"p_user": string }; Returns: number
+                           },
+"my_admin_organizations":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "company_id": string,"email_domain": string,"join_code": string,"name": string,"participants": number,"teams": Json
+            }[]
                            },
 "my_company_id":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -1284,6 +1361,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"poste_of":
+{ Args: { "p_category": string }; Returns: string
+                           },
 "propose_team_challenge":
 { Args: { "p_kind": string }; Returns: string
                            },
@@ -1414,6 +1494,9 @@ isOneToOne: false
                            },
 "todays_quests":
 { Args: { "p_user": string }; Returns: (string)[]
+                           },
+"unaccent_fr":
+{ Args: { "t": string }; Returns: string
                            },
 "unit_kg":
 { Args: { "h": Omit<Database["public"]['Tables']["habits"]['Row'], Database["public"]['Tables']["habits"]['ComputedFields']>,"p_template": string,"p_variant": string }; Returns: number
