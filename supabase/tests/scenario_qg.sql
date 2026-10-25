@@ -76,6 +76,9 @@ select pg_temp.check((select count(*) from team_messages where user_id is null) 
 
 -- 3. Objectif atteint : +30 pour chaque contributeur, une seule fois.
 update team_weeks set chosen = 'actions', target = 1 where week_start = '2026-10-19';
+-- Vu par la personne 1, qui a enregistré des actions cette semaine (la personne 3 n'en a pas toujours :
+-- cela dépendait des tirages des scénarios précédents).
+select pg_temp.as_admin('00000000-0000-0000-0000-000000000001');
 select pg_temp.check((w->>'gained')::int = 30 and (w->>'mine')::int > 0, 'objectif atteint : +30 pour un contributeur')
 from my_team_week_at('2026-10-20 12:00') w;
 select pg_temp.check((w->>'gained')::int = 0, 'crédité une seule fois') from my_team_week_at('2026-10-20 12:05') w;
