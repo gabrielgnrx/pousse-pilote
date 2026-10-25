@@ -105,7 +105,7 @@ $$;
 revoke all on function public.answer_week_quiz(bigint, integer) from public;
 grant execute on function public.answer_week_quiz(bigint, integer) to authenticated;
 
--- La tâche du lundi enregistre les questions relues (clé « ia ») ; une semaine déjà remplie est gardée.
+-- La tâche du lundi enregistre les questions relues (clé « ia ») ; une semaine déjà remplie est gardée (-1).
 create or replace function public.quiz_week_insert(p_token text, p_week date, p_questions jsonb, p_version text)
 returns integer
 language plpgsql security definer set search_path = public
@@ -117,8 +117,9 @@ begin
   if not public.cron_key_named('ia', p_token) then
     raise exception 'not_allowed';
   end if;
+  -- -1 : semaine déjà remplie (rien n'est refait).
   if exists (select 1 from public.quiz_week_questions where week_start = p_week) then
-    return 0;
+    return -1;
   end if;
   for q in select * from jsonb_array_elements(p_questions) loop
     exit when n >= 5;

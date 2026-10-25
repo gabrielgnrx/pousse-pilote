@@ -36,7 +36,7 @@ select pg_temp.check(quiz_week_insert('cle-ia-de-test-assez-longue-pour-passer-0
      'answer', 0, 'explanation', 'Parce que la fiche le dit clairement.', 'source_kind', 'fiche', 'source_title', 'Vélo', 'source_url', ''))
    from generate_series(1, 6) i), 'quiz-semaine@1') = 5, '5 questions enregistrées au plus');
 select pg_temp.check(quiz_week_insert('cle-ia-de-test-assez-longue-pour-passer-0123456789',
-  date_trunc('week', now() at time zone 'Europe/Paris')::date, '[]', 'quiz-semaine@1') = 0, 'semaine déjà remplie : gardée');
+  date_trunc('week', now() at time zone 'Europe/Paris')::date, '[]', 'quiz-semaine@1') = -1, 'semaine déjà remplie : gardée');
 reset role;
 
 -- 2. La bonne réponse reste cachée tant qu'on n'a pas répondu ; la table est illisible.
