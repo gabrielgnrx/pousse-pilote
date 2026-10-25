@@ -304,11 +304,11 @@ avec la CI verte (types, lint, tests unitaires, tests SQL, build, e2e Playwright
   travaillées, 12 000 km pour un long-courrier aller-retour, 2 000 km pour des vacances en train,
   moyennes non pondérées « porc/poulet/poisson » et « métro/RER ».
 
-### Questions ouvertes
+### Décisions du 25/10/2026 (soir)
 
-1. Les défis d'équipe fondés sur le quiz, les bravos ou le scanner ne sont pas quantifiables en CO₂ : on les
-   garde (pousses seulement) ou on les retire du vote du lundi ?
-2. Mentions légales de l'IA : la page Confidentialité contient « [À COMPLÉTER PAR LE RESPONSABLE DE
-   TRAITEMENT] » pour le sous-traitant (Anthropic) et ses conditions. À rédiger avec la personne responsable.
-3. Météo de l'animateur : Paris par défaut pour toutes les organisations ; ajouter une ville par organisation ?
-4. URL de production codée dans les migrations « Supabase seulement » (`pousse-pilote.vercel.app`).
+1. Défis d'équipe quiz, bravos et scanner : **gardés** dans le vote du lundi, avec des pousses seulement
+   (exception assumée à « chaque défi est quantifiable en CO₂ »).
+2. Mention du sous-traitant IA dans la Confidentialité : **à rédiger par Gabriel** (responsable de traitement),
+   à partir des engagements publiés par Anthropic.
+3. Météo de l'animateur : **Paris pour toutes les organisations**, pas de ville par organisation.
+4. `pousse-pilote.vercel.app` : **confirmé** comme domaine de production.
