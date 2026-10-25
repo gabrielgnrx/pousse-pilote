@@ -270,8 +270,12 @@
         "tshirt_neuf"
       ],
       "aliases": [
+        "t-shirt",
+        "tee-shirt",
         "t-shirt seconde main",
-        "friperie"
+        "friperie",
+        "seconde main",
+        "d'occasion"
       ]
     },
     {
@@ -288,7 +292,11 @@
         "chemise_neuve"
       ],
       "aliases": [
-        "chemise seconde main"
+        "chemise",
+        "chemise seconde main",
+        "friperie",
+        "seconde main",
+        "d'occasion"
       ]
     },
     {
@@ -305,7 +313,12 @@
         "chaussures_cuir_neuves"
       ],
       "aliases": [
-        "chaussures seconde main"
+        "chaussures",
+        "baskets",
+        "chaussures seconde main",
+        "friperie",
+        "seconde main",
+        "d'occasion"
       ]
     },
     {
@@ -322,7 +335,11 @@
         "jean_neuf"
       ],
       "aliases": [
-        "jean seconde main"
+        "jean",
+        "jean seconde main",
+        "friperie",
+        "seconde main",
+        "d'occasion"
       ]
     },
     {
@@ -339,7 +356,11 @@
         "pull_laine_neuf"
       ],
       "aliases": [
-        "pull seconde main"
+        "pull",
+        "pull seconde main",
+        "friperie",
+        "seconde main",
+        "d'occasion"
       ]
     },
     {
@@ -356,7 +377,12 @@
         "manteau_neuf"
       ],
       "aliases": [
-        "manteau seconde main"
+        "manteau",
+        "veste",
+        "manteau seconde main",
+        "friperie",
+        "seconde main",
+        "d'occasion"
       ]
     },
     {

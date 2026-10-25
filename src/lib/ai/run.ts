@@ -18,6 +18,8 @@ export interface AiTask<I, O> {
   version: string;
   model: ModelKey;
   effort?: "low" | "medium" | "high";
+  /** Message système stable et long (au moins 512 tokens) : mis en cache côté API. */
+  cacheSystem?: boolean;
   maxTokens: number;
   timeoutMs: number;
   system: string;
@@ -111,6 +113,7 @@ export async function runTask<I, O>(
     client,
     model: task.model,
     effort: task.effort,
+    cacheSystem: task.cacheSystem,
     system: task.system,
     user: task.user(input),
     jsonSchema: task.jsonSchema,

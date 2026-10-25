@@ -5,6 +5,14 @@ import { getEngagement } from "@/lib/engagement-data";
 import { PROOF_BUCKET } from "@/lib/constants";
 import { actionTitle, themeOf, type Theme } from "@/lib/actions-catalog";
 import { TEMPLATE_BY_ID, isHabitAction } from "@/lib/co2/challenges.ts";
+import { z } from "zod";
+import { ACTION_SLUGS } from "@/lib/co2/action-types.data.ts";
+import { ACTION_BY_SLUG } from "@/lib/co2/engine.ts";
+import { candidatesFor, interpretItems, ruleParse, type ConfirmCard } from "@/lib/ai/parse/interpret.ts";
+import { parseActionTask } from "@/lib/ai/prompts/parse-action.ts";
+import { runTask } from "@/lib/ai/run.ts";
+import { aiDepsFor } from "@/lib/ai/client";
+import { habitsFromRow, type HabitsRow } from "@/lib/session";
 
 export interface LoggedAction {
   id: string;
@@ -34,9 +42,94 @@ export interface LoggedAction {
   duel: { otherName: string; mine: number; theirs: number; target: number; endsOn: string; stakes: boolean } | null;
   /** Achat validé avec un reçu (privé, jamais publié). */
   receipt: boolean;
+  /** Unités comptées (2 repas = 2) ; la distance saisie a été ramenée au trajet déclaré. */
+  units?: number;
+  capped?: boolean;
+  /** Aperçu affiché avant la réponse de la base (interface optimiste). */
+  provisional?: boolean;
 }
 
 export type LogResult = { ok: true; action: LoggedAction } | { ok: false; error: string };
+
+// --- Saisie en langage naturel ------------------------------------------------------------------
+
+const RECEIPT_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+export type ParseResponse =
+  | { ok: true; source: "rule" | "ai" | "cache" | "mock"; cards: ConfirmCard[] }
+  | { ok: false; reason: "invalid" | "not_understood" | "unavailable" | "rate_limited"; cards: ConfirmCard[] };
+
+const textSchema = z.string().trim().min(2).max(300);
+
+/**
+ * Comprend une phrase libre et propose des cartes à confirmer. Rien n'est enregistré ici.
+ * D'abord une règle simple (sans IA), puis l'IA ; en cas d'échec, des propositions par les mots et le
+ * choix manuel. L'IA ne fournit qu'une classification : le CO₂ est calculé par le code puis la base.
+ */
+export async function parseActionText(raw: string): Promise<ParseResponse> {
+  const parsed = textSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, reason: "invalid", cards: [] };
+  const text = parsed.data;
+  const { supabase, user } = await requireProfile();
+  const { data: row } = await supabase.from("habits").select("*").eq("user_id", user.id).maybeSingle<HabitsRow>();
+  const habits = row ? habitsFromRow(row) : null;
+
+  const rule = ruleParse(text);
+  if (rule) return { ok: true, source: "rule", cards: interpretItems(rule, text, habits) };
+
+  const r = await runTask(parseActionTask, text, aiDepsFor(supabase));
+  if (r.ok) {
+    const cards = interpretItems(r.data.actions, text, habits);
+    if (cards.length) return { ok: true, source: r.source, cards };
+  }
+  // Repli : les actions proches, à choisir. Sinon, le choix manuel dans la liste.
+  const suggestions = interpretItems(
+    candidatesFor(text, 3).map((slug) => ({ action: slug, quantity: null, unit: "", confidence: 0 })),
+    text,
+    habits,
+  ).map((c) => ({ ...c, needsChoice: c.needsChoice ?? ("low_confidence" as const) }));
+  const reason = r.ok ? "not_understood" : r.reason === "rate_limited" ? "rate_limited" : r.reason === "invalid_output" ? "not_understood" : "unavailable";
+  return { ok: false, reason, cards: suggestions.slice(0, 1).map((c) => ({ ...c, candidates: suggestions.map((x) => x.slug) })) };
+}
+
+const confirmSchema = z.object({
+  slug: z.enum(ACTION_SLUGS as [string, ...string[]]),
+  quantity: z.coerce.number().positive().max(10_000).optional(),
+});
+
+/** Enregistre une carte confirmée : la base recalcule tout (CO₂, plafonds, pousses). */
+export async function logParsedAction(form: FormData): Promise<LogResult> {
+  const input = confirmSchema.safeParse({
+    slug: form.get("slug"),
+    quantity: form.get("quantity") === null || form.get("quantity") === "" ? undefined : form.get("quantity"),
+  });
+  if (!input.success) return { ok: false, error: "Vérifie l'action et la quantité avant de valider." };
+  const action = ACTION_BY_SLUG[input.data.slug];
+  const { supabase, user, profile } = await requireProfile();
+
+  let receiptPath: string | null = null;
+  const file = form.get("receipt");
+  if (file instanceof File && file.size > 0) {
+    const ext = RECEIPT_TYPES[file.type];
+    if (!ext) return { ok: false, error: "Justificatif en photo : JPEG, PNG ou WebP (une capture d'écran convient)." };
+    if (file.size > 5 * 1024 * 1024) return { ok: false, error: "Photo trop lourde (5 Mo maximum)." };
+    receiptPath = `${user.id}/recu-${crypto.randomUUID()}.${ext}`;
+    const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(receiptPath, file, { contentType: file.type, upsert: false });
+    if (upload) return { ok: false, error: "Envoi du justificatif impossible. Réessaie." };
+  }
+
+  const { data, error } = await supabase.rpc("log_action_slug", {
+    p_action: action.slug,
+    p_quantity: input.data.quantity ?? null,
+    p_receipt: receiptPath,
+  });
+  if (error || !data) {
+    if (receiptPath) await supabase.storage.from(PROOF_BUCKET).remove([receiptPath]);
+    const code = error?.message ?? "";
+    return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
+  }
+  return describe(supabase, user.id, profile.display_name, data);
+}
 
 const ERRORS: Record<string, string> = {
   cap_reached: "Déjà compté aujourd'hui : au-delà du plafond du jour, rien n'est compté. Reviens demain !",
@@ -46,6 +139,9 @@ const ERRORS: Record<string, string> = {
   teletravail_conflict: "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.",
   receipt_required: "Joins ton justificatif (reçu, billet ou facture) pour valider cette action.",
   invalid_photo: "Ce justificatif n'a pas pu être enregistré. Réessaie.",
+  quantity_out_of_range: "Cette quantité n'est pas possible pour cette action : corrige-la avant de valider.",
+  quantity_required: "Indique la distance avant de valider.",
+  quantity_not_allowed: "Cette action ne prend pas de quantité.",
 };
 
 /** Enregistre une action en un tap, sans preuve. Le CO₂ et les pousses sont calculés par la base. */
@@ -59,7 +155,6 @@ export async function logAction(templateId: string, variant: string): Promise<Lo
   return describe(supabase, user.id, profile.display_name, data);
 }
 
-const RECEIPT_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
 /** Un achat via une appli durable : le reçu est envoyé (privé), puis l'action est enregistrée. */
 export async function logActionWithReceipt(form: FormData): Promise<LogResult> {
@@ -105,6 +200,9 @@ async function describe(
     boost: "duel" | "equipe" | null;
     duel: { other_name: string; mine: number; theirs: number; target: number; ends_on: string; stakes: boolean } | null;
     receipt: boolean;
+    units?: number;
+    quantity?: number | null;
+    capped?: boolean;
   };
 
   const [me, { data: pulse }] = await Promise.all([
@@ -117,7 +215,7 @@ async function describe(
     ok: true,
     action: {
       id: r.id,
-      title: actionTitle(r.template_id, r.variant),
+      title: titleWithQuantity(r),
       theme: themeOf(r.template_id),
       habit: isHabitAction(r.template_id),
       kg: Number(r.kg),
@@ -153,8 +251,20 @@ async function describe(
           }
         : null,
       receipt: !!r.receipt,
+      units: Number(r.units ?? 1),
+      capped: !!r.capped,
     },
   };
+}
+
+/** Le titre de l'action, avec la distance ou le nombre d'unités quand la personne les a saisis. */
+function titleWithQuantity(r: { template_id: string; variant: string; units?: number; quantity?: number | null }): string {
+  const q = r.quantity === null || r.quantity === undefined ? null : Number(r.quantity);
+  if (r.template_id === "train" && r.variant === "km" && q) return `Train au lieu de l'avion · ${q.toLocaleString("fr-FR")} km`;
+  const base = actionTitle(r.template_id, r.variant);
+  if (["velo", "transports", "covoiturage"].includes(r.template_id) && q) return `${base} · ${q.toLocaleString("fr-FR")} km`;
+  if ((r.units ?? 1) > 1) return `${base} · ×${r.units}`;
+  return base;
 }
 
 const IMAGE_TYPES: Record<string, string> = {

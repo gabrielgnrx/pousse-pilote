@@ -13,7 +13,8 @@ export type ContentBlock =
 export interface MessageParams {
   model: string;
   max_tokens: number;
-  system?: string;
+  /** Bloc système ; cache_control « ephemeral » met en cache la partie stable (catalogue, consignes). */
+  system?: string | { type: "text"; text: string; cache_control?: { type: "ephemeral" } }[];
   messages: { role: "user" | "assistant"; content: string | ContentBlock[] }[];
   output_config?: {
     effort?: "low" | "medium" | "high";

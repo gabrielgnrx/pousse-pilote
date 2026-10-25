@@ -286,8 +286,12 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "tshirt_neuf"
     ],
     "aliases": [
+      "t-shirt",
+      "tee-shirt",
       "t-shirt seconde main",
-      "friperie"
+      "friperie",
+      "seconde main",
+      "d'occasion"
     ]
   },
   {
@@ -304,7 +308,11 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "chemise_neuve"
     ],
     "aliases": [
-      "chemise seconde main"
+      "chemise",
+      "chemise seconde main",
+      "friperie",
+      "seconde main",
+      "d'occasion"
     ]
   },
   {
@@ -321,7 +329,12 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "chaussures_cuir_neuves"
     ],
     "aliases": [
-      "chaussures seconde main"
+      "chaussures",
+      "baskets",
+      "chaussures seconde main",
+      "friperie",
+      "seconde main",
+      "d'occasion"
     ]
   },
   {
@@ -338,7 +351,11 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "jean_neuf"
     ],
     "aliases": [
-      "jean seconde main"
+      "jean",
+      "jean seconde main",
+      "friperie",
+      "seconde main",
+      "d'occasion"
     ]
   },
   {
@@ -355,7 +372,11 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "pull_laine_neuf"
     ],
     "aliases": [
-      "pull seconde main"
+      "pull",
+      "pull seconde main",
+      "friperie",
+      "seconde main",
+      "d'occasion"
     ]
   },
   {
@@ -372,7 +393,12 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "manteau_neuf"
     ],
     "aliases": [
-      "manteau seconde main"
+      "manteau",
+      "veste",
+      "manteau seconde main",
+      "friperie",
+      "seconde main",
+      "d'occasion"
     ]
   },
   {

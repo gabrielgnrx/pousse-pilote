@@ -32,6 +32,8 @@ export interface StructuredCall<T> {
   timeoutMs: number;
   /** Rapidité : « low » pour classer, défaut du modèle pour rédiger. */
   effort?: "low" | "medium" | "high";
+  /** Met en cache le message système (catalogue, consignes) : 10 % du prix à la relecture. */
+  cacheSystem?: boolean;
   /** Horloge injectable pour les tests. */
   now?: () => number;
 }
@@ -59,7 +61,7 @@ export function buildParams(call: Omit<StructuredCall<unknown>, "client" | "vali
   const params: MessageParams = {
     model,
     max_tokens: call.maxTokens,
-    system: call.system,
+    system: call.cacheSystem ? [{ type: "text", text: call.system, cache_control: { type: "ephemeral" } }] : call.system,
     messages: [{ role: "user", content: call.user }],
     output_config: { format: { type: "json_schema", schema: toApiSchema(call.jsonSchema) } },
   };
