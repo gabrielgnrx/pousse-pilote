@@ -27,9 +27,16 @@ export async function compressImage(file: File, maxSide = 1600, quality = 0.82):
   }
 }
 
-/** Remplace, dans un formulaire, la photo du champ `name` par sa version compressée. */
-export async function compressFormImage(form: FormData, name: string): Promise<FormData> {
-  const f = form.get(name);
-  if (f instanceof File && f.size > 0) form.set(name, await compressImage(f));
-  return form;
+/**
+ * À brancher sur l'événement onChange d'un champ fichier : remplace la photo choisie par sa version
+ * compressée, avant tout envoi du formulaire (qui reste un formulaire ordinaire).
+ */
+export async function compressInput(input: HTMLInputElement): Promise<void> {
+  const f = input.files?.[0];
+  if (!f || typeof DataTransfer === "undefined") return;
+  const small = await compressImage(f);
+  if (small === f) return;
+  const dt = new DataTransfer();
+  dt.items.add(small);
+  input.files = dt.files;
 }

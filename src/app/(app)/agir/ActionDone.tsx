@@ -5,7 +5,7 @@ import { formatKg } from "@/lib/co2/challenges.ts";
 import { levelFor, weekStart } from "@/lib/co2/engagement.ts";
 import { addDays, todayParis } from "@/lib/dates";
 import { publishAction, shareChallengeDone, type LoggedAction } from "./actions";
-import { compressFormImage } from "@/lib/image/compress";
+import { compressInput } from "@/lib/image/compress";
 import { ThemeIcon } from "./ThemeIcon";
 import { Confetti, Mascot } from "@/components/Mascot";
 import { BONUS, fmtMult } from "@/lib/boosts";
@@ -276,12 +276,20 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
                 Un instant…
               </button>
             ) : publishing ? (
-              <form action={async (fd: FormData) => publish(await compressFormImage(fd, "photo"))} className="flex w-full flex-col gap-2 rounded-[20px] border border-trait bg-papier p-4 text-left">
+              <form action={publish} className="flex w-full flex-col gap-2 rounded-[20px] border border-trait bg-papier p-4 text-left">
                 <input type="hidden" name="validation" value={action.id} />
                 <label className="text-sm font-semibold" htmlFor="caption">Un mot pour tes collègues (facultatif)</label>
                 <input id="caption" name="caption" maxLength={280} className="input" />
                 <label className="text-sm font-semibold" htmlFor="photo">Une photo (facultatif, +5 pousses)</label>
-                <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="text-sm" />
+                <input
+                  id="photo"
+                  name="photo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  className="text-sm"
+                  onChange={(e) => void compressInput(e.currentTarget)}
+                />
                 {state.error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{state.error}</p> : null}
                 <button type="submit" disabled={sending} className="btn-primary">{sending ? "Publication…" : "Publier dans le fil"}</button>
                 <button type="button" onClick={() => setPublishing(false)} className="min-h-11 text-[13px] font-semibold text-terre underline underline-offset-2">

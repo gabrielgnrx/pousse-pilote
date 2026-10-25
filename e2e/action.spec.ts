@@ -30,7 +30,10 @@ test("enregistrer une action, la confirmer, la célébrer et la publier", async 
   await dialog.getByLabel("Un mot pour tes collègues (facultatif)").fill("Premier vélotaf de la saison !");
   await dialog.getByRole("button", { name: "Publier dans le fil" }).click();
 
-  await expect(page).toHaveURL(/\/fil\?publie=1/);
+  // En cas d'échec, le texte de la pop-up (message d'erreur éventuel) aide à comprendre.
+  await page.waitForURL(/\/fil\?publie=1/, { timeout: 15_000 }).catch(async (e: Error) => {
+    throw new Error(`${e.message}\nPop-up : ${await dialog.innerText().catch(() => "(fermée)")}`);
+  });
   await expect(page.getByText("Publié ! Tes collègues peuvent maintenant t'encourager.")).toBeVisible();
   await expect(page.getByText("Premier vélotaf de la saison !")).toBeVisible();
 });
