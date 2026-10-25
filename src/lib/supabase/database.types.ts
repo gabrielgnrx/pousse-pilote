@@ -6,7 +6,81 @@ export type Database = {
   
   "public": {
           Tables: {
-            "alerts": {
+            "action_types": {
+                  Row: {
+                    "active": boolean,"factors": (string)[],"kind": string,"label": string,"max_quantity": number,"min_quantity": number,"reference_rule": string,"slug": string,"template_id": string,"unit": string,"variant": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"factors"?: (string)[],"kind": string,"label": string,"max_quantity": number,"min_quantity": number,"reference_rule": string,"slug": string,"template_id": string,"unit": string,"variant": string
+                  }
+                  Update: {
+                    "active"?: boolean,"factors"?: (string)[],"kind"?: string,"label"?: string,"max_quantity"?: number,"min_quantity"?: number,"reference_rule"?: string,"slug"?: string,"template_id"?: string,"unit"?: string,"variant"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "action_types_template_id_fkey"
+      columns: ["template_id"]
+isOneToOne: false
+      referencedRelation: "challenge_templates"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ai_cache": {
+                  Row: {
+                    "created_at": string,"expires_at": string,"key": string,"output": NonNullable<Json>,"task": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"expires_at": string,"key": string,"output": NonNullable<Json>,"task": string
+                  }
+                  Update: {
+                    "created_at"?: string,"expires_at"?: string,"key"?: string,"output"?: NonNullable<Json>,"task"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"ai_calls": {
+                  Row: {
+                    "cache_read_tokens": number,"company_id": string | null,"cost_usd": number,"created_at": string,"error_code": string | null,"id": number,"input_tokens": number,"latency_ms": number,"model": string,"output_tokens": number,"prompt_version": string,"status": string,"task": string,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cache_read_tokens"?: number,"company_id"?: string | null,"cost_usd"?: number,"created_at"?: string,"error_code"?: string | null,"id"?: never,"input_tokens"?: number,"latency_ms"?: number,"model": string,"output_tokens"?: number,"prompt_version": string,"status": string,"task": string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "cache_read_tokens"?: number,"company_id"?: string | null,"cost_usd"?: number,"created_at"?: string,"error_code"?: string | null,"id"?: never,"input_tokens"?: number,"latency_ms"?: number,"model"?: string,"output_tokens"?: number,"prompt_version"?: string,"status"?: string,"task"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_calls_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_calls_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ai_quota": {
+                  Row: {
+                    "day": string,"scope": string,"subject": string,"task": string,"used": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "day": string,"scope": string,"subject": string,"task": string,"used"?: number
+                  }
+                  Update: {
+                    "day"?: string,"scope"?: string,"subject"?: string,"task"?: string,"used"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"alerts": {
                   Row: {
                     "body": string,"created_at": string,"id": number,"kind": string,"pushed_at": string | null,"ref": string,"seen_at": string | null,"title": string,"url": string,"user_id": string
                   }
@@ -158,6 +232,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"emission_factors": {
+                  Row: {
+                    "category": string,"created_at": string,"id": number,"kgco2e_per_unit": number | null,"label": string,"slug": string,"source": string,"source_ref": string,"todo": string | null,"unit": string,"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category": string,"created_at"?: string,"id"?: never,"kgco2e_per_unit"?: number | null,"label": string,"slug": string,"source": string,"source_ref": string,"todo"?: string | null,"unit": string,"version": string
+                  }
+                  Update: {
+                    "category"?: string,"created_at"?: string,"id"?: never,"kgco2e_per_unit"?: number | null,"label"?: string,"slug"?: string,"source"?: string,"source_ref"?: string,"todo"?: string | null,"unit"?: string,"version"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"feedback": {
                   Row: {
                     "brakes": (string)[],"comment": string | null,"company_id": string,"created_at": string,"id": string,"motivation": number,"recommend": number,"user_id": string | null
@@ -290,6 +378,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"plan_feasibility": {
+                  Row: {
+                    "level": string,"template_id": string,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "level": string,"template_id": string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "level"?: string,"template_id"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plan_feasibility_template_id_fkey"
+      columns: ["template_id"]
+isOneToOne: false
+      referencedRelation: "challenge_templates"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "plan_feasibility_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"points_ledger": {
                   Row: {
                     "company_id": string,"created_at": string,"id": string,"kind": string,"points": number,"ref_id": string,"user_id": string
@@ -391,6 +505,32 @@ isOneToOne: false
       columns: ["team_id"]
 isOneToOne: false
       referencedRelation: "teams"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"proof_checks": {
+                  Row: {
+                    "checked_at": string,"company_id": string,"id": number,"model": string,"points_withheld": number,"prompt_version": string,"reason_code": string,"validation_id": string,"verdict": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "checked_at"?: string,"company_id": string,"id"?: never,"model": string,"points_withheld"?: number,"prompt_version": string,"reason_code": string,"validation_id": string,"verdict": string
+                  }
+                  Update: {
+                    "checked_at"?: string,"company_id"?: string,"id"?: never,"model"?: string,"points_withheld"?: number,"prompt_version"?: string,"reason_code"?: string,"validation_id"?: string,"verdict"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "proof_checks_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "proof_checks_validation_id_fkey"
+      columns: ["validation_id"]
+isOneToOne: false
+      referencedRelation: "validations"
       referencedColumns: ["id"]
     }
                   ]
@@ -652,14 +792,14 @@ isOneToOne: false
                   ]
                 },"user_challenges": {
                   Row: {
-                    "company_id": string,"created_at": string,"done_at": string | null,"ends_on": string,"id": string,"inspired_by": string | null,"starts_on": string,"status": string,"target": number,"template_id": string,"user_id": string,"variant": string
+                    "abandoned_at": string | null,"company_id": string,"created_at": string,"done_at": string | null,"ends_on": string,"id": string,"inspired_by": string | null,"shared_done_at": string | null,"shared_start_at": string | null,"starts_on": string,"status": string,"target": number,"template_id": string,"user_id": string,"variant": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "company_id": string,"created_at"?: string,"done_at"?: string | null,"ends_on": string,"id"?: string,"inspired_by"?: string | null,"starts_on"?: string,"status"?: string,"target": number,"template_id": string,"user_id": string,"variant"?: string
+                    "abandoned_at"?: string | null,"company_id": string,"created_at"?: string,"done_at"?: string | null,"ends_on": string,"id"?: string,"inspired_by"?: string | null,"shared_done_at"?: string | null,"shared_start_at"?: string | null,"starts_on"?: string,"status"?: string,"target": number,"template_id": string,"user_id": string,"variant"?: string
                   }
                   Update: {
-                    "company_id"?: string,"created_at"?: string,"done_at"?: string | null,"ends_on"?: string,"id"?: string,"inspired_by"?: string | null,"starts_on"?: string,"status"?: string,"target"?: number,"template_id"?: string,"user_id"?: string,"variant"?: string
+                    "abandoned_at"?: string | null,"company_id"?: string,"created_at"?: string,"done_at"?: string | null,"ends_on"?: string,"id"?: string,"inspired_by"?: string | null,"shared_done_at"?: string | null,"shared_start_at"?: string | null,"starts_on"?: string,"status"?: string,"target"?: number,"template_id"?: string,"user_id"?: string,"variant"?: string
                   }
                   Relationships: [
                     {
@@ -688,16 +828,42 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"validations": {
+                },"user_plans": {
                   Row: {
-                    "caption": string | null,"challenge_id": string | null,"company_id": string,"created_at": string,"day": string,"id": string,"kg": number,"points": number,"proof_level": number,"proof_photo_path": string | null,"receipt_path": string | null,"status": string,"team_id": string | null,"template_id": string,"units": number,"user_id": string,"variant": string,"visibility": string,"witness_id": string | null,"witness_status": string
+                    "company_id": string,"created_at": string,"items": NonNullable<Json>,"prompt_version": string | null,"source": string,"user_id": string,"week_start": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "caption"?: string | null,"challenge_id"?: string | null,"company_id": string,"created_at"?: string,"day"?: string,"id"?: string,"kg": number,"points": number,"proof_level": number,"proof_photo_path"?: string | null,"receipt_path"?: string | null,"status"?: string,"team_id"?: string | null,"template_id": string,"units": number,"user_id": string,"variant": string,"visibility": string,"witness_id"?: string | null,"witness_status"?: string
+                    "company_id": string,"created_at"?: string,"items": NonNullable<Json>,"prompt_version"?: string | null,"source": string,"user_id": string,"week_start": string
                   }
                   Update: {
-                    "caption"?: string | null,"challenge_id"?: string | null,"company_id"?: string,"created_at"?: string,"day"?: string,"id"?: string,"kg"?: number,"points"?: number,"proof_level"?: number,"proof_photo_path"?: string | null,"receipt_path"?: string | null,"status"?: string,"team_id"?: string | null,"template_id"?: string,"units"?: number,"user_id"?: string,"variant"?: string,"visibility"?: string,"witness_id"?: string | null,"witness_status"?: string
+                    "company_id"?: string,"created_at"?: string,"items"?: NonNullable<Json>,"prompt_version"?: string | null,"source"?: string,"user_id"?: string,"week_start"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_plans_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_plans_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"validations": {
+                  Row: {
+                    "caption": string | null,"challenge_id": string | null,"company_id": string,"created_at": string,"day": string,"id": string,"kg": number,"points": number,"proof_level": number,"proof_photo_path": string | null,"proof_status": string,"receipt_path": string | null,"status": string,"team_id": string | null,"template_id": string,"units": number,"user_id": string,"variant": string,"visibility": string,"witness_id": string | null,"witness_status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "caption"?: string | null,"challenge_id"?: string | null,"company_id": string,"created_at"?: string,"day"?: string,"id"?: string,"kg": number,"points": number,"proof_level": number,"proof_photo_path"?: string | null,"proof_status"?: string,"receipt_path"?: string | null,"status"?: string,"team_id"?: string | null,"template_id": string,"units": number,"user_id": string,"variant": string,"visibility": string,"witness_id"?: string | null,"witness_status"?: string
+                  }
+                  Update: {
+                    "caption"?: string | null,"challenge_id"?: string | null,"company_id"?: string,"created_at"?: string,"day"?: string,"id"?: string,"kg"?: number,"points"?: number,"proof_level"?: number,"proof_photo_path"?: string | null,"proof_status"?: string,"receipt_path"?: string | null,"status"?: string,"team_id"?: string | null,"template_id"?: string,"units"?: number,"user_id"?: string,"variant"?: string,"visibility"?: string,"witness_id"?: string | null,"witness_status"?: string
                   }
                   Relationships: [
                     {
@@ -747,6 +913,21 @@ isOneToOne: false
             "active_days":
 { Args: { "p_user": string }; Returns: string[]
                            },
+"ai_cache_get":
+{ Args: { "p_key": string }; Returns: Json
+                           },
+"ai_cache_put":
+{ Args: { "p_key": string,"p_output": Json,"p_task": string,"p_ttl_hours"?: number }; Returns: undefined
+                           },
+"ai_consume":
+{ Args: { "p_org_limit": number,"p_task": string,"p_user_limit": number }; Returns: boolean
+                           },
+"ai_log":
+{ Args: { "p_cache_read_tokens"?: number,"p_company"?: string,"p_cost_usd"?: number,"p_error_code"?: string,"p_input_tokens"?: number,"p_latency_ms"?: number,"p_model": string,"p_output_tokens"?: number,"p_prompt_version": string,"p_status": string,"p_task": string,"p_token"?: string }; Returns: undefined
+                           },
+"ai_log_service":
+{ Args: { "p_cache_read_tokens"?: number,"p_company": string,"p_cost_usd"?: number,"p_error_code"?: string,"p_input_tokens"?: number,"p_latency_ms"?: number,"p_model": string,"p_output_tokens"?: number,"p_prompt_version": string,"p_status": string,"p_task": string }; Returns: undefined
+                           },
 "alerts_due":
 { Args: { "p_token": string }; Returns: {
               "endpoint": string,"user_id": string
@@ -789,6 +970,9 @@ isOneToOne: false
                            },
 "apply_penalty":
 { Args: { "p_company": string,"p_points": number,"p_ref": string,"p_user": string }; Returns: number
+                           },
+"avoided_kg":
+{ Args: { "h": Omit<Database["public"]['Tables']["habits"]['Row'], Database["public"]['Tables']["habits"]['ComputedFields']>,"p_quantity": number,"p_template": string,"p_variant": string }; Returns: number
                            },
 "challenge_duel":
 { Args: { "p_kind": string,"p_opponent": string,"p_target"?: number }; Returns: {
@@ -865,6 +1049,9 @@ isOneToOne: false
               "kg": number,"participants": number
             }[]
                            },
+"cron_key_named":
+{ Args: { "p_name": string,"p_token": string }; Returns: boolean
+                           },
 "cron_key_ok":
 { Args: { "p_token": string }; Returns: boolean
                            },
@@ -890,6 +1077,12 @@ isOneToOne: false
                            },
 "duel_progress":
 { Args: { "d": Omit<Database["public"]['Tables']["duels"]['Row'], Database["public"]['Tables']["duels"]['ComputedFields']>,"p_user": string }; Returns: number
+                           },
+"ef":
+{ Args: { "p_slug": string }; Returns: number
+                           },
+"effective_quantity":
+{ Args: { "h": Omit<Database["public"]['Tables']["habits"]['Row'], Database["public"]['Tables']["habits"]['ComputedFields']>,"p_quantity": number,"p_template": string,"p_variant": string }; Returns: number
                            },
 "garden":
 { Args: { "p_user": string }; Returns: Json
@@ -931,7 +1124,10 @@ isOneToOne: false
 { Args: { "h": Omit<Database["public"]['Tables']["habits"]['Row'], Database["public"]['Tables']["habits"]['ComputedFields']> }; Returns: (string)[]
                            },
 "log_action":
-{ Args: { "p_receipt"?: string,"p_template": string,"p_variant"?: string }; Returns: Json
+{ Args: { "p_quantity"?: number,"p_receipt"?: string,"p_template": string,"p_variant"?: string }; Returns: Json
+                           },
+"log_action_slug":
+{ Args: { "p_action": string,"p_quantity"?: number,"p_receipt"?: string }; Returns: Json
                            },
 "mark_alerts_seen":
 { Args: Record<PropertyKey, never>; Returns: undefined
@@ -954,6 +1150,9 @@ isOneToOne: false
             }[]
                            },
 "my_latest_alert":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_plan_inputs":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "my_reminder":
@@ -980,6 +1179,17 @@ isOneToOne: false
 "pgp_armor_headers":
 { Args: { "": string }; Returns: Record<string, unknown>[]
                            },
+"plan_pending":
+{ Args: { "p_limit"?: number,"p_token": string }; Returns: {
+              "active_recently": boolean,"company_id": string,"feasibility": Json,"habits": Json,"stats": Json,"user_id": string
+            }[]
+                           },
+"plan_validate":
+{ Args: { "p_items": Json }; Returns: Json
+                           },
+"plan_week_stats":
+{ Args: { "p_user": string }; Returns: Json
+                           },
 "post_team_message":
 { Args: { "p_body": string }; Returns: {
               "body": string,
@@ -1000,7 +1210,7 @@ isOneToOne: false
 { Args: { "p_kind": string }; Returns: string
                            },
 "publish_action":
-{ Args: { "p_caption"?: string,"p_photo_path": string,"p_validation": string }; Returns: {
+{ Args: { "p_caption"?: string,"p_photo_path"?: string,"p_validation": string }; Returns: {
               "caption": string | null,
 "challenge_id": string | null,
 "company_id": string,
@@ -1011,6 +1221,7 @@ isOneToOne: false
 "points": number,
 "proof_level": number,
 "proof_photo_path": string | null,
+"proof_status": string,
 "receipt_path": string | null,
 "status": string,
 "team_id": string | null,
@@ -1034,6 +1245,9 @@ isOneToOne: false
 "quiz_day_ids":
 { Args: { "d": string }; Returns: (number)[]
                            },
+"record_proof_verdict":
+{ Args: { "p_model": string,"p_reason": string,"p_validation": string,"p_verdict": string,"p_version": string }; Returns: Json
+                           },
 "record_swap":
 { Args: { "p_from_co2": number,"p_from_code": string,"p_from_grade": string,"p_to_co2": number,"p_to_code": string,"p_to_grade": string }; Returns: Json
                            },
@@ -1050,6 +1264,18 @@ isOneToOne: false
                            },
 "respond_witness":
 { Args: { "p_confirm": boolean,"p_validation": string }; Returns: undefined
+                           },
+"resubmit_proof":
+{ Args: { "p_receipt": string,"p_validation": string }; Returns: undefined
+                           },
+"save_my_plan":
+{ Args: { "p_items": Json,"p_source": string,"p_version"?: string }; Returns: undefined
+                           },
+"save_plan_for":
+{ Args: { "p_items": Json,"p_source": string,"p_token": string,"p_user": string,"p_version"?: string }; Returns: undefined
+                           },
+"set_feasibility":
+{ Args: { "p_level": string,"p_template": string }; Returns: undefined
                            },
 "settle_duels":
 { Args: { "p_user": string }; Returns: undefined
@@ -1068,6 +1294,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"share_challenge":
+{ Args: { "p_challenge": string,"p_event": string }; Returns: undefined
+                           },
 "team_kind_count":
 { Args: { "p_from": string,"p_kind": string,"p_team": string,"p_to": string,"p_user": string }; Returns: number
                            },
@@ -1114,6 +1343,7 @@ isOneToOne: false
 "points": number,
 "proof_level": number,
 "proof_photo_path": string | null,
+"proof_status": string,
 "receipt_path": string | null,
 "status": string,
 "team_id": string | null,
