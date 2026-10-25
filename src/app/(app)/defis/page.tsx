@@ -11,7 +11,12 @@ import {
   verbOf,
 } from "@/lib/co2/challenges.ts";
 import { formatDay, todayParis } from "@/lib/dates";
-import { cancelChallenge } from "./actions";
+import { cancelChallenge, setFeasibility } from "./actions";
+import { WeeklyPlan } from "@/components/WeeklyPlan";
+import { weekStart } from "@/lib/co2/engagement.ts";
+import { buildPlan, parseInputs } from "@/lib/plan/service";
+import type { PlanEntry } from "@/lib/plan/weekly.ts";
+import { aiDepsFor } from "@/lib/ai/client";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { DailyQuests } from "@/components/DailyQuests";
 import { getDuels } from "@/lib/game/data.ts";
@@ -60,6 +65,28 @@ export default async function DefisPage({
     profile.team_id ? supabase.rpc("my_team_week") : Promise.resolve({ data: null }),
   ]);
   const teamWeek = teamWeekData as TeamWeek | null;
+
+  // Mon plan de la semaine : préparé le lundi par la tâche planifiée (avec le coach IA) ; à défaut
+  // (nouvelle personne, faisabilité changée), calculé ici avec les règles, sans faire attendre la page.
+  const [{ data: savedPlan }, { data: planInputs }] = await Promise.all([
+    supabase
+      .from("user_plans")
+      .select("items, source")
+      .eq("user_id", user.id)
+      .eq("week_start", weekStart(today))
+      .maybeSingle<{ items: PlanEntry[]; source: "regles" | "ia" | "mock" }>(),
+    supabase.rpc("my_plan_inputs"),
+  ]);
+  const { feasibility, week: lastWeek } = parseInputs(planInputs as { feasibility?: unknown; stats?: unknown } | null);
+  let plan = savedPlan;
+  if (!plan) {
+    const built = await buildPlan(habits, feasibility, lastWeek, aiDepsFor(supabase), false);
+    if (built) {
+      // « visite » : la tâche du lundi pourra le reformuler avec le coach.
+      await supabase.rpc("save_my_plan", { p_items: built.items, p_source: built.source, p_version: "visite" });
+      plan = { items: built.items, source: built.source };
+    }
+  }
   const duelOf = (challengeId: string) =>
     duels.find((d) => d.challenge_id === challengeId && (d.status === "active" || d.status === "pending"));
 
@@ -131,6 +158,10 @@ export default async function DefisPage({
 
       {tab === "en-cours" ? (
         <>
+          {plan?.items?.length ? (
+            <WeeklyPlan items={plan.items} source={plan.source} feasibility={feasibility} setFeasibility={setFeasibility} />
+          ) : null}
+
           <DuelStrip duels={duels.filter((d) => d.status === "pending" && d.role === "opponent")} />
 
           {teamWeek?.chosen ? (
