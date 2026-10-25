@@ -9,7 +9,7 @@ import { Logo } from "@/components/Logo";
 // (possible seulement avec un SMTP personnalisé). D'ici là, la connexion se fait par le lien.
 const CODE_LOGIN = process.env.NEXT_PUBLIC_LOGIN_CODE === "1";
 
-function CodeStep({ state, onRestart }: { state: JoinState; onRestart: () => void }) {
+export function CodeStep({ state, onRestart, next }: { state: JoinState; onRestart: () => void; next?: string }) {
   const [verify, action] = useActionState<VerifyState, FormData>(verifyCode, {});
   return (
     <section className="mt-6 flex flex-col gap-4">
@@ -29,6 +29,7 @@ function CodeStep({ state, onRestart }: { state: JoinState; onRestart: () => voi
       {CODE_LOGIN ? (
         <form action={action} className="flex flex-col gap-3">
           <input type="hidden" name="email" value={state.sentTo} />
+          {next ? <input type="hidden" name="next" value={next} /> : null}
           <label className="flex flex-col gap-1.5">
             <span className="label">Code reçu par e-mail</span>
             <input
@@ -62,20 +63,22 @@ function CodeStep({ state, onRestart }: { state: JoinState; onRestart: () => voi
   );
 }
 
-export function JoinFlow({ initialMode = "join" }: { initialMode?: "join" | "login" }) {
+export function JoinFlow({ initialMode = "join", initialCode }: { initialMode?: "join" | "login"; initialCode?: string }) {
   const [mode, setMode] = useState<"join" | "login">(initialMode);
   const [attempt, setAttempt] = useState(0);
-  return <RequestForm key={`${mode}-${attempt}`} mode={mode} setMode={setMode} restart={() => setAttempt((n) => n + 1)} />;
+  return <RequestForm key={`${mode}-${attempt}`} mode={mode} setMode={setMode} restart={() => setAttempt((n) => n + 1)} initialCode={initialCode} />;
 }
 
 function RequestForm({
   mode,
   setMode,
   restart,
+  initialCode,
 }: {
   mode: "join" | "login";
   setMode: (m: "join" | "login") => void;
   restart: () => void;
+  initialCode?: string;
 }) {
   const [state, action] = useActionState<JoinState, FormData>(requestMagicLink, {});
 
@@ -118,7 +121,7 @@ function RequestForm({
                 </p>
                 <label className="flex flex-col gap-1.5">
                   <span className="label">Code de l&apos;entreprise</span>
-                  <input name="code" required autoCapitalize="characters" placeholder="Ex. ACME-2026" className="input tracking-wider uppercase" />
+                  <input name="code" required defaultValue={initialCode} autoCapitalize="characters" placeholder="Ex. ACME-2026" className="input tracking-wider uppercase" />
                 </label>
               </>
             ) : (

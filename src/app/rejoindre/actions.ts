@@ -8,7 +8,7 @@ export interface JoinState {
   error?: string;
   sentTo?: string;
   companyName?: string;
-  mode?: "join" | "login";
+  mode?: "join" | "login" | "admin";
 }
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -27,11 +27,22 @@ async function siteUrl() {
  * « join » : première fois, avec le code de l'entreprise. « login » : compte existant, e-mail seul.
  */
 export async function requestMagicLink(_prev: JoinState, form: FormData): Promise<JoinState> {
-  const mode = form.get("mode") === "login" ? "login" : "join";
+  const raw = form.get("mode");
+  const mode = raw === "login" ? "login" : raw === "admin" ? "admin" : "join";
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   if (!EMAIL.test(email)) return { mode, error: "Adresse e-mail invalide." };
   const supabase = await createClient();
   const site = await siteUrl();
+
+  // Responsable RSE : compte créé si besoin, sans code d'entreprise (elle lance son organisation ensuite).
+  if (mode === "admin") {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true, emailRedirectTo: `${site}/auth/callback?next=/admin` },
+    });
+    if (error) return { mode, error: "Impossible d'envoyer le code pour l'instant. Réessaie dans une minute." };
+    return { mode, sentTo: email };
+  }
 
   if (mode === "login") {
     const { error } = await supabase.auth.signInWithOtp({
@@ -90,6 +101,6 @@ export async function verifyCode(_prev: VerifyState, form: FormData): Promise<Ve
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
   if (error) return { error: "Code incorrect ou expiré. Vérifie le dernier e-mail reçu, ou redemande un code." };
-  // La page d'accueil oriente vers l'étape suivante : bienvenue, bilan ou fil.
-  redirect("/");
+  // La page d'accueil oriente vers l'étape suivante : bienvenue, bilan ou fil (ou l'espace admin).
+  redirect(form.get("next") === "/admin" ? "/admin" : "/");
 }
