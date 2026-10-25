@@ -17,7 +17,7 @@ import type { AiTask } from "../run.ts";
 
 export const PARSE_ACTION_VERSION = "parse-action@1";
 
-const slugs = [...ACTION_SLUGS, UNKNOWN] as [string, ...string[]];
+const slugs: [string, ...string[]] = [UNKNOWN, ...ACTION_SLUGS];
 
 export const parsedActionSchema = z.object({
   action: z.enum(slugs),
