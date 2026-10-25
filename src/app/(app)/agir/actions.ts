@@ -12,6 +12,8 @@ import { candidatesFor, interpretItems, ruleParse, type ConfirmCard } from "@/li
 import { parseActionTask } from "@/lib/ai/prompts/parse-action.ts";
 import { runTask } from "@/lib/ai/run.ts";
 import { aiDepsFor } from "@/lib/ai/client";
+import { checkProofNow } from "@/lib/ai/proof/server";
+import { after } from "next/server";
 import { habitsFromRow, type HabitsRow } from "@/lib/session";
 
 export interface LoggedAction {
@@ -128,6 +130,9 @@ export async function logParsedAction(form: FormData): Promise<LogResult> {
     const code = error?.message ?? "";
     return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
   }
+  // Le justificatif est vérifié juste après la réponse : la célébration n'attend pas l'IA.
+  const loggedId = (data as { id?: string; receipt?: boolean }).id;
+  if (loggedId && (data as { receipt?: boolean }).receipt) after(() => checkProofNow(loggedId).then(() => undefined));
   return describe(supabase, user.id, profile.display_name, data);
 }
 
@@ -177,6 +182,9 @@ export async function logActionWithReceipt(form: FormData): Promise<LogResult> {
     const code = error?.message ?? "";
     return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
   }
+  // Le justificatif est vérifié juste après la réponse : la célébration n'attend pas l'IA.
+  const loggedId = (data as { id?: string; receipt?: boolean }).id;
+  if (loggedId && (data as { receipt?: boolean }).receipt) after(() => checkProofNow(loggedId).then(() => undefined));
   return describe(supabase, user.id, profile.display_name, data);
 }
 
@@ -316,4 +324,27 @@ export async function shareChallengeDone(challengeId: string): Promise<{ ok: boo
   if (!/^[0-9a-f-]{36}$/i.test(challengeId)) return { ok: false };
   const { error } = await supabase.rpc("share_challenge", { p_challenge: challengeId, p_event: "reussi" });
   return { ok: !error };
+}
+
+/** Envoie une autre photo d'un justificatif « à renvoyer » ; il est vérifié de nouveau aussitôt. */
+export async function resubmitProof(form: FormData): Promise<void> {
+  const { supabase, user } = await requireProfile();
+  const id = String(form.get("validation") ?? "");
+  const file = form.get("receipt");
+  if (!/^[0-9a-f-]{36}$/i.test(id) || !(file instanceof File) || file.size === 0) redirect("/agir?justificatif=erreur");
+  const ext = RECEIPT_TYPES[(file as File).type];
+  if (!ext || (file as File).size > 5 * 1024 * 1024) redirect("/agir?justificatif=format");
+  const { data: current } = await supabase.from("validations").select("receipt_path").eq("id", id).eq("user_id", user.id).maybeSingle<{ receipt_path: string | null }>();
+  const path = `${user.id}/recu-${crypto.randomUUID()}.${ext}`;
+  const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, file as File, { contentType: (file as File).type, upsert: false });
+  if (upload) redirect("/agir?justificatif=erreur");
+  const { error } = await supabase.rpc("resubmit_proof", { p_validation: id, p_receipt: path });
+  if (error) {
+    await supabase.storage.from(PROOF_BUCKET).remove([path]);
+    redirect(`/agir?justificatif=${error.message === "too_many_attempts" ? "essais" : "erreur"}`);
+  }
+  // L'ancienne photo n'est plus utile : effacée tout de suite.
+  if (current?.receipt_path) await supabase.storage.from(PROOF_BUCKET).remove([current.receipt_path]);
+  after(() => checkProofNow(id).then(() => undefined));
+  redirect("/agir?justificatif=envoye");
 }
