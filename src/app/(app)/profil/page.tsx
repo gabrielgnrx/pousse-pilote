@@ -174,10 +174,9 @@ export default async function ProfilPage() {
           <span className="text-sm font-bold">Prénom affiché</span>
           <input name="display_name" defaultValue={profile.display_name} maxLength={40} className="input" />
         </label>
-        <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" name="share_feed" defaultChecked={profile.share_feed} className="mt-0.5 size-5 accent-sapin" />
-          <span>Mes actions et mes défis apparaissent dans le fil de l&apos;entreprise (jamais mes reçus d&apos;achat).</span>
-        </label>
+        <p className="text-sm text-brun">
+          Rien n&apos;est publié dans le fil sans ton accord : après chaque action ou défi, Pousse te propose de le partager.
+        </p>
         <label className="flex items-start gap-3 text-sm">
           <input type="checkbox" name="consent_team_stats" defaultChecked={profile.consent_team_stats} className="mt-0.5 size-5 accent-sapin" />
           <span>Mes pousses comptent pour mon équipe (totaux anonymes). Sans cette case, tu comptes quand même dans l&apos;effectif de ton équipe, avec 0 pousse.</span>

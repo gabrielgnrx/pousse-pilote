@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { formatKg } from "@/lib/co2/challenges.ts";
 import { levelFor, weekStart } from "@/lib/co2/engagement.ts";
 import { addDays, todayParis } from "@/lib/dates";
-import { publishAction, type LoggedAction } from "./actions";
+import { publishAction, shareChallengeDone, type LoggedAction } from "./actions";
 import { ThemeIcon } from "./ThemeIcon";
 import { Confetti, Mascot } from "@/components/Mascot";
 import { BONUS, fmtMult } from "@/lib/boosts";
@@ -16,6 +16,7 @@ const DAY_LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
 export function ActionDone({ action, onClose }: { action: LoggedAction; onClose: () => void }) {
   const router = useRouter();
   const [publishing, setPublishing] = useState(false);
+  const [sharedDone, setSharedDone] = useState(false);
   const [state, publish, sending] = useActionState(publishAction, {});
   const primary = useRef<HTMLButtonElement>(null);
   const level = levelFor(action.total);
@@ -261,21 +262,22 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
 
           <div className="mt-auto flex flex-col gap-2 pt-2">
             {action.receipt ? (
-              <>
-                <p className="rounded-2xl bg-sable px-3 py-2 text-[13px] text-brun">Ton reçu reste privé : tes collègues ne le voient jamais, et il est effacé après 90 jours.</p>
-                <button ref={primary} type="button" onClick={finish} className="btn-primary min-h-14 font-display text-[19px] font-normal">
-                  Super !
-                </button>
-              </>
-            ) : publishing ? (
+              <p className="rounded-2xl bg-sable px-3 py-2 text-[13px] text-brun">
+                Ton justificatif reste privé : tes collègues ne le voient jamais, même si tu publies l&apos;action.
+              </p>
+            ) : null}
+            {publishing ? (
               <form action={publish} className="flex w-full flex-col gap-2 rounded-[20px] border border-trait bg-papier p-4 text-left">
                 <input type="hidden" name="validation" value={action.id} />
-                <label className="text-sm font-semibold" htmlFor="photo">Ta photo</label>
-                <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required className="text-sm" />
                 <label className="text-sm font-semibold" htmlFor="caption">Un mot pour tes collègues (facultatif)</label>
                 <input id="caption" name="caption" maxLength={280} className="input" />
+                <label className="text-sm font-semibold" htmlFor="photo">Une photo (facultatif, +5 pousses)</label>
+                <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="text-sm" />
                 {state.error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{state.error}</p> : null}
-                <button type="submit" disabled={sending} className="btn-primary">{sending ? "Publication…" : "Publier · +5 pousses"}</button>
+                <button type="submit" disabled={sending} className="btn-primary">{sending ? "Publication…" : "Publier dans le fil"}</button>
+                <button type="button" onClick={() => setPublishing(false)} className="min-h-11 text-[13px] font-semibold text-terre underline underline-offset-2">
+                  Finalement, garder pour moi
+                </button>
               </form>
             ) : (
               <>
@@ -283,8 +285,21 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
                   {c && !challengeDone ? "Je continue !" : "Super !"}
                 </button>
                 <button type="button" onClick={() => setPublishing(true)} className="btn-ghost">
-                  Ajouter une photo · +5 pousses
+                  Publier dans le fil
                 </button>
+                {c && challengeDone ? (
+                  <button
+                    type="button"
+                    disabled={sharedDone}
+                    onClick={async () => {
+                      const r = await shareChallengeDone(c.id);
+                      if (r.ok) setSharedDone(true);
+                    }}
+                    className="btn-ghost"
+                  >
+                    {sharedDone ? "Réussite partagée dans le fil" : "Partager ma réussite de défi"}
+                  </button>
+                ) : null}
               </>
             )}
             <button type="button" onClick={close} className="min-h-11 text-[13px] font-semibold text-terre underline underline-offset-2">

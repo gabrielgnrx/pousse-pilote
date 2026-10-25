@@ -25,7 +25,7 @@ export interface LoggedAction {
   firstName: string;
   unit: { one: string; many: string };
   /** Le défi en cours dans lequel l'action compte. */
-  challenge: { target: number; done: number; startsOn: string; endsOn: string; days: string[] } | null;
+  challenge: { id: string; target: number; done: number; startsOn: string; endsOn: string; days: string[] } | null;
   /** Pousses sans multiplicateur, et le multiplicateur appliqué (duel ×1,5, équipe ×2). */
   basePoints: number;
   multiplier: number;
@@ -99,7 +99,7 @@ async function describe(
     points: number;
     month_count: number;
     month_kg: number;
-    challenge: { target: number; done: number; starts_on: string; ends_on: string; days: string[] } | null;
+    challenge: { id: string; target: number; done: number; starts_on: string; ends_on: string; days: string[] } | null;
     base_points: number;
     multiplier: number;
     boost: "duel" | "equipe" | null;
@@ -131,6 +131,7 @@ async function describe(
       unit: t?.unit ?? { one: "fois", many: "fois" },
       challenge: r.challenge
         ? {
+            id: r.challenge.id,
             target: Number(r.challenge.target),
             done: Number(r.challenge.done),
             startsOn: r.challenge.starts_on,
@@ -162,23 +163,25 @@ const IMAGE_TYPES: Record<string, string> = {
   "image/webp": "webp",
 };
 
-/** Ajoute une photo à une action du jour : +5 pousses, et elle part dans le fil. */
+/** Publie une action du jour dans le fil, avec ou sans photo (la photo rapporte +5 pousses). */
 export async function publishAction(_prev: { error?: string }, form: FormData): Promise<{ error?: string }> {
   const { supabase, user } = await requireProfile();
   const validation = String(form.get("validation") ?? "");
   const caption = String(form.get("caption") ?? "").slice(0, 280);
   const photo = form.get("photo");
-  if (!(photo instanceof File) || photo.size === 0) return { error: "Choisis une photo." };
-  const ext = IMAGE_TYPES[photo.type];
-  if (!ext) return { error: "Photo au format JPEG, PNG ou WebP." };
-  if (photo.size > 5 * 1024 * 1024) return { error: "Photo trop lourde (5 Mo maximum)." };
 
-  const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-  const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, photo, {
-    contentType: photo.type,
-    upsert: false,
-  });
-  if (upload) return { error: "Envoi de la photo impossible. Réessaie." };
+  let path: string | null = null;
+  if (photo instanceof File && photo.size > 0) {
+    const ext = IMAGE_TYPES[photo.type];
+    if (!ext) return { error: "Photo au format JPEG, PNG ou WebP." };
+    if (photo.size > 5 * 1024 * 1024) return { error: "Photo trop lourde (5 Mo maximum)." };
+    path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, photo, {
+      contentType: photo.type,
+      upsert: false,
+    });
+    if (upload) return { error: "Envoi de la photo impossible. Réessaie." };
+  }
 
   const { error } = await supabase.rpc("publish_action", {
     p_validation: validation,
@@ -186,7 +189,7 @@ export async function publishAction(_prev: { error?: string }, form: FormData): 
     p_caption: caption,
   });
   if (error) {
-    await supabase.storage.from(PROOF_BUCKET).remove([path]);
+    if (path) await supabase.storage.from(PROOF_BUCKET).remove([path]);
     return {
       error:
         error.message === "nothing_to_publish"
@@ -195,4 +198,12 @@ export async function publishAction(_prev: { error?: string }, form: FormData): 
     };
   }
   redirect("/fil?publie=1");
+}
+
+/** Partage la réussite d'un défi dans le fil, sur demande. */
+export async function shareChallengeDone(challengeId: string): Promise<{ ok: boolean }> {
+  const { supabase } = await requireProfile();
+  if (!/^[0-9a-f-]{36}$/i.test(challengeId)) return { ok: false };
+  const { error } = await supabase.rpc("share_challenge", { p_challenge: challengeId, p_event: "reussi" });
+  return { ok: !error };
 }

@@ -65,6 +65,11 @@ export async function createChallenge(_prev: { error?: string }, form: FormData)
     return { error: "Impossible de créer le défi. Réessaie." };
   }
 
+  // Annoncer le défi dans le fil : seulement si la case a été cochée (jamais par défaut).
+  if (form.get("share") === "on") {
+    await supabase.rpc("share_challenge", { p_challenge: created.id, p_event: "lance" });
+  }
+
   if (withDuel) {
     const { error: duelError } = await supabase.rpc("challenge_duel_action", { p_challenge: created.id, p_opponent: opponent });
     if (duelError) {
