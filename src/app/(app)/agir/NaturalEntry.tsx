@@ -31,6 +31,7 @@ const REASONS: Record<string, string> = {
   unavailable: "La saisie libre est indisponible pour le moment. Choisis l'action ci-dessous, ou dans la liste.",
   rate_limited: "Tu as beaucoup utilisé la saisie libre aujourd'hui. Choisis l'action ci-dessous, ou dans la liste.",
   invalid: "Écris quelques mots sur ce que tu as fait.",
+  ai_off: "Tu as choisi de ne pas utiliser l'IA : choisis l'action ci-dessous, ou dans la liste.",
 };
 
 const CHOICE_HINT: Record<NonNullable<ConfirmCard["needsChoice"]>, string> = {

@@ -26,6 +26,10 @@ export async function joinCompany(_prev: WelcomeState, form: FormData): Promise<
     p_consent_feedback: form.get("consent_feedback") === "on",
   });
   if (error) return { error: sqlErrorMessage(error.message) };
+  if (form.get("consent_ai") !== "on") {
+    const { data: auth } = await supabase.auth.getUser();
+    if (auth.user) await supabase.from("profiles").update({ consent_ai: false }).eq("id", auth.user.id);
+  }
 
   redirect("/questionnaire");
 }

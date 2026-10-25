@@ -59,7 +59,7 @@ const RECEIPT_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png"
 
 export type ParseResponse =
   | { ok: true; source: "rule" | "ai" | "cache" | "mock"; cards: ConfirmCard[] }
-  | { ok: false; reason: "invalid" | "not_understood" | "unavailable" | "rate_limited"; cards: ConfirmCard[] };
+  | { ok: false; reason: "invalid" | "not_understood" | "unavailable" | "rate_limited" | "ai_off"; cards: ConfirmCard[] };
 
 const textSchema = z.string().trim().min(2).max(300);
 
@@ -72,14 +72,15 @@ export async function parseActionText(raw: string): Promise<ParseResponse> {
   const parsed = textSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, reason: "invalid", cards: [] };
   const text = parsed.data;
-  const { supabase, user } = await requireProfile();
+  const { supabase, user, profile } = await requireProfile();
   const { data: row } = await supabase.from("habits").select("*").eq("user_id", user.id).maybeSingle<HabitsRow>();
   const habits = row ? habitsFromRow(row) : null;
 
   const rule = ruleParse(text);
   if (rule) return { ok: true, source: "rule", cards: interpretItems(rule, text, habits) };
 
-  const r = await runTask(parseActionTask, text, aiDepsFor(supabase));
+  // IA refusée par la personne : les actions proches, sans appel (la base le refuserait aussi).
+  const r = profile.consent_ai === false ? ({ ok: false, reason: "disabled" } as const) : await runTask(parseActionTask, text, aiDepsFor(supabase));
   if (r.ok) {
     const cards = interpretItems(r.data.actions, text, habits);
     if (cards.length) return { ok: true, source: r.source, cards };
@@ -90,7 +91,7 @@ export async function parseActionText(raw: string): Promise<ParseResponse> {
     text,
     habits,
   ).map((c) => ({ ...c, needsChoice: c.needsChoice ?? ("low_confidence" as const) }));
-  const reason = r.ok ? "not_understood" : r.reason === "rate_limited" ? "rate_limited" : r.reason === "invalid_output" ? "not_understood" : "unavailable";
+  const reason = profile.consent_ai === false ? "ai_off" : r.ok ? "not_understood" : r.reason === "rate_limited" ? "rate_limited" : r.reason === "invalid_output" ? "not_understood" : "unavailable";
   return { ok: false, reason, cards: suggestions.slice(0, 1).map((c) => ({ ...c, candidates: suggestions.map((x) => x.slug) })) };
 }
 

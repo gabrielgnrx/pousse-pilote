@@ -50,6 +50,13 @@ export default function ConfidentialitePage() {
           Les messages de l&apos;animateur du chat sont signalés comme venant d&apos;un bot. Sans l&apos;IA, Pousse
           fonctionne quand même : raccourcis, formulaire et messages préparés prennent le relais.
         </p>
+        <p>
+          Tu peux refuser l&apos;IA pour tes propres données à l&apos;inscription ou à tout moment dans ton profil :
+          tes phrases et tes justificatifs ne lui sont plus envoyés, et ton plan est calculé par les règles. Les
+          actions qui demandent un justificatif comptent alors pour ton CO₂, sans leurs pousses (elles ne peuvent
+          pas être vérifiées). L&apos;animateur du chat et le rapport de l&apos;entreprise ne reçoivent que des
+          totaux, sans ton nom.
+        </p>
         <p>Sous-traitant et conditions d&apos;utilisation des données : [À COMPLÉTER PAR LE RESPONSABLE DE TRAITEMENT]</p>
       </Section>
       <Section title="Conservation et droits">

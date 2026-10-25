@@ -47,7 +47,8 @@ const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
  * gardée : elle sert à cette seule reconnaissance.
  */
 export async function scanPhoto(form: FormData) {
-  const { supabase } = await requireProfile();
+  const { supabase, profile } = await requireProfile();
+  if (profile.consent_ai === false) redirect("/scanner?photo=sans-ia");
   const file = form.get("photo");
   if (!(file instanceof File) || file.size === 0 || file.size > 5 * 1024 * 1024 || !(PHOTO_TYPES as readonly string[]).includes(file.type)) {
     redirect("/scanner?photo=format");

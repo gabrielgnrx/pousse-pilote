@@ -12,6 +12,7 @@ const PHOTO_STATUS: Record<string, string> = {
   indisponible: "La reconnaissance par photo est indisponible pour le moment : scanne le code-barres ou tape-le.",
   inconnu: "Je n'ai pas reconnu ce produit. Essaie le code-barres, ou une photo plus nette du produit.",
   choix: "Je ne suis pas sûr. C'est l'un de ces rayons ?",
+  "sans-ia": "Tu as choisi de ne pas utiliser l'IA (réglable dans ton profil) : scanne le code-barres ou tape-le.",
 };
 
 export const metadata = { title: "Scanner · Pousse" };

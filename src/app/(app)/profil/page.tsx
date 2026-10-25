@@ -182,6 +182,13 @@ export default async function ProfilPage() {
           <span>Mes pousses comptent pour mon équipe (totaux anonymes). Sans cette case, tu comptes quand même dans l&apos;effectif de ton équipe, avec 0 pousse.</span>
         </label>
         <label className="flex items-start gap-3 text-sm">
+          <input type="checkbox" name="consent_ai" defaultChecked={profile.consent_ai} className="mt-0.5 size-5 accent-sapin" />
+          <span>
+            Utiliser l&apos;IA pour comprendre mes phrases, me proposer mes défis et vérifier mes justificatifs. Sans IA : raccourcis et
+            formulaires, plan calculé par les règles, et les actions à justificatif comptent pour le CO₂ mais sans leurs pousses.
+          </span>
+        </label>
+        <label className="flex items-start gap-3 text-sm">
           <input type="checkbox" name="consent_feedback" defaultChecked={profile.consent_feedback} className="mt-0.5 size-5 accent-sapin" />
           <span>Pousse peut me proposer un court questionnaire.</span>
         </label>

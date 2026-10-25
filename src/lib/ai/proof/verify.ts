@@ -59,9 +59,12 @@ export async function verifyProof(
   ai: { client: MessagesClient | null; mock?: boolean },
   bucket: string,
 ): Promise<VerifyOutcome> {
-  const { data } = await admin.from("validations").select("id, company_id, template_id, day, receipt_path, proof_status").eq("id", validationId).maybeSingle();
-  const v = data as { id: string; company_id: string; template_id: string; day: string; receipt_path: string | null; proof_status: string } | null;
+  const { data } = await admin.from("validations").select("id, user_id, company_id, template_id, day, receipt_path, proof_status").eq("id", validationId).maybeSingle();
+  const v = data as { id: string; user_id: string; company_id: string; template_id: string; day: string; receipt_path: string | null; proof_status: string } | null;
   if (!v || v.proof_status !== "pending" || !v.receipt_path) return "skipped";
+  // IA refusée par la personne : la photo n'est pas lue ; elle sera effacée au bout de 30 jours.
+  const { data: who } = await admin.from("profiles").select("consent_ai").eq("id", v.user_id).maybeSingle();
+  if ((who as { consent_ai?: boolean } | null)?.consent_ai === false) return "skipped";
 
   const { data: blob } = await admin.storage.from(bucket).download(v.receipt_path);
   if (!blob || blob.size === 0 || blob.size > MAX_BYTES) return "unavailable";
