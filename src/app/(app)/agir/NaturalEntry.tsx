@@ -5,6 +5,7 @@ import { ACTION_BY_SLUG, computeAvoided } from "@/lib/co2/engine.ts";
 import type { Habits } from "@/lib/co2/footprint.ts";
 import type { ConfirmCard } from "@/lib/ai/parse/interpret.ts";
 import { themeOf } from "@/lib/actions-catalog";
+import { compressImage } from "@/lib/image/compress";
 import { logParsedAction, parseActionText, type LoggedAction } from "./actions";
 
 /* Web Speech API : présente sur Chrome et Safari, absente ailleurs (le champ texte suffit alors). */
@@ -193,7 +194,7 @@ function ConfirmCardView({
   const quantityMissing = action.kind === "distance" ? q === null && !["velo", "transports", "covoiturage"].includes(action.template) : false;
   const needsReceipt = ["train", "vacances_train", "reparation", "appli_antigaspi", "appli_occasion"].includes(action.template);
 
-  const confirm = () => {
+  const confirm = async () => {
     if (!preview.ok) {
       setError("Corrige la quantité avant de valider.");
       return;
@@ -210,7 +211,7 @@ function ConfirmCardView({
     const form = new FormData();
     form.set("slug", slug);
     if (q !== null) form.set("quantity", String(q));
-    if (file) form.set("receipt", file);
+    if (file) form.set("receipt", await compressImage(file));
     setError(null);
     // Interface optimiste : la célébration s'ouvre avec l'aperçu, puis prend les chiffres de la base.
     onProvisional({

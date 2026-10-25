@@ -16,9 +16,9 @@ export default function ConfidentialitePage() {
       </Section>
       <Section title="Ce que voient tes collègues">
         <p>
-          Ton prénom et ton équipe, et, si tu l&apos;acceptes, tes actions et tes défis dans le fil interne. Ce
-          choix t&apos;est demandé une fois et se change à tout moment dans ton profil ; rien de ce que tu as fait
-          avant n&apos;est rendu public. Tes reçus d&apos;achat ne sont jamais visibles par tes collègues.
+          Ton prénom et ton équipe, tes messages dans le chat de ton équipe, et seulement les actions et les défis
+          que tu choisis de publier dans le fil interne : après chaque action, Pousse te propose de la publier,
+          jamais d&apos;office. Tes justificatifs ne sont jamais visibles par tes collègues.
         </p>
       </Section>
       <Section title="Ce que fait Pousse de tes données">
@@ -33,9 +33,29 @@ export default function ConfidentialitePage() {
           qu&apos;à l&apos;arrivée, sur ton téléphone. Tu peux les couper à tout moment depuis ton profil.
         </p>
       </Section>
+      <Section title="Intelligence artificielle">
+        <p>
+          Pousse utilise l&apos;IA (l&apos;API Claude d&apos;Anthropic) pour comprendre une action écrite ou dictée,
+          formuler ton plan de la semaine, vérifier qu&apos;un justificatif ressemble bien à un billet ou à une facture,
+          animer le chat de ton équipe, proposer des quiz et rédiger le rapport mensuel de l&apos;entreprise.
+        </p>
+        <p>
+          L&apos;IA ne calcule jamais ton CO₂ : elle classe seulement ce que tu as fait, et le calcul est fait par
+          Pousse avec les facteurs de l&apos;ADEME. Rien n&apos;est enregistré sans ta confirmation. Elle ne reçoit que
+          le strict nécessaire : ta phrase sans e-mail ni numéro, des totaux anonymes pour ton plan et pour ton
+          équipe, la photo du justificatif (dont aucune information n&apos;est gardée : seulement le verdict, et la
+          photo est effacée). Le rapport de l&apos;entreprise n&apos;est rédigé qu&apos;à partir de totaux.
+        </p>
+        <p>
+          Les messages de l&apos;animateur du chat sont signalés comme venant d&apos;un bot. Sans l&apos;IA, Pousse
+          fonctionne quand même : raccourcis, formulaire et messages préparés prennent le relais.
+        </p>
+        <p>Sous-traitant et conditions d&apos;utilisation des données : [À COMPLÉTER PAR LE RESPONSABLE DE TRAITEMENT]</p>
+      </Section>
       <Section title="Conservation et droits">
         <p>
-          Photos de preuve supprimées après 90 jours. Tu peux télécharger toutes tes données ou supprimer ton
+          Justificatifs vérifiés puis effacés (30 jours au plus) ; photos publiées dans le fil supprimées après
+          90 jours. Le journal technique des appels à l&apos;IA ne contient ni tes phrases ni les réponses. Tu peux télécharger toutes tes données ou supprimer ton
           compte à tout moment depuis ton profil. La participation est volontaire et sans lien avec ton
           évaluation professionnelle.
         </p>

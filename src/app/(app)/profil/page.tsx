@@ -190,7 +190,7 @@ export default async function ProfilPage() {
 
       <section className="card flex flex-col gap-2 text-sm leading-relaxed">
         <p className="label">Tes données</p>
-        <p>Photos de preuve supprimées après 90 jours. Ton employeur ne voit que des totaux par équipe.</p>
+        <p>Justificatifs vérifiés puis effacés (30 jours au plus) ; photos publiées dans le fil supprimées après 90 jours. Ton employeur ne voit que des totaux par équipe.</p>
         <a href="/api/export" className="font-bold underline">Télécharger mes données (JSON)</a>
         <Link href="/confidentialite" className="font-bold underline">Politique de confidentialité</Link>
         <Link href="/methodologie" className="font-bold underline">Méthodologie de calcul</Link>
