@@ -3,6 +3,7 @@
 # (aucun accès au projet Supabase de production n'est nécessaire). Demande Docker (Supabase CLI).
 # Connexion : variables PG* habituelles ; la base pousse_types est recréée.
 set -euo pipefail
+export PGOPTIONS="-c client_min_messages=warning"
 cd "$(dirname "$0")/.."
 DB=pousse_types
 psql -d postgres -qc "drop database if exists $DB" >/dev/null
@@ -12,7 +13,7 @@ for f in supabase/migrations/*.sql; do
   if head -1 "$f" | grep -q "Supabase seulement"; then continue; fi
   psql -d "$DB" -q -v ON_ERROR_STOP=1 -f "$f" >/dev/null
 done
-url="postgresql://${PGUSER:-postgres}:${PGPASSWORD:-postgres}@${PGHOST:-localhost}:${PGPORT:-5432}/$DB"
+url="postgresql://${PGUSER:-postgres}:${PGPASSWORD:-postgres}@${PGHOST:-localhost}:${PGPORT:-5432}/$DB?sslmode=disable"
 out=src/lib/supabase/database.types.ts
 {
   echo "// Fichier généré par scripts/db-types.sh (npm run db:types) : ne pas modifier à la main."
