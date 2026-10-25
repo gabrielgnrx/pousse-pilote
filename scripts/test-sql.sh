@@ -75,4 +75,8 @@ reliability_chain() {
 
 chain pousse_test main_chain
 chain pousse_test_fiabilite reliability_chain
+# Les données de démo se chargent sur la base complète, et se rejouent sans rien refaire.
+run pousse_test_fiabilite supabase/seed_demo.sql
+run pousse_test_fiabilite supabase/seed_demo.sql
+run pousse_test_fiabilite supabase/tests/seed_demo_check.sql
 echo "Tous les scénarios SQL passent."
