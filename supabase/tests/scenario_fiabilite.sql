@@ -118,6 +118,8 @@ select tick();
 select pg_temp.check((select count(*) from alerts where kind = 'equipe_depassee') = 6, 'rejouer tick() : pas de doublon');
 
 -- 4. Défi de la semaine : vote ouvert à 9 h, résultat à 14 h, réglé sans que personne n'ouvre le QG.
+-- Un lundi après 9 h, les tick() ci-dessus ont déjà ouvert le vote du jour : on repart de zéro.
+delete from alerts where kind in ('vote_ouvert', 'vote_resultat');
 select tick_at((select next_monday from ids) + time '08:30');
 select pg_temp.check((select count(*) from alerts where kind = 'vote_ouvert') = 0, 'avant 9 h : pas encore d''alerte');
 select tick_at((select next_monday from ids) + time '09:05');
@@ -131,6 +133,9 @@ select pg_temp.check((select count(*) from team_messages where team_id = (select
                      'l''annonce est postée dans le chat');
 
 -- 5. Défi perso : dernier jour.
+-- Un lundi, un défi de 7 jours commencé aujourd'hui finit le lundi suivant, que l'étape 4 a simulé :
+-- on repart de zéro pour ne compter que le défi ci-dessous.
+delete from alerts where kind = 'defi_fin';
 insert into user_challenges (id, user_id, company_id, template_id, variant, target, starts_on, ends_on)
 select 'f0000000-0000-0000-0000-000000000001', id, company_id, 'vege', 'boeuf', 3, current_date - 6, current_date
 from profiles where id = '00000000-0000-0000-0000-000000000003';
