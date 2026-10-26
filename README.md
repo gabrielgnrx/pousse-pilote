@@ -49,6 +49,7 @@ rappels (`pousse-rappels`) et la purge des photos (`pousse-purge`, Edge Function
 | 0042 | Retrait de l'IA |
 | 0043 | Plus de justificatif : plafonds annuels calés sur le bilan |
 | 0044 | Rappels et purge des photos planifiés par la base (Supabase seulement) |
+| 0045 – 0046 | Actions universelles du + : repas végé pondéré, appareils, catalogue mis à jour |
 
 ### Données de démo
 

@@ -342,3 +342,19 @@ plafonds calés sur le bilan : vacances en train = vols long-courrier déclarés
 
 Secrets (migration 0044) : purge des photos dans une Edge Function Supabase et rappels déclenchés par la
 base ; la seule variable secrète de Vercel est `VAPID_PRIVATE_KEY`.
+
+### Actions universelles (26/10/2026, migrations 0045 et 0046)
+
+Le + passe de 39 lignes à 16 actions générales, à noter juste après les avoir faites : vélo ou à pied,
+transports en commun, covoiturage, télétravail, train au lieu de l'avion (distance saisie), vacances sans
+avion, repas végé, poulet ou poisson plutôt que bœuf, repas anti-gaspi, gourde ou eau du robinet, vêtement
+d'occasion, appareil réparé ou reconditionné, escaliers, ordinateur éteint le soir, chauffage baissé d'1 °C,
+geste pour la nature. Plus d'action « via une appli ».
+
+- Vêtement d'occasion et appareil : on choisit quoi et combien (« 1 jean et 2 t-shirts ») ; chaque article
+  est calculé avec son propre facteur ADEME, dans les plafonds existants.
+- Repas végé : CO₂ du repas habituel déclaré (bœuf et autres viandes pondérés par leurs repas) moins un
+  repas végétarien, mêmes facteurs Agribalyse.
+- Train : la distance est demandée dans la fiche de confirmation.
+- Le catalogue des actions s'écrit désormais dans une nouvelle migration à chaque changement (champ
+  `migration` de `action_types.json`) ; 0027 reste figée.
