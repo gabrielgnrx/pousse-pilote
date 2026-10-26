@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fallbackNarrative, keyFigures, monthLabel, numbersSupported, parseReportData, pickQuotes, reportFacts } from "./report.ts";
+import { keyFigures, monthLabel, monthNarrative, parseReportData, pickQuotes } from "./report.ts";
 
 const raw = {
   month: "2026-10", k: 5, participants: 42, active: 27, kg: 318.4, kg_previous: 250, actions: 512,
@@ -23,15 +23,6 @@ test("chiffres clés : mis en forme par le code, valeurs masquées sous 5 person
   assert.ok(masked.some((x) => x.value === "moins de 5 personnes"));
 });
 
-test("contrôle : aucun chiffre absent des agrégats dans le texte de l'IA", () => {
-  const facts = reportFacts(parseReportData(raw));
-  assert.equal(numbersSupported("318 kg évités ce mois-ci, 27 personnes actives, +27 % sur le mois.", facts), true);
-  assert.equal(numbersSupported("319 kg évités ce mois-ci.", facts), false);
-  assert.equal(numbersSupported("27 personnes actives et 512 actions enregistrées.", facts), true);
-  assert.equal(numbersSupported("Le vélo a été choisi 999 fois.", facts), false);
-  assert.equal(numbersSupported("1. Relayer le défi. 2. Valoriser les équipes.", facts), true);
-});
-
 test("verbatims : les plus positifs d'abord, 3 au plus", () => {
   assert.deepEqual(pickQuotes(["Une phrase neutre ici.", "Bravo pour cette semaine !", "Merci, c'était sympa", "Autre phrase"], 2), [
     "Bravo pour cette semaine !",
@@ -39,7 +30,12 @@ test("verbatims : les plus positifs d'abord, 3 au plus", () => {
   ]);
 });
 
-test("texte sans IA et libellé du mois", () => {
-  assert.match(fallbackNarrative(parseReportData(raw)), /Recommandations/);
+test("synthèse du mois par les règles, et libellé du mois", () => {
+  const text = monthNarrative(parseReportData(raw));
+  assert.match(text, /318 kg de CO₂, \+27 % par rapport au mois précédent/);
+  assert.match(text, /27 personnes sur 42/);
+  assert.match(text, /mobilité/);
+  assert.equal(text.split("\n").filter((l) => l.startsWith("- ")).length, 3);
+  assert.match(monthNarrative(parseReportData({ ...raw, kg: null, active: null, teams: [], top_actions: [], by_poste: {} })), /Pas assez de participants/);
   assert.equal(monthLabel("2026-10"), "octobre 2026");
 });

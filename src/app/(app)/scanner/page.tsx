@@ -4,16 +4,7 @@ import { parisMidnightISO, relativeTime } from "@/lib/dates";
 import { normalizeGrade } from "@/lib/off/product.ts";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Scanner } from "./Scanner";
-import { PhotoScan } from "./PhotoScan";
-import { CATEGORY_BY_TAG } from "@/lib/off/categories";
-
-const PHOTO_STATUS: Record<string, string> = {
-  format: "Photo au format JPEG, PNG ou WebP, 5 Mo au plus.",
-  indisponible: "La reconnaissance par photo est indisponible pour le moment : scanne le code-barres ou tape-le.",
-  inconnu: "Je n'ai pas reconnu ce produit. Essaie le code-barres, ou une photo plus nette du produit.",
-  choix: "Je ne suis pas sûr. C'est l'un de ces rayons ?",
-  "sans-ia": "Tu as choisi de ne pas utiliser l'IA (réglable dans ton profil) : scanne le code-barres ou tape-le.",
-};
+import { FOOD_CATEGORIES } from "@/lib/off/categories";
 
 export const metadata = { title: "Scanner · Pousse" };
 
@@ -23,9 +14,7 @@ const EXAMPLES = [
   { code: "3560070894222", label: "Sirop de cerise" },
 ];
 
-export default async function ScannerPage({ searchParams }: { searchParams: Promise<{ photo?: string; c?: string }> }) {
-  const { photo, c } = await searchParams;
-  const choices = (c ?? "").split(",").filter((t) => CATEGORY_BY_TAG[t]);
+export default async function ScannerPage() {
   const { supabase, user } = await requireProfile();
   const [{ data: scans }, { count: swapsToday }] = await Promise.all([
     supabase
@@ -54,21 +43,22 @@ export default async function ScannerPage({ searchParams }: { searchParams: Prom
 
       <Scanner />
 
-      {photo && PHOTO_STATUS[photo] ? (
-        <div role="status" className="flex flex-col gap-2 rounded-2xl bg-peche px-4 py-3 text-sm font-semibold text-argile-fonce">
-          {PHOTO_STATUS[photo]}
-          {photo === "choix" && choices.length ? (
-            <span className="flex flex-wrap gap-1.5">
-              {choices.map((t) => (
-                <Link key={t} href={`/scanner/categorie/${encodeURIComponent(t)}`} className="chip min-h-9 bg-papier text-encre">
-                  {CATEGORY_BY_TAG[t].label}
-                </Link>
-              ))}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-      <PhotoScan />
+      <details className="card group">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold">
+          Pas de code-barres ? Choisis le rayon
+          <span aria-hidden="true" className="text-terre transition group-open:rotate-90">›</span>
+        </summary>
+        <p className="mt-1 text-xs text-terre">L&apos;impact estimé du rayon (Agribalyse) et ses produits les mieux notés.</p>
+        <ul className="mt-3 flex flex-wrap gap-1.5">
+          {FOOD_CATEGORIES.map((cat) => (
+            <li key={cat.tag}>
+              <Link href={`/scanner/categorie/${encodeURIComponent(cat.tag)}`} className="chip min-h-9 bg-sable text-encre">
+                {cat.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </details>
 
       <p className="rounded-2xl bg-peche px-4 py-3 text-sm text-[#3f4a3c]">
         <strong>+5 pousses</strong> chaque fois que tu choisis une alternative mieux notée, jusqu&apos;à 3 fois par

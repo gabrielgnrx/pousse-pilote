@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin/session";
-import { fallbackNarrative, monthLabel } from "@/lib/admin/report";
+import { monthLabel } from "@/lib/admin/report";
 import { loadReport, pickMonth } from "@/lib/admin/report-server";
 import { ReportBody } from "../ReportBody";
 import { PrintButton } from "./PrintButton";
@@ -15,7 +15,7 @@ export default async function PrintReport({ searchParams }: { searchParams: Prom
   const month = pickMonth(sp.mois);
   const report = await loadReport(supabase, org.company_id, month);
   if (!report) return <p className="card text-sm">Le rapport n&apos;a pas pu se charger.</p>;
-  const { data, saved } = report;
+  const { data } = report;
   return (
     <article className="flex flex-col gap-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -25,7 +25,7 @@ export default async function PrintReport({ searchParams }: { searchParams: Prom
         </div>
         <PrintButton />
       </header>
-      <ReportBody figures={saved?.figures ?? report.figures} narrative={saved?.narrative ?? fallbackNarrative(data)} quotes={saved?.quotes ?? report.quotes} teams={data.teams} k={data.k} />
+      <ReportBody figures={report.figures} narrative={report.narrative} quotes={report.quotes} teams={data.teams} k={data.k} />
       <p className="text-xs text-terre">
         CO₂ évité calculé par Pousse avec les facteurs d&apos;émission de l&apos;ADEME (Base Empreinte, Agribalyse), par rapport aux
         habitudes déclarées par chaque participant. Données agrégées uniquement.

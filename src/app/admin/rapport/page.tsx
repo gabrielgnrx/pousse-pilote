@@ -4,15 +4,8 @@ import { requireAdmin } from "@/lib/admin/session";
 import { monthLabel } from "@/lib/admin/report";
 import { defaultMonth, loadReport, pickMonth } from "@/lib/admin/report-server";
 import { ReportBody } from "./ReportBody";
-import { ReportWriter } from "./ReportWriter";
 
 export const metadata = { title: "Rapport mensuel · Pousse" };
-
-const SOURCE_NOTE: Record<string, string> = {
-  ia: "Synthèse rédigée par l'IA à partir des seuls agrégats ; chaque chiffre cité a été vérifié.",
-  gabarit: "Synthèse rédigée sans IA, à partir des agrégats.",
-  mock: "Synthèse de démonstration (IA simulée).",
-};
 
 /** Les 12 derniers mois terminés. */
 function lastMonths(): string[] {
@@ -28,7 +21,7 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
   const month = pickMonth(sp.mois);
   const report = await loadReport(supabase, org.company_id, month);
   if (!report) return <p className="card text-sm">Le rapport n&apos;a pas pu se charger. Réessaie dans un instant.</p>;
-  const { data, saved } = report;
+  const { data } = report;
   const q = `org=${org.company_id}&mois=${month}`;
 
   return (
@@ -48,19 +41,12 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
         </form>
       </div>
 
-      <ReportBody figures={saved?.figures ?? report.figures} narrative={saved?.narrative ?? null} quotes={saved?.quotes ?? report.quotes} teams={data.teams} k={data.k} />
+      <ReportBody figures={report.figures} narrative={report.narrative} quotes={report.quotes} teams={data.teams} k={data.k} />
 
-      <section className="card flex flex-col gap-3">
-        {saved ? (
-          <p className="text-xs text-terre">
-            {SOURCE_NOTE[saved.source] ?? ""}
-            {saved.replaced ? " Le texte de l'IA citait un chiffre absent des agrégats : il a été remplacé." : ""}
-          </p>
-        ) : (
-          <p className="text-sm text-brun">L&apos;IA rédige les faits marquants et des recommandations à partir des agrégats ci-dessus, sans aucune donnée individuelle.</p>
-        )}
-        <ReportWriter org={org.company_id} month={month} hasSaved={saved !== null} />
-      </section>
+      <p className="text-xs text-terre">
+        Rapport calculé à partir des seuls totaux de l&apos;organisation, sans aucune donnée individuelle. Faits marquants
+        et recommandations sont tirés de ces chiffres.
+      </p>
 
       <section className="flex flex-wrap gap-2">
         <Link href={`/admin/rapport/imprimer?${q}`} className="btn-ghost min-h-11 text-sm">Exporter en PDF</Link>

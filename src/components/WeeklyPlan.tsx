@@ -22,12 +22,10 @@ const LEVELS = [
  */
 export function WeeklyPlan({
   items,
-  source,
   feasibility,
   setFeasibility,
 }: {
   items: PlanEntry[];
-  source: "regles" | "ia" | "mock";
   feasibility: Record<string, string>;
   setFeasibility: (form: FormData) => Promise<void>;
 }) {
@@ -85,10 +83,8 @@ export function WeeklyPlan({
         })}
       </ol>
       <p className="text-xs text-terre">
-        {source === "regles"
-          ? "Classés selon ce qui pèse le plus dans ton bilan et ce que tu juges faisable."
-          : "Défis classés par Pousse selon ton bilan ; les phrases sont rédigées par le coach IA de Pousse, qui ne voit que des totaux anonymes."}{" "}
-        Le CO₂ est toujours calculé avec les facteurs de l&apos;ADEME, jamais par l&apos;IA.
+        Classés selon ce qui pèse le plus dans ton bilan et ce que tu juges faisable. Le CO₂ est calculé avec les
+        facteurs de l&apos;ADEME.
       </p>
     </section>
   );

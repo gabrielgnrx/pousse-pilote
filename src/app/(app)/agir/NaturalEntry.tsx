@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { formatKg } from "@/lib/co2/challenges.ts";
 import { ACTION_BY_SLUG, computeAvoided } from "@/lib/co2/engine.ts";
 import type { Habits } from "@/lib/co2/footprint.ts";
-import type { ConfirmCard } from "@/lib/ai/parse/interpret.ts";
+import type { ConfirmCard } from "@/lib/actions/interpret.ts";
 import { themeOf } from "@/lib/actions-catalog";
 import { compressImage } from "@/lib/image/compress";
 import { logParsedAction, parseActionText, type LoggedAction } from "./actions";
@@ -28,10 +28,7 @@ function speechRecognition(): RecognitionCtor | null {
 
 const REASONS: Record<string, string> = {
   not_understood: "Je n'ai pas bien compris. Choisis l'action ci-dessous, ou dans la liste.",
-  unavailable: "La saisie libre est indisponible pour le moment. Choisis l'action ci-dessous, ou dans la liste.",
-  rate_limited: "Tu as beaucoup utilisé la saisie libre aujourd'hui. Choisis l'action ci-dessous, ou dans la liste.",
   invalid: "Écris quelques mots sur ce que tu as fait.",
-  ai_off: "Tu as choisi de ne pas utiliser l'IA : choisis l'action ci-dessous, ou dans la liste.",
 };
 
 const CHOICE_HINT: Record<NonNullable<ConfirmCard["needsChoice"]>, string> = {
@@ -76,7 +73,7 @@ export function NaturalEntry({
     startTransition(async () => {
       const r = await parseActionText(value);
       setCards(r.cards);
-      if (!r.ok) setNotice(REASONS[r.reason] ?? REASONS.unavailable);
+      if (!r.ok) setNotice(REASONS[r.reason] ?? REASONS.not_understood);
     });
   };
 
@@ -291,7 +288,7 @@ function ConfirmCardView({
 
       {needsReceipt ? (
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold">Justificatif (gardé privé, vérifié puis effacé)</span>
+          <span className="font-semibold">Justificatif (gardé privé, effacé sous 30 jours)</span>
           <input ref={receiptRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="text-sm" />
         </label>
       ) : null}

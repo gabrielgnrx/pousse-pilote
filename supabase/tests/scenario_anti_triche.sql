@@ -57,7 +57,8 @@ insert into validations (user_id, company_id, team_id, template_id, variant, day
 select p.id, p.company_id, p.team_id, 'transports', 'base', date_trunc('week', current_date)::date, 4, 0, 40, 'none', 0, 'private'
 from profiles p where p.id = '00000000-0000-0000-0000-000000000004';
 select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
-select pg_temp.expect_error($$select log_action('velo', 'base')$$, '%_cap_reached%', '2 jours de bureau déclarés : pas de 5e trajet cette semaine');
+-- Le lundi, ces 4 trajets sont aussi ceux du jour : c'est alors le plafond du jour qui refuse en premier.
+select pg_temp.expect_error($$select log_action('velo', 'base')$$, '%cap_reached%', '2 jours de bureau déclarés : pas de 5e trajet cette semaine');
 
 -- 3. Le bilan se refait une fois tous les 30 jours.
 select pg_temp.expect_error($$insert into footprints (user_id, answers, total_kg, by_category) values (auth.uid(), '{}', 9000, '{}')$$,

@@ -321,7 +321,7 @@ function ReceiptSheet({
         )}
         <label className="flex flex-col gap-1 text-sm font-bold">
           {item.templateId.startsWith("appli_") ? "Ton reçu ou ta confirmation de commande" : (t?.proofHint ?? "Ton justificatif")}
-          <span className="text-xs font-normal text-terre">Une photo ou une capture d&apos;écran. Il reste privé : personne d&apos;autre ne le voit ; il est vérifié automatiquement par l&apos;IA de Pousse, puis effacé.</span>
+          <span className="text-xs font-normal text-terre">Une photo ou une capture d&apos;écran. Il reste privé : personne d&apos;autre ne le voit, et il est effacé au bout de 30 jours.</span>
           <input name="receipt" type="file" accept="image/jpeg,image/png,image/webp" required className="text-sm font-normal" />
         </label>
         {error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{error}</p> : null}

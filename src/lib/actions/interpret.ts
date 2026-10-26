@@ -2,22 +2,22 @@
  * Ce qu'on fait d'une phrase libre (« vélo jusqu'au bureau, 8 km ») avant de demander confirmation.
  *
  * Tout ici est déterministe et testé :
- *   - ruleParse : une règle simple suffit souvent (un seul geste reconnu, une seule quantité) → pas
- *     d'appel à l'IA (sobriété) ;
- *   - interpretItems : la sortie du LLM (ou des règles) devient des cartes de confirmation ; une
- *     confiance faible, une action inconnue, une unité incohérente ou une quantité hors bornes
- *     déclenchent un choix explicite, jamais une supposition ;
- *   - candidatesFor : les actions proches, pour l'écran de choix et le repli sans IA.
+ *   - ruleParse : un geste nettement reconnu et au plus une quantité ;
+ *   - parsePhrase : la phrase entière, ou découpée en morceaux (« vélo 8 km puis déjeuner végé ») ;
+ *   - interpretItems : les actions reconnues deviennent des cartes de confirmation ; une action
+ *     inconnue, une unité incohérente ou une quantité hors bornes déclenchent un choix explicite,
+ *     jamais une supposition ;
+ *   - candidatesFor : les actions proches, pour l'écran de choix.
  * Le CO₂ affiché est un aperçu (engine.ts) ; la base le recalcule à l'enregistrement.
  */
-import { ACTION_TYPES, type ActionType } from "../../co2/action-types.data.ts";
-import { ACTION_BY_SLUG, checkQuantity, computeAvoided } from "../../co2/engine.ts";
-import type { Habits } from "../../co2/footprint.ts";
+import { ACTION_TYPES, type ActionType } from "../co2/action-types.data.ts";
+import { ACTION_BY_SLUG, checkQuantity, computeAvoided } from "../co2/engine.ts";
+import type { Habits } from "../co2/footprint.ts";
 
 export const MIN_CONFIDENCE = 0.7;
 export const UNKNOWN = "inconnu";
 
-/** Ce que renvoie le LLM pour une action (après validation zod). */
+/** Une action reconnue dans la phrase. */
 export interface ParsedItem {
   action: string;
   quantity: number | null;
@@ -117,17 +117,17 @@ export function candidatesFor(text: string, limit = 3, exclude: string[] = []): 
 const QUANTITY = /(\d+(?:[.,]\d+)?)\s*(km|kms|kilom[eè]tres?|m(?![a-zé])|m[eè]tres?|repas|d[ée]jeuners?|d[îi]ners?|jours?|fois)?/giu;
 
 /**
- * Règle simple, sans IA : un seul geste nettement reconnu, et au plus une quantité cohérente.
- * Renvoie null dès qu'il y a un doute (plusieurs gestes, plusieurs nombres…) : l'IA prend le relais.
+ * Règle simple : un seul geste nettement reconnu, et au plus une quantité cohérente.
+ * Renvoie null dès qu'il y a un doute (plusieurs gestes, plusieurs nombres…).
  */
 export function ruleParse(text: string): ParsedItem[] | null {
   const scored = ACTION_TYPES.map((a) => ({ a, s: score(text, a) })).filter((x) => x.s >= 2);
   if (scored.length === 0) return null;
   scored.sort((x, y) => y.s - x.s);
   const [best, second] = scored;
-  // Deux gestes proches (« végé » et « végé au lieu du bœuf ») : on laisse trancher l'IA.
+  // Deux gestes proches (« végé » et « végé au lieu du bœuf ») : à choisir.
   if (second && second.s >= best.s - 0.5) return null;
-  // Plusieurs gestes dans la phrase (« vélo puis déjeuner végé ») : à l'IA aussi.
+  // Plusieurs gestes dans la phrase (« vélo puis déjeuner végé ») : voir parsePhrase.
   if (scored.some((x) => x !== best && x.a.template !== best.a.template && x.s >= 2)) return null;
 
   const numbers = [...text.matchAll(QUANTITY)];
@@ -137,6 +137,32 @@ export function ruleParse(text: string): ParsedItem[] | null {
   const q = Number(n.replace(",", "."));
   if (convertQuantity(best.a, q, unit) === null) return null;
   return [{ action: best.a.slug, quantity: q, unit, confidence: 0.9 }];
+}
+
+const SEPARATORS = /\s*(?:[,;+]|\bpuis\b|\bensuite\b|\bet\b|\baussi\b)\s*/iu;
+
+/**
+ * La phrase entière si une règle suffit ; sinon, découpée aux « puis », « et », virgules… chaque
+ * morceau devant être reconnu seul. Un morceau qui garde un nombre sans geste (« 8 km aller et 9 km
+ * retour ») ou un geste ambigu rend la phrase entière ambiguë : null, et la personne choisit.
+ */
+export function parsePhrase(text: string): ParsedItem[] | null {
+  const whole = ruleParse(text);
+  if (whole) return whole;
+  const parts = text.split(SEPARATORS).map((p) => p.trim()).filter((p) => p.length >= 2);
+  if (parts.length < 2) return null;
+  const items: ParsedItem[] = [];
+  for (const part of parts) {
+    const parsed = ruleParse(part);
+    if (parsed) {
+      items.push(...parsed);
+      continue;
+    }
+    // Un morceau sans geste ni nombre (« ce matin ») ne gêne pas ; le reste, si.
+    const hasGesture = ACTION_TYPES.some((a) => score(part, a) >= 2);
+    if (hasGesture || [...part.matchAll(QUANTITY)].length > 0) return null;
+  }
+  return items.length ? items : null;
 }
 
 /** Transforme les actions reconnues en cartes de confirmation, avec aperçu du CO₂. */

@@ -16,7 +16,6 @@ import { WeeklyPlan } from "@/components/WeeklyPlan";
 import { weekStart } from "@/lib/co2/engagement.ts";
 import { buildPlan, parseInputs } from "@/lib/plan/service";
 import type { PlanEntry } from "@/lib/plan/weekly.ts";
-import { aiDepsFor } from "@/lib/ai/client";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { DailyQuests } from "@/components/DailyQuests";
 import { getDuels } from "@/lib/game/data.ts";
@@ -66,25 +65,24 @@ export default async function DefisPage({
   ]);
   const teamWeek = teamWeekData as TeamWeek | null;
 
-  // Mon plan de la semaine : préparé le lundi par la tâche planifiée (avec le coach IA) ; à défaut
-  // (nouvelle personne, faisabilité changée), calculé ici avec les règles, sans faire attendre la page.
+  // Mon plan de la semaine : calculé par les règles à la première visite de la semaine (ou après un
+  // changement de faisabilité), puis gardé jusqu'au lundi suivant.
   const [{ data: savedPlan }, { data: planInputs }] = await Promise.all([
     supabase
       .from("user_plans")
       .select("items, source")
       .eq("user_id", user.id)
       .eq("week_start", weekStart(today))
-      .maybeSingle<{ items: PlanEntry[]; source: "regles" | "ia" | "mock" }>(),
+      .maybeSingle<{ items: PlanEntry[]; source: string }>(),
     supabase.rpc("my_plan_inputs"),
   ]);
   const { feasibility, week: lastWeek } = parseInputs(planInputs as { feasibility?: unknown; stats?: unknown } | null);
   let plan = savedPlan;
   if (!plan) {
-    const built = await buildPlan(habits, feasibility, lastWeek, aiDepsFor(supabase), false);
-    if (built) {
-      // « visite » : la tâche du lundi pourra le reformuler avec le coach.
-      await supabase.rpc("save_my_plan", { p_items: built.items, p_source: built.source, p_version: "visite" });
-      plan = { items: built.items, source: built.source };
+    const items = buildPlan(habits, feasibility, lastWeek);
+    if (items) {
+      await supabase.rpc("save_my_plan", { p_items: items, p_source: "regles", p_version: null });
+      plan = { items, source: "regles" };
     }
   }
   const duelOf = (challengeId: string) =>
@@ -159,7 +157,7 @@ export default async function DefisPage({
       {tab === "en-cours" ? (
         <>
           {plan?.items?.length ? (
-            <WeeklyPlan items={plan.items} source={plan.source} feasibility={feasibility} setFeasibility={setFeasibility} />
+            <WeeklyPlan items={plan.items} feasibility={feasibility} setFeasibility={setFeasibility} />
           ) : null}
 
           <DuelStrip duels={duels.filter((d) => d.status === "pending" && d.role === "opponent")} />

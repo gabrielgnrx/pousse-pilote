@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { factsFor, fallbackMessage, fillNames, type Due } from "./facts.ts";
+import { factsFor, animatorMessage, fillNames, type Due } from "./facts.ts";
 import { goodForBike, parseForecast } from "./weather.ts";
 
 const due = (slot: Due["slot"], context: Record<string, unknown>): Due => ({ team_id: "t", company_id: "c", slot, ref: "", context });
@@ -17,7 +17,7 @@ test("vendredi : les prénoms ne partent pas dans les faits, seulement des marqu
 
 test("vendredi sans publication : personne n'est nommé", () => {
   const f = factsFor(due("friday", { kg: 10, actions: 5, publishers: [] }));
-  const msg = fallbackMessage(f);
+  const msg = animatorMessage(f);
   assert.ok(!/\{\{/.test(msg));
   assert.ok(msg.length <= 500);
 });
@@ -34,7 +34,7 @@ test("faits : les données inattendues sont ignorées", () => {
 });
 
 test("relance du mercredi : bienveillante, jamais culpabilisante", () => {
-  const msg = fallbackMessage(factsFor(due("midweek", { this_week: 2, last_week: 9 })));
+  const msg = animatorMessage(factsFor(due("midweek", { this_week: 2, last_week: 9 })));
   assert.ok(!/(honte|nul|décevant|pas assez)/i.test(msg));
   assert.match(msg, /repart/);
 });

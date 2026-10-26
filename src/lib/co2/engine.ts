@@ -1,7 +1,7 @@
 /**
  * Moteur de calcul du CO₂ évité pour une action du + (v2).
  *
- * Règle d'or : l'IA classe (slug + quantité), le code calcule. Ce module est le miroir exact de
+ * L'action (slug + quantité) vient du + ; le code calcule. Ce module est le miroir exact de
  * avoided_kg / effective_quantity / log_action (migration 0028) : il sert aux aperçus à l'écran
  * (interface optimiste) et aux tests. Le chiffre qui fait foi est toujours recalculé par la base.
  */

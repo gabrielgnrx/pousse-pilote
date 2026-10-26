@@ -10,7 +10,7 @@ export interface ChatMessage {
   id: string;
   mine: boolean;
   fromPousse: boolean;
-  /** Message de l'animateur IA : signalé comme venant d'un bot. */
+  /** Message de l'animateur de Pousse : signalé comme venant d'un bot. */
   bot?: boolean;
   author: string;
   body: string;
@@ -230,7 +230,7 @@ export function TeamChat({
                     <span className="flex items-center gap-1 text-xs font-bold text-[#5b6458]">
                       {m.author} · {time(m.at)}
                       {m.bot ? (
-                        <span className="chip bg-sapin px-1.5 py-0 text-[10px] text-sapin-clair" title="Message écrit par l'animateur IA de Pousse">
+                        <span className="chip bg-sapin px-1.5 py-0 text-[10px] text-sapin-clair" title="Message automatique de l'animateur de Pousse">
                           bot
                         </span>
                       ) : null}

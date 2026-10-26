@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Test de bout en bout du parcours principal, sur une pile Supabase locale (supabase start) et
- * l'application compilée, avec des réponses IA simulées (AI_MOCK=1) : aucun appel réseau à l'IA.
+ * l'application compilée.
  */
 export default defineConfig({
   testDir: "e2e",
@@ -23,6 +23,5 @@ export default defineConfig({
     url: "http://localhost:3000/connexion",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    env: { AI_MOCK: "1" },
   },
 });

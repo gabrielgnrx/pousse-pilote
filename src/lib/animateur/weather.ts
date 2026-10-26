@@ -1,6 +1,6 @@
 /**
  * Météo de demain (Open-Meteo, gratuit et sans clé : https://open-meteo.com). Paris par défaut,
- * l'ICP de Pousse étant en Île-de-France. Règle simple et testée, sans IA.
+ * l'ICP de Pousse étant en Île-de-France. Règle simple et testée.
  */
 export interface Tomorrow {
   date: string;
