@@ -26,60 +26,6 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"ai_cache": {
-                  Row: {
-                    "created_at": string,"expires_at": string,"key": string,"output": NonNullable<Json>,"task": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "created_at"?: string,"expires_at": string,"key": string,"output": NonNullable<Json>,"task": string
-                  }
-                  Update: {
-                    "created_at"?: string,"expires_at"?: string,"key"?: string,"output"?: NonNullable<Json>,"task"?: string
-                  }
-                  Relationships: [
-                    
-                  ]
-                },"ai_calls": {
-                  Row: {
-                    "cache_read_tokens": number,"company_id": string | null,"cost_usd": number,"created_at": string,"error_code": string | null,"id": number,"input_tokens": number,"latency_ms": number,"model": string,"output_tokens": number,"prompt_version": string,"status": string,"task": string,"user_id": string | null
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "cache_read_tokens"?: number,"company_id"?: string | null,"cost_usd"?: number,"created_at"?: string,"error_code"?: string | null,"id"?: never,"input_tokens"?: number,"latency_ms"?: number,"model": string,"output_tokens"?: number,"prompt_version": string,"status": string,"task": string,"user_id"?: string | null
-                  }
-                  Update: {
-                    "cache_read_tokens"?: number,"company_id"?: string | null,"cost_usd"?: number,"created_at"?: string,"error_code"?: string | null,"id"?: never,"input_tokens"?: number,"latency_ms"?: number,"model"?: string,"output_tokens"?: number,"prompt_version"?: string,"status"?: string,"task"?: string,"user_id"?: string | null
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "ai_calls_company_id_fkey"
-      columns: ["company_id"]
-isOneToOne: false
-      referencedRelation: "companies"
-      referencedColumns: ["id"]
-    },{
-      foreignKeyName: "ai_calls_user_id_fkey"
-      columns: ["user_id"]
-isOneToOne: false
-      referencedRelation: "profiles"
-      referencedColumns: ["id"]
-    }
-                  ]
-                },"ai_quota": {
-                  Row: {
-                    "day": string,"scope": string,"subject": string,"task": string,"used": number
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "day": string,"scope": string,"subject": string,"task": string,"used"?: number
-                  }
-                  Update: {
-                    "day"?: string,"scope"?: string,"subject"?: string,"task"?: string,"used"?: number
-                  }
-                  Relationships: [
-                    
-                  ]
                 },"alerts": {
                   Row: {
                     "body": string,"created_at": string,"id": number,"kind": string,"pushed_at": string | null,"ref": string,"seen_at": string | null,"title": string,"url": string,"user_id": string
@@ -384,26 +330,6 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
-                },"monthly_reports": {
-                  Row: {
-                    "company_id": string,"content": NonNullable<Json>,"created_at": string,"month": string,"prompt_version": string | null,"source": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "company_id": string,"content": NonNullable<Json>,"created_at"?: string,"month": string,"prompt_version"?: string | null,"source": string
-                  }
-                  Update: {
-                    "company_id"?: string,"content"?: NonNullable<Json>,"created_at"?: string,"month"?: string,"prompt_version"?: string | null,"source"?: string
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "monthly_reports_company_id_fkey"
-      columns: ["company_id"]
-isOneToOne: false
-      referencedRelation: "companies"
-      referencedColumns: ["id"]
-    }
-                  ]
                 },"mystery_seeds": {
                   Row: {
                     "day": string,"opened_at": string | null,"points": number,"reward": string | null,"user_id": string
@@ -550,14 +476,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "company_id": string,"consent_ai": boolean,"consent_data": boolean,"consent_feedback": boolean,"consent_team_stats": boolean,"created_at": string,"display_name": string,"feed_choice_at": string | null,"id": string,"share_feed": boolean,"team_id": string | null
+                    "company_id": string,"consent_data": boolean,"consent_feedback": boolean,"consent_team_stats": boolean,"created_at": string,"display_name": string,"feed_choice_at": string | null,"id": string,"share_feed": boolean,"team_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "company_id": string,"consent_ai"?: boolean,"consent_data": boolean,"consent_feedback"?: boolean,"consent_team_stats"?: boolean,"created_at"?: string,"display_name": string,"feed_choice_at"?: string | null,"id": string,"share_feed"?: boolean,"team_id"?: string | null
+                    "company_id": string,"consent_data": boolean,"consent_feedback"?: boolean,"consent_team_stats"?: boolean,"created_at"?: string,"display_name": string,"feed_choice_at"?: string | null,"id": string,"share_feed"?: boolean,"team_id"?: string | null
                   }
                   Update: {
-                    "company_id"?: string,"consent_ai"?: boolean,"consent_data"?: boolean,"consent_feedback"?: boolean,"consent_team_stats"?: boolean,"created_at"?: string,"display_name"?: string,"feed_choice_at"?: string | null,"id"?: string,"share_feed"?: boolean,"team_id"?: string | null
+                    "company_id"?: string,"consent_data"?: boolean,"consent_feedback"?: boolean,"consent_team_stats"?: boolean,"created_at"?: string,"display_name"?: string,"feed_choice_at"?: string | null,"id"?: string,"share_feed"?: boolean,"team_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -571,32 +497,6 @@ isOneToOne: false
       columns: ["team_id"]
 isOneToOne: false
       referencedRelation: "teams"
-      referencedColumns: ["id"]
-    }
-                  ]
-                },"proof_checks": {
-                  Row: {
-                    "checked_at": string,"company_id": string,"id": number,"model": string,"points_withheld": number,"prompt_version": string,"reason_code": string,"validation_id": string,"verdict": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "checked_at"?: string,"company_id": string,"id"?: never,"model": string,"points_withheld"?: number,"prompt_version": string,"reason_code": string,"validation_id": string,"verdict": string
-                  }
-                  Update: {
-                    "checked_at"?: string,"company_id"?: string,"id"?: never,"model"?: string,"points_withheld"?: number,"prompt_version"?: string,"reason_code"?: string,"validation_id"?: string,"verdict"?: string
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "proof_checks_company_id_fkey"
-      columns: ["company_id"]
-isOneToOne: false
-      referencedRelation: "companies"
-      referencedColumns: ["id"]
-    },{
-      foreignKeyName: "proof_checks_validation_id_fkey"
-      columns: ["validation_id"]
-isOneToOne: false
-      referencedRelation: "validations"
       referencedColumns: ["id"]
     }
                   ]
@@ -656,46 +556,6 @@ isOneToOne: false
                   }
                   Update: {
                     "active"?: boolean,"answer"?: number,"choices"?: (string)[],"explanation"?: string,"id"?: number,"question"?: string
-                  }
-                  Relationships: [
-                    
-                  ]
-                },"quiz_week_answers": {
-                  Row: {
-                    "choice": number,"correct": boolean,"created_at": string,"question_id": number,"user_id": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "choice": number,"correct": boolean,"created_at"?: string,"question_id": number,"user_id": string
-                  }
-                  Update: {
-                    "choice"?: number,"correct"?: boolean,"created_at"?: string,"question_id"?: number,"user_id"?: string
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "quiz_week_answers_question_id_fkey"
-      columns: ["question_id"]
-isOneToOne: false
-      referencedRelation: "quiz_week_questions"
-      referencedColumns: ["id"]
-    },{
-      foreignKeyName: "quiz_week_answers_user_id_fkey"
-      columns: ["user_id"]
-isOneToOne: false
-      referencedRelation: "profiles"
-      referencedColumns: ["id"]
-    }
-                  ]
-                },"quiz_week_questions": {
-                  Row: {
-                    "answer": number,"choices": (string)[],"created_at": string,"explanation": string,"id": number,"position": number,"prompt_version": string,"question": string,"source_kind": string,"source_title": string,"source_url": string | null,"week_start": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "answer": number,"choices": (string)[],"created_at"?: string,"explanation": string,"id"?: never,"position": number,"prompt_version": string,"question": string,"source_kind": string,"source_title": string,"source_url"?: string | null,"week_start": string
-                  }
-                  Update: {
-                    "answer"?: number,"choices"?: (string)[],"created_at"?: string,"explanation"?: string,"id"?: never,"position"?: number,"prompt_version"?: string,"question"?: string,"source_kind"?: string,"source_title"?: string,"source_url"?: string | null,"week_start"?: string
                   }
                   Relationships: [
                     
@@ -962,14 +822,14 @@ isOneToOne: false
                   ]
                 },"validations": {
                   Row: {
-                    "caption": string | null,"challenge_id": string | null,"company_id": string,"created_at": string,"day": string,"id": string,"kg": number,"points": number,"proof_level": number,"proof_photo_path": string | null,"proof_status": string,"receipt_path": string | null,"status": string,"team_id": string | null,"template_id": string,"units": number,"user_id": string,"variant": string,"visibility": string,"witness_id": string | null,"witness_status": string
+                    "caption": string | null,"challenge_id": string | null,"company_id": string,"created_at": string,"day": string,"id": string,"kg": number,"points": number,"proof_level": number,"proof_photo_path": string | null,"receipt_path": string | null,"status": string,"team_id": string | null,"template_id": string,"units": number,"user_id": string,"variant": string,"visibility": string,"witness_id": string | null,"witness_status": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "caption"?: string | null,"challenge_id"?: string | null,"company_id": string,"created_at"?: string,"day"?: string,"id"?: string,"kg": number,"points": number,"proof_level": number,"proof_photo_path"?: string | null,"proof_status"?: string,"receipt_path"?: string | null,"status"?: string,"team_id"?: string | null,"template_id": string,"units": number,"user_id": string,"variant": string,"visibility": string,"witness_id"?: string | null,"witness_status"?: string
+                    "caption"?: string | null,"challenge_id"?: string | null,"company_id": string,"created_at"?: string,"day"?: string,"id"?: string,"kg": number,"points": number,"proof_level": number,"proof_photo_path"?: string | null,"receipt_path"?: string | null,"status"?: string,"team_id"?: string | null,"template_id": string,"units": number,"user_id": string,"variant": string,"visibility": string,"witness_id"?: string | null,"witness_status"?: string
                   }
                   Update: {
-                    "caption"?: string | null,"challenge_id"?: string | null,"company_id"?: string,"created_at"?: string,"day"?: string,"id"?: string,"kg"?: number,"points"?: number,"proof_level"?: number,"proof_photo_path"?: string | null,"proof_status"?: string,"receipt_path"?: string | null,"status"?: string,"team_id"?: string | null,"template_id"?: string,"units"?: number,"user_id"?: string,"variant"?: string,"visibility"?: string,"witness_id"?: string | null,"witness_status"?: string
+                    "caption"?: string | null,"challenge_id"?: string | null,"company_id"?: string,"created_at"?: string,"day"?: string,"id"?: string,"kg"?: number,"points"?: number,"proof_level"?: number,"proof_photo_path"?: string | null,"receipt_path"?: string | null,"status"?: string,"team_id"?: string | null,"template_id"?: string,"units"?: number,"user_id"?: string,"variant"?: string,"visibility"?: string,"witness_id"?: string | null,"witness_status"?: string
                   }
                   Relationships: [
                     {
@@ -1022,12 +882,6 @@ isOneToOne: false
 "admin_add_teams":
 { Args: { "p_company": string,"p_teams": (string)[] }; Returns: number
                            },
-"admin_ai_consume":
-{ Args: { "p_company": string,"p_limit": number,"p_task": string }; Returns: boolean
-                           },
-"admin_ai_log":
-{ Args: { "p_cache_read_tokens"?: number,"p_company": string,"p_cost_usd"?: number,"p_error_code"?: string,"p_input_tokens"?: number,"p_latency_ms"?: number,"p_model": string,"p_output_tokens"?: number,"p_prompt_version": string,"p_status": string,"p_task": string }; Returns: undefined
-                           },
 "admin_dashboard":
 { Args: { "p_company": string }; Returns: Json
                            },
@@ -1038,24 +892,6 @@ isOneToOne: false
                            },
 "admin_report_data":
 { Args: { "p_company": string,"p_month": string }; Returns: Json
-                           },
-"admin_save_report":
-{ Args: { "p_company": string,"p_content": Json,"p_month": string,"p_source": string,"p_version": string }; Returns: undefined
-                           },
-"ai_cache_get":
-{ Args: { "p_key": string }; Returns: Json
-                           },
-"ai_cache_put":
-{ Args: { "p_key": string,"p_output": Json,"p_task": string,"p_ttl_hours"?: number }; Returns: undefined
-                           },
-"ai_consume":
-{ Args: { "p_org_limit": number,"p_task": string,"p_user_limit": number }; Returns: boolean
-                           },
-"ai_log":
-{ Args: { "p_cache_read_tokens"?: number,"p_company"?: string,"p_cost_usd"?: number,"p_error_code"?: string,"p_input_tokens"?: number,"p_latency_ms"?: number,"p_model": string,"p_output_tokens"?: number,"p_prompt_version": string,"p_status": string,"p_task": string,"p_token"?: string }; Returns: undefined
-                           },
-"ai_log_service":
-{ Args: { "p_cache_read_tokens"?: number,"p_company": string,"p_cost_usd"?: number,"p_error_code"?: string,"p_input_tokens"?: number,"p_latency_ms"?: number,"p_model": string,"p_output_tokens"?: number,"p_prompt_version": string,"p_status": string,"p_task": string }; Returns: undefined
                            },
 "alerts_due":
 { Args: { "p_token": string }; Returns: {
@@ -1106,9 +942,6 @@ isOneToOne: false
         isSetofReturn: false
       } },
 "answer_quiz":
-{ Args: { "p_choice": number,"p_question": number }; Returns: Json
-                           },
-"answer_week_quiz":
 { Args: { "p_choice": number,"p_question": number }; Returns: Json
                            },
 "apply_penalty":
@@ -1333,11 +1166,6 @@ isOneToOne: false
 "pgp_armor_headers":
 { Args: { "": string }; Returns: Record<string, unknown>[]
                            },
-"plan_pending":
-{ Args: { "p_limit"?: number,"p_token": string }; Returns: {
-              "active_recently": boolean,"company_id": string,"feasibility": Json,"habits": Json,"stats": Json,"user_id": string
-            }[]
-                           },
 "plan_validate":
 { Args: { "p_items": Json }; Returns: Json
                            },
@@ -1379,7 +1207,6 @@ isOneToOne: false
 "points": number,
 "proof_level": number,
 "proof_photo_path": string | null,
-"proof_status": string,
 "receipt_path": string | null,
 "status": string,
 "team_id": string | null,
@@ -1403,12 +1230,6 @@ isOneToOne: false
 "quiz_day_ids":
 { Args: { "d": string }; Returns: (number)[]
                            },
-"quiz_week_insert":
-{ Args: { "p_questions": Json,"p_token": string,"p_version": string,"p_week": string }; Returns: number
-                           },
-"record_proof_verdict":
-{ Args: { "p_model": string,"p_reason": string,"p_validation": string,"p_verdict": string,"p_version": string }; Returns: Json
-                           },
 "record_swap":
 { Args: { "p_from_co2": number,"p_from_code": string,"p_from_grade": string,"p_to_co2": number,"p_to_code": string,"p_to_grade": string }; Returns: Json
                            },
@@ -1426,14 +1247,8 @@ isOneToOne: false
 "respond_witness":
 { Args: { "p_confirm": boolean,"p_validation": string }; Returns: undefined
                            },
-"resubmit_proof":
-{ Args: { "p_receipt": string,"p_validation": string }; Returns: undefined
-                           },
 "save_my_plan":
 { Args: { "p_items": Json,"p_source": string,"p_version"?: string }; Returns: undefined
-                           },
-"save_plan_for":
-{ Args: { "p_items": Json,"p_source": string,"p_token": string,"p_user": string,"p_version"?: string }; Returns: undefined
                            },
 "set_feasibility":
 { Args: { "p_level": string,"p_template": string }; Returns: undefined
@@ -1518,7 +1333,6 @@ isOneToOne: false
 "points": number,
 "proof_level": number,
 "proof_photo_path": string | null,
-"proof_status": string,
 "receipt_path": string | null,
 "status": string,
 "team_id": string | null,
@@ -1541,9 +1355,6 @@ isOneToOne: false
                            },
 "vote_team_week_at":
 { Args: { "p_choice": string,"p_now": string }; Returns: Json
-                           },
-"week_quiz":
-{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "weekly_cap":
 { Args: { "h": Omit<Database["public"]['Tables']["habits"]['Row'], Database["public"]['Tables']["habits"]['ComputedFields']>,"p_template": string }; Returns: number
