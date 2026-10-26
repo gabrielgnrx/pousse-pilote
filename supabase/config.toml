@@ -31,3 +31,7 @@ additional_redirect_urls = ["http://localhost:3000/auth/callback"]
 [auth.email]
 enable_signup = true
 enable_confirmations = false
+
+# Purge nocturne des photos : protégée par la clé « purge » (cron_keys), pas par un jeton utilisateur.
+[functions.purge-photos]
+verify_jwt = false

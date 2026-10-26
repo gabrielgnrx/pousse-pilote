@@ -335,5 +335,10 @@ Retirés : `src/lib/ai`, le SDK Anthropic, `ANTHROPIC_API_KEY` / `AI_MOCK`, les 
 `ai_cache`, `proof_checks`, `quiz_week_*`, `monthly_reports`, la colonne `consent_ai`, les tâches `pousse-plan`
 et `pousse-quiz`. Les migrations 0029 – 0040 restent dans l'historique (déjà appliquées en production).
 
-Point à trancher plus tard : sans vérification, le justificatif dissuade mais ne prouve rien ; le garder
-(collecte d'une photo privée) ou le retirer est un choix produit et RGPD.
+Justificatifs (décision du 26/10/2026, migration 0043) : retirés. Sans vérification, la photo ne prouvait
+rien et collectait des données personnelles. Les grosses actions se confirment sur l'honneur et ont des
+plafonds calés sur le bilan : vacances en train = vols long-courrier déclarés par an (au moins 1), train =
+2 par vol court déclaré par an (au moins 4), réparation = 2 par an, achats via une appli = 3 par semaine.
+
+Secrets (migration 0044) : purge des photos dans une Edge Function Supabase et rappels déclenchés par la
+base ; la seule variable secrète de Vercel est `VAPID_PRIVATE_KEY`.
