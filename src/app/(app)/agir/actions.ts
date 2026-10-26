@@ -185,7 +185,7 @@ export async function logSheet(form: FormData): Promise<LogResult> {
   // Plusieurs articles : une seule célébration, avec la somme du CO₂ et des pousses.
   const rows = logged as { kg: number; points: number; base_points?: number; units?: number }[];
   const sum = (f: (r: (typeof rows)[number]) => number) => rows.reduce((a, r) => a + f(r), 0);
-  const labels = lines.slice(0, logged.length).map((l) => `${l.quantity} ${(t.variants.find((v) => v.key === l.variant)?.label ?? l.variant).toLowerCase()}`);
+  const labels = lines.slice(0, logged.length).map((l) => `${l.quantity} × ${(t.variants.find((v) => v.key === l.variant)?.label ?? l.variant).toLowerCase()}`);
   return {
     ok: true,
     action: {

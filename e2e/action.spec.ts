@@ -47,5 +47,5 @@ test("vêtements d'occasion : choisir quoi et combien, en une seule action", asy
   await sheet.getByRole("button", { name: "Un t-shirt de plus" }).click();
   await sheet.getByRole("button", { name: "Un t-shirt de plus" }).click();
   await sheet.getByRole("button", { name: /Valider · \+30/ }).click();
-  await expect(page.getByRole("dialog").getByText("Vêtements d'occasion · 1 jean, 2 t-shirt")).toBeVisible();
+  await expect(page.getByRole("dialog").getByText("Vêtements d'occasion · 2 × t-shirt, 1 × jean")).toBeVisible();
 });
