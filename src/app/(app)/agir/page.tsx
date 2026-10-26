@@ -33,16 +33,19 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
     profile.team_id ? supabase.rpc("my_team_week") : Promise.resolve({ data: null }),
   ]);
 
+  // Les actions du + sont générales (« Repas végé », « Vêtement d'occasion ») : l'historique et les
+  // défis comptent par geste, quelle que soit la variante enregistrée.
+  const items = actionItems(habits);
+  const keyOf = Object.fromEntries(items.map((i) => [i.templateId, i.key]));
   const counts: Record<string, number> = {};
   const doneToday: Record<string, boolean> = {};
   for (const v of recent ?? []) {
-    const key = `${v.template_id}:${v.variant}`;
+    const key = keyOf[v.template_id];
+    if (!key) continue;
     counts[key] = (counts[key] ?? 0) + 1;
     if (v.day === today) doneToday[key] = true;
   }
-  const inChallenge = (active ?? []).map((c) => `${c.template_id}:${c.variant}`);
-
-  const items = actionItems(habits);
+  const inChallenge = (active ?? []).map((c) => keyOf[c.template_id]).filter((k): k is string => !!k);
 
   // À plusieurs, ça rapporte plus : ×2 pour le défi d'équipe de la semaine, sinon ×1,5 pour un duel en cours.
   const week = teamWeek as TeamWeek | null;
@@ -78,7 +81,7 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
       doneToday={doneToday}
       inChallenge={inChallenge}
       boosts={boosts}
-      openConfirm={ajout && items.some((i) => i.key === ajout && i.requiresConfirm) ? ajout : null}
+      openConfirm={ajout ? (items.find((i) => i.templateId === ajout.split(":")[0] && (i.requiresConfirm || i.pick))?.key ?? null) : null}
       habits={habits}
     />
   );

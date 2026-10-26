@@ -2,7 +2,8 @@
  * Génère, depuis supabase/data/emission_factors.json et supabase/data/action_types.json (sources uniques) :
  *   - src/lib/co2/factors.data.ts et src/lib/co2/action-types.data.ts : pour le moteur TypeScript ;
  *   - supabase/migrations/0026_emission_factors.sql : la table versionnée des facteurs et ef() ;
- *   - supabase/migrations/0027_action_types.sql : le catalogue des actions du +.
+ *   - supabase/migrations/<migration>.sql : le catalogue des actions du + (numéro dans action_types.json ;
+ *     0027 en était la première version, figée depuis).
  *
  *   node scripts/generate-factors.ts          écrit les deux fichiers
  *   node scripts/generate-factors.ts --check  vérifie qu'ils sont à jour (utilisé par les tests)
@@ -161,12 +162,15 @@ export interface ActionTypeRow {
 }
 
 interface ActionFile {
+  /** La migration où écrire le catalogue (ex. « 0046_catalogue_actions ») : nouveau numéro à chaque changement. */
+  migration: string;
   reference_rules: Record<string, string>;
   actions: ActionTypeRow[];
 }
 
 export function loadActions(factorSlugs: Set<string>): ActionFile {
   const file = JSON.parse(readFileSync(join(root, "supabase/data/action_types.json"), "utf8")) as ActionFile;
+  if (!/^\d{4}_[a-z0-9_]+$/.test(file.migration ?? "")) throw new Error("migration du catalogue invalide (ex. 0046_catalogue_actions)");
   const seen = new Set<string>();
   for (const a of file.actions) {
     if (!/^[a-z0-9_]+$/.test(a.slug)) throw new Error(`slug d'action invalide : ${a.slug}`);
@@ -232,10 +236,11 @@ export function renderActionsSql(file: ActionFile): string {
         `  (${q(a.slug)}, ${q(a.template)}, ${q(a.variant)}, ${q(a.label)}, ${q(a.kind)}, ${q(a.unit)}, ${a.min}, ${a.max}, ${q(a.reference_rule)}, ${arr(a.factors)})`,
     )
     .join(",\n");
-  return `-- 0027 — Catalogue des actions du + (v2, octobre 2026).
+  return `-- ${file.migration.slice(0, 4)} — Catalogue des actions du + (octobre 2026).
 -- Fichier généré par scripts/generate-factors.ts depuis supabase/data/action_types.json : ne pas
--- modifier à la main. L'IA ne renvoie qu'un slug de cette table et une quantité ; la base calcule le
--- CO₂ avec avoided_kg (migration 0028), d'après la règle de référence et les facteurs listés.
+-- modifier à la main. La saisie libre ne renvoie qu'un slug de cette table et une quantité ; la base
+-- calcule le CO₂ avec avoided_kg, d'après la règle de référence et les facteurs listés. Les actions
+-- retirées du catalogue restent en base, désactivées : l'historique garde son sens.
 
 create table if not exists public.action_types (
   slug text primary key check (slug ~ '^[a-z0-9_]+$'),
@@ -262,7 +267,10 @@ ${values}
 on conflict (slug) do update set
   template_id = excluded.template_id, variant = excluded.variant, label = excluded.label, kind = excluded.kind,
   unit = excluded.unit, min_quantity = excluded.min_quantity, max_quantity = excluded.max_quantity,
-  reference_rule = excluded.reference_rule, factors = excluded.factors;
+  reference_rule = excluded.reference_rule, factors = excluded.factors, active = true;
+
+update public.action_types set active = false
+where slug not in (${file.actions.map((a) => q(a.slug)).join(", ")});
 
 -- Chaque facteur cité doit exister dans emission_factors.
 do $$
@@ -288,7 +296,7 @@ if (isMain) {
     [join(root, "src/lib/co2/factors.data.ts"), renderTs(file)],
     [join(root, "src/lib/co2/action-types.data.ts"), renderActionsTs(actions)],
     [join(root, "supabase/migrations/0026_emission_factors.sql"), renderSql(file)],
-    [join(root, "supabase/migrations/0027_action_types.sql"), renderActionsSql(actions)],
+    [join(root, `supabase/migrations/${actions.migration}.sql`), renderActionsSql(actions)],
   ];
   if (process.argv.includes("--check")) {
     const stale = outputs.filter(([path, content]) => {

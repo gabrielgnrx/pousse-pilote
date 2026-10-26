@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { APP_TEMPLATES, GESTES, TEMPLATES, unitImpact } from "./co2/challenges.ts";
+import { GESTES, TEMPLATES, unitImpact } from "./co2/challenges.ts";
 import { actionItems } from "./actions-catalog.ts";
 import { DUOS, FICHES, RECETTES, recettesOfWeek } from "./informer.ts";
 import { gesteOfWeek } from "./geste-semaine.ts";
@@ -22,15 +22,24 @@ const h: Habits = {
   bottledWaterLDay: 1,
 };
 
-test("bouton + : une ligne par variante, le CO₂ vient du bilan", () => {
+test("bouton + : 16 actions générales, le CO₂ vient du bilan", () => {
   const items = actionItems(h);
-  const n = [...TEMPLATES, ...GESTES, ...APP_TEMPLATES].reduce((s, t) => s + t.variants.length, 0);
-  assert.equal(items.length, n);
-  assert.ok(items.filter((i) => i.templateId.startsWith("appli_")).every((i) => i.points === 30 && i.requiresConfirm), "achats via appli : 30 pousses, sur l'honneur");
-  assert.ok(["train", "vacances_train", "reparation"].every((id) => items.filter((i) => i.templateId === id).every((i) => i.requiresConfirm)), "grosses actions : sur l'honneur");
-  assert.equal(items.find((i) => i.key === "appli_occasion:jean")?.kg, unitImpact("occasion", "jean", h).kg, "même CO₂ que l'occasion");
+  assert.equal(items.length, 16);
+  assert.equal(new Set(items.map((i) => i.key)).size, 16, "une seule ligne par action");
+  assert.ok(!items.some((i) => i.templateId.startsWith("appli_")), "plus d'action « via une appli »");
+  assert.ok(["train", "vacances_train", "reparation"].every((id) => items.find((i) => i.templateId === id)?.requiresConfirm), "grosses actions : sur l'honneur");
+  const clothes = items.find((i) => i.templateId === "occasion")!;
+  assert.equal(clothes.pick, "items");
+  assert.deepEqual(clothes.choices?.map((c) => c.variant), ["tshirt", "chemise", "chaussures", "jean", "pull", "manteau"]);
+  assert.equal(clothes.choices?.find((c) => c.variant === "jean")?.kg, unitImpact("occasion", "jean", h).kg, "chaque vêtement garde son facteur");
+  assert.equal(clothes.kg, unitImpact("occasion", "tshirt", h).kg, "affiché : à partir du moins émetteur");
+  assert.equal(items.find((i) => i.templateId === "train")?.pick, "distance");
   assert.equal(items.find((i) => i.key === "velo:base")?.kg, 10 * 0.1106);
-  assert.equal(items.find((i) => i.key === "train:500")?.kg, 0, "aucun vol déclaré : 0 kg");
+  assert.equal(items.find((i) => i.templateId === "train")?.kg, 0, "aucun vol déclaré : 0 kg");
+  // Repas végé : repas habituel du bilan (2 bœuf, 4 autres viandes), pondéré.
+  const vege = items.find((i) => i.key === "vege:repas")!;
+  const expected = (2 * unitImpact("vege", "boeuf", h).kg + 4 * unitImpact("vege", "autre", h).kg) / 6;
+  assert.ok(Math.abs(vege.kg - expected) < 1e-9, "végé pondéré par les repas déclarés");
   for (const g of GESTES) assert.equal(unitImpact(g.id, "base", h).kg, 0, `${g.id} : pas de CO₂ mesurable`);
 });
 

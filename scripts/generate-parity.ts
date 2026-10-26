@@ -1,6 +1,7 @@
 /**
- * Génère supabase/tests/v2_0028_calcul.sql : le moteur TypeScript et la base doivent donner exactement
- * les mêmes kg (au gramme) pour chaque action du catalogue, sur plusieurs profils de bilan.
+ * Génère supabase/tests/v2_<migration du catalogue>_calcul.sql (joué juste après cette migration) : le
+ * moteur TypeScript et la base doivent donner exactement les mêmes kg (au gramme) pour chaque action du
+ * catalogue, sur plusieurs profils de bilan.
  *
  *   node scripts/generate-parity.ts          écrit le scénario
  *   node scripts/generate-parity.ts --check  vérifie qu'il est à jour (utilisé par les tests)
@@ -14,7 +15,8 @@ import { APP_TEMPLATES, GESTES, TEMPLATES, unitImpact } from "../src/lib/co2/cha
 import type { Habits } from "../src/lib/co2/footprint.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const out = join(root, "supabase/tests/v2_0028_calcul.sql");
+const catalog = JSON.parse(readFileSync(join(root, "supabase/data/action_types.json"), "utf8")) as { migration: string };
+const out = join(root, `supabase/tests/v2_${catalog.migration.slice(0, 4)}_calcul.sql`);
 
 export const PROFILES: Record<string, Habits> = {
   voiture: {
@@ -82,7 +84,7 @@ export function render(): string {
       }
     }
   }
-  return `-- Scénario v2 (migration 0028) : parité au gramme entre le moteur TypeScript et la base.
+  return `-- Scénario v2 (migration ${catalog.migration.slice(0, 4)}) : parité au gramme entre le moteur TypeScript et la base.
 -- Fichier généré par scripts/generate-parity.ts : ne pas modifier à la main.
 \\set ON_ERROR_STOP 1
 set client_min_messages = warning;
@@ -129,11 +131,11 @@ if (isMain) {
       /* absent */
     }
     if (current !== content) {
-      console.error("supabase/tests/v2_0028_calcul.sql à régénérer : node scripts/generate-parity.ts");
+      console.error(`${out} à régénérer : node scripts/generate-parity.ts`);
       process.exit(1);
     }
   } else {
     writeFileSync(out, content);
-    console.log("supabase/tests/v2_0028_calcul.sql écrit");
+    console.log(`${out} écrit`);
   }
 }

@@ -30,7 +30,8 @@ export const REFERENCE_RULES: Record<string, string> = {
   "article_neuf": "Fabrication d'un article neuf évitée. 0 kg sans achats neufs déclarés.",
   "appareil_neuf": "Fabrication d'un appareil neuf évitée. 0 kg sans achats d'appareils neufs déclarés.",
   "chauffage_declare": "Chauffage annuel déclaré × 7 % ÷ 30 semaines de chauffe. 0 kg sans chauffage déclaré.",
-  "aucun": "Pas de CO₂ mesurable : l'action rapporte des pousses et compte pour la série."
+  "aucun": "Pas de CO₂ mesurable : l'action rapporte des pousses et compte pour la série.",
+  "repas_viande_declaree": "Repas habituel du bilan moins repas végétarien : moyenne du bœuf et des autres viandes, pondérée par les repas déclarés de chacun. 0 kg sans viande déclarée."
 };
 
 export const ACTION_TYPES: readonly ActionType[] = [
@@ -170,6 +171,33 @@ export const ACTION_TYPES: readonly ActionType[] = [
     ]
   },
   {
+    "slug": "vege_repas",
+    "template": "vege",
+    "variant": "repas",
+    "label": "Repas végétarien",
+    "kind": "count",
+    "unit": "repas",
+    "min": 1,
+    "max": 2,
+    "referenceRule": "repas_viande_declaree",
+    "factors": [
+      "repas_boeuf",
+      "repas_porc",
+      "repas_poulet",
+      "repas_poisson",
+      "repas_vegetarien"
+    ],
+    "aliases": [
+      "végé",
+      "végétarien",
+      "veggie",
+      "sans viande",
+      "vegan",
+      "végétalien",
+      "repas végé"
+    ]
+  },
+  {
     "slug": "vege_boeuf",
     "template": "vege",
     "variant": "boeuf",
@@ -205,10 +233,9 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "repas_vegetarien"
     ],
     "aliases": [
-      "végé",
-      "végétarien",
-      "veggie",
-      "sans viande"
+      "végé au lieu du poulet",
+      "végé au lieu du porc",
+      "végé au lieu du poisson"
     ]
   },
   {
@@ -247,9 +274,7 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "repas_vegetalien"
     ],
     "aliases": [
-      "vegan",
-      "végétalien",
-      "100 % végétal"
+      "végétalien au lieu de végétarien"
     ]
   },
   {
@@ -291,7 +316,9 @@ export const ACTION_TYPES: readonly ActionType[] = [
       "t-shirt seconde main",
       "friperie",
       "seconde main",
-      "d'occasion"
+      "d'occasion",
+      "Vinted",
+      "Leboncoin"
     ]
   },
   {
@@ -416,7 +443,9 @@ export const ACTION_TYPES: readonly ActionType[] = [
     ],
     "aliases": [
       "écran de téléphone réparé",
-      "batterie changée"
+      "batterie changée",
+      "téléphone reconditionné",
+      "smartphone reconditionné"
     ]
   },
   {
@@ -434,7 +463,9 @@ export const ACTION_TYPES: readonly ActionType[] = [
     ],
     "aliases": [
       "ordi réparé",
-      "console réparée"
+      "console réparée",
+      "ordinateur reconditionné",
+      "tablette reconditionnée"
     ]
   },
   {
@@ -541,7 +572,10 @@ export const ACTION_TYPES: readonly ActionType[] = [
     "factors": [],
     "aliases": [
       "restes",
-      "anti-gaspi"
+      "anti-gaspi",
+      "invendus",
+      "panier anti-gaspi",
+      "Too Good To Go"
     ]
   },
   {
