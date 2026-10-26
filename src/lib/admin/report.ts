@@ -1,8 +1,7 @@
 /**
  * Rapport mensuel de l'admin RSE : uniquement à partir des agrégats de la base (admin_report_data),
- * jamais de données individuelles. Les chiffres clés sont mis en forme par le code ; l'IA rédige
- * seulement les faits marquants et les recommandations, et un contrôle vérifie qu'elle n'a cité
- * aucun chiffre absent des agrégats. Sinon, le texte des règles prend le relais.
+ * jamais de données individuelles. Chiffres clés, faits marquants et recommandations sont écrits par
+ * des règles à partir de ces seuls agrégats.
  */
 import { TEMPLATE_BY_ID, formatKg } from "../co2/challenges.ts";
 
@@ -84,43 +83,39 @@ export function keyFigures(d: ReportData): KeyFigure[] {
   return out;
 }
 
-/** Les faits donnés à l'IA : des agrégats en phrases, aucune donnée personnelle. */
-export function reportFacts(d: ReportData): string[] {
-  const lines = keyFigures(d).map((f) => `${f.label} : ${f.value}.`);
-  const postes = Object.entries(d.by_poste)
-    .filter(([, v]) => v !== null && v > 0)
-    .map(([k, v]) => `${POSTE_LABEL[k]} ${formatKg(v as number)}`);
-  if (postes.length) lines.push(`CO₂ évité par poste : ${postes.join(", ")}.`);
-  if (d.top_actions.length) {
-    lines.push(`Actions les plus fréquentes : ${d.top_actions.map((a) => `${TEMPLATE_BY_ID[a.template].title.toLowerCase()} (${fr(a.count)} fois, ${fr(a.people)} personnes)`).join(" ; ")}.`);
-  }
-  if (d.teams.length) lines.push(`Équipes (classement) : ${d.teams.map((t, i) => `${i + 1}. ${t.name}`).join(", ")}.`);
-  return lines;
-}
-
 /** Jusqu'à 3 verbatims, choisis parmi les messages publics anonymisés (les plus positifs d'abord). */
 export function pickQuotes(quotes: string[], max = 3): string[] {
   const positive = /(bravo|merci|super|génial|top|content|fier|facile|sympa|motiv|chouette|réussi)/i;
   return [...quotes].sort((a, b) => Number(positive.test(b)) - Number(positive.test(a))).slice(0, max);
 }
 
-/** Les nombres cités par l'IA doivent tous figurer dans les faits (aucun chiffre inventé). */
-export function numbersSupported(text: string, facts: string[]): boolean {
-  const pool = new Set(facts.join(" ").match(/\d+(?:[  ]\d{3})*(?:[.,]\d+)?/g)?.map((x) => x.replace(/[  ]/g, "").replace(",", ".")) ?? []);
-  const cited = text.match(/\d+(?:[  ]\d{3})*(?:[.,]\d+)?/g)?.map((x) => x.replace(/[  ]/g, "").replace(",", ".")) ?? [];
-  // Les ordinaux et petits nombres de liste (1., 2., 3.) sont tolérés.
-  return cited.every((c) => pool.has(c) || Number(c) <= 3);
-}
-
-/** Le texte sans IA : sobre et factuel. */
-export function fallbackNarrative(d: ReportData): string {
+/** Faits marquants et recommandations du mois, écrits par des règles à partir des agrégats. */
+export function monthNarrative(d: ReportData): string {
   const facts: string[] = [];
-  if (d.kg !== null) facts.push(`Ce mois-ci, les participants ont évité ${formatKg(d.kg)} de CO₂.`);
+  if (d.kg !== null) {
+    let line = `Ce mois-ci, les participants ont évité ${formatKg(d.kg)} de CO₂`;
+    if (d.kg_previous !== null && d.kg_previous > 0) {
+      const delta = Math.round(((d.kg - d.kg_previous) / d.kg_previous) * 100);
+      line += delta === 0 ? ", autant que le mois précédent" : `, ${delta > 0 ? "+" : ""}${delta} % par rapport au mois précédent`;
+    }
+    facts.push(`${line}.`);
+  }
+  if (d.active !== null && d.participants > 0) facts.push(`${fr(d.active)} personnes sur ${fr(d.participants)} inscrites ont enregistré au moins une action.`);
+  const postes = Object.entries(d.by_poste)
+    .filter((e): e is [string, number] => e[1] !== null && e[1] > 0)
+    .sort((a, b) => b[1] - a[1]);
+  if (postes[0]) facts.push(`Le poste qui a le plus réduit : ${POSTE_LABEL[postes[0][0]].toLowerCase()} (${formatKg(postes[0][1])}).`);
   if (d.top_actions[0]) facts.push(`L'action la plus fréquente : ${TEMPLATE_BY_ID[d.top_actions[0].template].title.toLowerCase()}.`);
   if (d.teams[0]) facts.push(`L'équipe ${d.teams[0].name} mène le classement.`);
-  const reco = [
-    "Relayer le défi d'équipe du lundi dans vos canaux internes.",
-    "Mettre en avant les actions phares du mois dans la communication RSE.",
-  ];
-  return `Faits marquants\n${facts.join(" ") || "Pas assez de participants ce mois-ci pour un bilan chiffré."}\n\nRecommandations\n${reco.map((r) => `- ${r}`).join("\n")}`;
+
+  const reco: string[] = [];
+  if (d.active !== null && d.participants > 0 && d.active / d.participants < 0.5) {
+    reco.push("Relancer les personnes inscrites qui n'ont encore rien enregistré, par exemple avec le lien d'invitation dans un message d'équipe.");
+  }
+  if (!d.by_poste.mobilite) reco.push("Mettre en avant les trajets domicile-travail (vélo, transports, covoiturage) : c'est souvent le premier levier.");
+  if (!d.by_poste.alimentation) reco.push("Proposer un défi repas végétarien à la cantine ou en équipe.");
+  reco.push("Relayer le défi d'équipe du lundi dans vos canaux internes.");
+  reco.push("Mettre en avant les actions phares du mois dans la communication RSE.");
+  reco.push("Partager ce rapport avec les équipes pour montrer le chemin parcouru.");
+  return `Faits marquants\n${facts.join(" ") || "Pas assez de participants ce mois-ci pour un bilan chiffré."}\n\nRecommandations\n${reco.slice(0, 3).map((r) => `- ${r}`).join("\n")}`;
 }

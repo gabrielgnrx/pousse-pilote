@@ -60,25 +60,3 @@ export async function answerDuel(form: FormData) {
   revalidatePath("/fil");
   redirect(error ? "/duels?erreur=1" : accept ? "/duels?accepte=1" : "/duels");
 }
-
-export interface WeekQuestion {
-  id: number;
-  question: string;
-  choices: string[];
-  source_kind: "fiche" | "actu";
-  source_title: string;
-  source_url: string | null;
-  my_choice: number | null;
-  correct: boolean | null;
-  answer: number | null;
-  explanation: string | null;
-}
-
-/** Réponse au quiz de la semaine : la base corrige et plafonne les pousses (10 par semaine). */
-export async function answerWeekQuiz(question: number, choice: number): Promise<{ ok: true; quiz: WeekQuestion[] } | { ok: false; error: string }> {
-  const { supabase } = await requireProfile();
-  if (!Number.isInteger(question) || !Number.isInteger(choice)) return { ok: false, error: "Réponse invalide." };
-  const { data, error } = await supabase.rpc("answer_week_quiz", { p_question: question, p_choice: choice });
-  if (error) return { ok: false, error: error.message === "already_answered" ? "Déjà répondu." : "Réponse impossible pour le moment." };
-  return { ok: true, quiz: (data ?? []) as WeekQuestion[] };
-}

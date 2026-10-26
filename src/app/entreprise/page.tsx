@@ -8,14 +8,14 @@ export default function EntreprisePage() {
   return (
     <PublicPage
       title="Lancez Pousse dans votre entreprise"
-      lead="Un programme climat permanent, animé par l'IA, avec vos chiffres d'impact chaque mois. Lancement en moins de 30 minutes."
+      lead="Un programme climat permanent, animé toute l'année, avec vos chiffres d'impact chaque mois. Lancement en moins de 30 minutes."
     >
       <AdminSignup />
       <Section title="Comment ça se passe">
         <ol className="list-decimal pl-5">
           <li>Vous créez votre organisation et vos équipes.</li>
           <li>Vous partagez le lien d&apos;invitation (ou le domaine e-mail de l&apos;entreprise suffit).</li>
-          <li>Les salariés font leur bilan et enregistrent leurs actions ; l&apos;animateur IA fait vivre les équipes.</li>
+          <li>Les salariés font leur bilan et enregistrent leurs actions ; l&apos;animateur de Pousse fait vivre les équipes.</li>
           <li>Vous suivez la participation et le CO₂ évité, et recevez un rapport chaque mois.</li>
         </ol>
       </Section>

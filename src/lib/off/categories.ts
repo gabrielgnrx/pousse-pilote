@@ -1,6 +1,6 @@
 /**
- * Scanner par photo : la liste fermée des catégories que l'IA peut reconnaître, chacune reliée à une
- * catégorie Open Food Facts. L'impact affiché est une estimation PAR CATÉGORIE : la médiane des
+ * Les rayons du scanner (quand il n'y a pas de code-barres), chacun relié à une catégorie Open Food
+ * Facts. L'impact affiché est une estimation PAR CATÉGORIE : la médiane des
  * empreintes Agribalyse (kg CO₂e/kg) des produits de cette catégorie vendus en France, lues dans
  * Open Food Facts (ODbL). Aucune valeur n'est saisie ou inventée ici.
  */

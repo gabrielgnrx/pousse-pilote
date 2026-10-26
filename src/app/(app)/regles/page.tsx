@@ -51,7 +51,7 @@ export default function ReglesPage() {
             contributeur.</li>
           <li><strong>Achats via une appli durable.</strong> Occasion (Vinted, Leboncoin, Back Market…) ou panier
             anti-gaspi (Too Good To Go, Phenix…) : +30, seulement avec le reçu ou la confirmation de commande en photo.
-            Le justificatif reste privé : il est vérifié automatiquement par l&apos;IA de Pousse, puis effacé (30 jours au plus).</li>
+            Le justificatif reste privé : personne d&apos;autre ne le voit, et il est effacé au bout de 30 jours.</li>
           <li><strong>Duels.</strong> Défie quelqu&apos;un d&apos;une autre équipe sur 7 jours, par exemple en lançant un
             défi. Les deux réussissent : +30 chacun ; un seul : +40. Chacun mise 10 pousses : ne pas atteindre
             l&apos;objectif te coûte ta mise. Refuser, ou ne pas répondre en 3 jours, ne coûte rien. Une mise perdue

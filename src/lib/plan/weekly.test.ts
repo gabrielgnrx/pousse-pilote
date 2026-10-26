@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mergeCoachChoice, rankCandidates, rulePlan, signalFor, type LastWeek } from "./weekly.ts";
+import { rankCandidates, rulePlan, signalFor, type LastWeek } from "./weekly.ts";
 import { TEMPLATE_BY_ID } from "../co2/challenges.ts";
 import { ACTION_TYPES } from "../co2/action-types.data.ts";
 import type { Habits } from "../co2/footprint.ts";
@@ -58,28 +58,8 @@ test("semaine écoulée : un défi abandonné recule, une action régulière est
   assert.match(streak.find((x) => x.templateId === top)!.reason, /5 fois la semaine dernière/);
 });
 
-test("plan sans IA : les 3 premiers candidats, avec leurs phrases", () => {
+test("plan : les 3 premiers candidats, avec leurs phrases", () => {
   const plan = rulePlan(rankCandidates(h, {}, empty));
   assert.equal(plan.length, 3);
   assert.ok(plan.every((e) => e.reason && e.kg_year > 0));
-});
-
-test("coach : un défi hors liste est ignoré, le plan est complété par les règles", () => {
-  const pool = rankCandidates(h, {}, empty).slice(0, 6);
-  const plan = mergeCoachChoice(pool, [
-    { template: "fusee_spatiale", reason: "Inventé par l'IA, refusé." },
-    { template: pool[2].templateId, reason: "Tu fais déjà 15 km : le vélo électrique t'irait bien." },
-    { template: pool[2].templateId, reason: "Doublon." },
-  ]);
-  assert.equal(plan.length, 3);
-  assert.equal(plan[0].template_id, pool[2].templateId);
-  assert.match(plan[0].reason, /vélo électrique/);
-  assert.ok(!plan.some((e) => e.template_id === "fusee_spatiale"));
-  assert.equal(new Set(plan.map((e) => e.template_id)).size, 3);
-});
-
-test("coach : une phrase vide ou trop courte est remplacée par celle des règles", () => {
-  const pool = rankCandidates(h, {}, empty);
-  const [e] = mergeCoachChoice(pool, [{ template: pool[0].templateId, reason: "ok" }], 1);
-  assert.equal(e.reason, pool[0].reason);
 });

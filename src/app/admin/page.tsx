@@ -15,7 +15,6 @@ interface Dashboard {
   by_poste: Record<string, number | null>;
   weeks: { week: string; active: number | null; kg: number | null }[];
   teams: { name: string; members: number; active: number; kg: number; score: number }[];
-  ai: { calls: number; cost_usd: number };
 }
 
 const fr = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
@@ -161,8 +160,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         <a href={`/admin/export/mobilite?org=${org.company_id}`} className="btn-ghost min-h-11 text-sm">Export mobilité (CSV)</a>
       </section>
       <p className="text-xs text-terre">
-        CO₂ calculé avec les facteurs de l&apos;ADEME, par rapport aux habitudes déclarées par chacun. IA ce mois-ci : {fr(d.ai.calls)} appels,{" "}
-        {d.ai.cost_usd.toLocaleString("fr-FR", { style: "currency", currency: "USD" })} estimés.
+        CO₂ calculé avec les facteurs de l&apos;ADEME, par rapport aux habitudes déclarées par chacun.
       </p>
     </>
   );

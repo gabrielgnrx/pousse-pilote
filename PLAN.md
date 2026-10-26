@@ -312,3 +312,28 @@ avec la CI verte (types, lint, tests unitaires, tests SQL, build, e2e Playwright
    à partir des engagements publiés par Anthropic.
 3. Météo de l'animateur : **Paris pour toutes les organisations**, pas de ville par organisation.
 4. `pousse-pilote.vercel.app` : **confirmé** comme domaine de production.
+
+---
+
+## 8. Pousse sans IA (26/10/2026)
+
+Décision de Gabriel : l'application n'utilise pas d'IA (coût de l'API). Tout ce qui en dépendait est
+retiré du code et de la base (migration `0042_sans_ia.sql`) ; chaque fonctionnalité garde une version
+par règles :
+
+| Fonctionnalité | Sans IA |
+| --- | --- |
+| Le + en saisie libre | Règles (mots-clés et quantité), y compris plusieurs gestes dans une phrase ; sinon, actions proches à choisir |
+| Mon plan | Classement par règles (potentiel CO₂, faisabilité, semaine écoulée), calculé à la première visite de la semaine |
+| Justificatifs | Toujours demandés (train, vacances en train, réparation, applis) ; privés, effacés à 30 jours, sans vérification |
+| Scanner | Code-barres, ou choix du rayon (au lieu de la photo) |
+| Animateur du QG | Messages préparés, mêmes rendez-vous et mêmes limites |
+| Quiz | Quiz du jour seulement (banque générée depuis les facteurs ADEME) ; quiz de la semaine retiré |
+| Rapport mensuel | Faits marquants et recommandations écrits par des règles à partir des agrégats |
+
+Retirés : `src/lib/ai`, le SDK Anthropic, `ANTHROPIC_API_KEY` / `AI_MOCK`, les tables `ai_calls`, `ai_quota`,
+`ai_cache`, `proof_checks`, `quiz_week_*`, `monthly_reports`, la colonne `consent_ai`, les tâches `pousse-plan`
+et `pousse-quiz`. Les migrations 0029 – 0040 restent dans l'historique (déjà appliquées en production).
+
+Point à trancher plus tard : sans vérification, le justificatif dissuade mais ne prouve rien ; le garder
+(collecte d'une photo privée) ou le retirer est un choix produit et RGPD.

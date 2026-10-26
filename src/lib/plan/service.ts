@@ -1,18 +1,9 @@
 /**
- * Calcul du plan de la semaine : règles déterministes, puis formulation par le coach IA si possible.
- * Utilisé par la page Mon plan (à la première visite de la semaine) et par la tâche planifiée du lundi.
+ * Calcul du plan de la semaine, par les règles seulement (weekly.ts) : à la première visite de la
+ * semaine sur Mon plan, il est calculé puis gardé jusqu'au lundi suivant.
  */
-import { runTask, type AiStore } from "../ai/run.ts";
-import type { MessagesClient } from "../ai/types.ts";
-import { planCoachTask, PLAN_COACH_VERSION } from "../ai/prompts/plan-coach.ts";
 import type { Habits } from "../co2/footprint.ts";
-import { COACH_POOL, FEASIBILITY, mergeCoachChoice, rankCandidates, rulePlan, type Feasibility, type LastWeek, type PlanEntry } from "./weekly.ts";
-
-export interface BuiltPlan {
-  items: PlanEntry[];
-  source: "regles" | "ia" | "mock";
-  version: string | null;
-}
+import { FEASIBILITY, rankCandidates, rulePlan, type Feasibility, type LastWeek, type PlanEntry } from "./weekly.ts";
 
 /** Lit sans confiance les données venues de la base (jsonb) : tout ce qui est inattendu est ignoré. */
 export function parseInputs(raw: { feasibility?: unknown; stats?: unknown } | null | undefined): {
@@ -34,21 +25,8 @@ export function parseInputs(raw: { feasibility?: unknown; stats?: unknown } | nu
   return { feasibility, week: { counts, abandoned: list(s.abandoned), active: list(s.active) } };
 }
 
-export async function buildPlan(
-  h: Habits,
-  feasibility: Record<string, Feasibility>,
-  week: LastWeek,
-  deps: { client: MessagesClient | null; store: AiStore; mock?: boolean },
-  useAi = true,
-): Promise<BuiltPlan | null> {
+/** Le plan de la semaine : les premiers défis classés, avec leur phrase « pourquoi toi ». */
+export function buildPlan(h: Habits, feasibility: Record<string, Feasibility>, week: LastWeek): PlanEntry[] | null {
   const candidates = rankCandidates(h, feasibility, week);
-  if (candidates.length === 0) return null;
-  const fallback: BuiltPlan = { items: rulePlan(candidates), source: "regles", version: null };
-  // Sobriété : un seul candidat, ou une personne inactive depuis un mois → pas besoin de l'IA.
-  if (!useAi || candidates.length === 1) return fallback;
-
-  const pool = candidates.slice(0, COACH_POOL);
-  const r = await runTask(planCoachTask, { candidates: pool }, deps);
-  if (!r.ok) return fallback;
-  return { items: mergeCoachChoice(pool, r.data.items), source: r.source === "mock" ? "mock" : "ia", version: PLAN_COACH_VERSION };
+  return candidates.length ? rulePlan(candidates) : null;
 }

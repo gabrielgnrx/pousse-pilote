@@ -63,13 +63,6 @@ export function WelcomeForm({
             <span>Mes pousses comptent pour mon équipe (totaux anonymes). Sans cette case, tu comptes quand même dans l&apos;effectif de ton équipe, avec 0 pousse.</span>
           </label>
           <label className="flex items-start gap-3 text-sm leading-snug">
-            <input type="checkbox" name="consent_ai" defaultChecked className="mt-0.5 size-5 accent-sapin" />
-            <span>
-              L&apos;IA de Pousse (Claude, d&apos;Anthropic) peut comprendre mes phrases, me proposer mes défis et vérifier mes justificatifs.
-              Pousse ne lui transmet ni mon nom ni mon e-mail, seul le verdict d&apos;un justificatif est gardé, et elle ne calcule jamais le CO₂. Sans cette case : raccourcis et formulaires seulement.
-            </span>
-          </label>
-          <label className="flex items-start gap-3 text-sm leading-snug">
             <input type="checkbox" name="consent_feedback" defaultChecked className="mt-0.5 size-5 accent-sapin" />
             <span>Pousse peut me proposer un court questionnaire pendant le pilote.</span>
           </label>

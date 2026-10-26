@@ -6,8 +6,7 @@
  * 2. Tri : potentiel de CO₂ pour la personne (par palier), puis faisabilité déclarée, puis kg exacts.
  * 3. La semaine écoulée ajuste l'ordre : un défi abandonné recule (on le garde, sans insister), une
  *    action déjà régulière est marquée « sur ta lancée » et laisse la place à un nouveau levier.
- * L'IA (coach) choisit ensuite parmi les premiers candidats et formule le « pourquoi toi » ; sans IA,
- * les phrases d'ici servent telles quelles.
+ * 4. Chaque défi porte une phrase courte « pourquoi toi », écrite par les règles.
  */
 import { actionPlan, type PlanItem } from "../co2/plan.ts";
 import { formatKg } from "../co2/challenges.ts";
@@ -36,15 +35,13 @@ export interface PlanCandidate {
   feasibility: Feasibility | null;
   signal: Signal;
   lastWeekCount: number;
-  /** Phrase courte « pourquoi toi », sans IA. */
+  /** Phrase courte « pourquoi toi ». */
   reason: string;
 }
 
 /** Une action faite au moins 3 fois la semaine dernière est « sur sa lancée ». */
 export const STREAK_THRESHOLD = 3;
 export const PLAN_SIZE = 3;
-/** Nombre de candidats proposés au coach IA (il en garde PLAN_SIZE). */
-export const COACH_POOL = 6;
 
 const TIER = (kg: number) => (kg >= 200 ? 0 : kg >= 50 ? 1 : 2);
 const FEAS_RANK: Record<Feasibility, number> = { facile: 0, possible: 1, difficile: 2, impossible: 3 };
@@ -105,32 +102,11 @@ export interface PlanEntry {
   reason: string;
 }
 
-/** Le plan sans IA : les premiers candidats, avec leurs phrases. */
+/** Le plan : les premiers candidats, avec leurs phrases. */
 export function rulePlan(candidates: PlanCandidate[], size = PLAN_SIZE): PlanEntry[] {
   return candidates.slice(0, size).map((c) => toEntry(c));
 }
 
 export function toEntry(c: PlanCandidate, reason = c.reason): PlanEntry {
   return { template_id: c.templateId, variant: c.variant, kg_year: c.kgYear, signal: c.signal, reason };
-}
-
-/**
- * Applique le choix du coach IA : seuls les candidats proposés sont retenus (un défi hors liste est
- * ignoré), dans l'ordre du coach ; le plan est complété par les règles s'il manque des défis.
- */
-export function mergeCoachChoice(pool: PlanCandidate[], picks: { template: string; reason: string }[], size = PLAN_SIZE): PlanEntry[] {
-  const byId = new Map(pool.map((c) => [c.templateId, c]));
-  const chosen: PlanEntry[] = [];
-  for (const p of picks) {
-    const c = byId.get(p.template);
-    if (!c || chosen.some((e) => e.template_id === c.templateId)) continue;
-    const reason = p.reason.trim();
-    chosen.push(toEntry(c, reason.length >= 10 ? reason : c.reason));
-    if (chosen.length === size) break;
-  }
-  for (const c of pool) {
-    if (chosen.length === size) break;
-    if (!chosen.some((e) => e.template_id === c.templateId)) chosen.push(toEntry(c));
-  }
-  return chosen;
 }

@@ -7,45 +7,44 @@ preuve et les partage dans le fil interne de l'entreprise.
 Stack : Next.js 15 (App Router) · React 19 · Tailwind CSS 4 · Supabase (auth par lien e-mail,
 Postgres, stockage des photos). Pensée mobile d'abord, utilisable sur ordinateur.
 
-## Pousse v2 : programme climat permanent, animé par l'IA
+## Pousse v2 : programme climat permanent
 
-La v2 (branche `v2`, plan et décisions dans `PLAN.md`) ajoute :
-- **le + en langage naturel** : une phrase tapée ou dictée, comprise par l'IA, confirmée par la personne, puis
-  calculée par la base (`log_action_slug`) ;
-- **Mon plan** recalculé chaque lundi, **justificatifs** vérifiés par la vision, **animateur IA** dans le QG,
-  **scanner par photo**, **quiz de la semaine** générés et relus ;
+La v2 ajoute :
+- **le + en saisie libre** : une phrase tapée ou dictée (« vélo 8 km puis déjeuner végé »), comprise par des
+  règles (`src/lib/actions/interpret.ts`), confirmée par la personne, puis calculée par la base (`log_action_slug`) ;
+- **Mon plan** calculé chaque semaine par des règles, **justificatifs** privés effacés à 30 jours, **animateur**
+  du QG à messages préparés (vote du lundi, bilan du vendredi, relances, météo), **scanner par rayon** ;
 - **l'espace RSE** (`/entreprise` puis `/admin`) : lancement en self-serve, tableau de bord agrégé (rien sous
-  5 personnes), rapport mensuel rédigé en flux, export PDF (impression) et CSV de la mobilité domicile-travail.
+  5 personnes), rapport mensuel écrit par des règles, export PDF (impression) et CSV de la mobilité domicile-travail.
 
-**Règle d'or** : l'IA ne calcule jamais le CO₂. Elle choisit une action d'un catalogue fermé
-(`supabase/data/action_types.json`) ; la base calcule `quantité × facteur` avec la table versionnée
-`emission_factors` (`supabase/data/emission_factors.json`, généré par `node scripts/generate-factors.ts`).
+L'application n'utilise pas d'IA (décision du 26/10/2026, migration `0042_sans_ia.sql`). Le CO₂ est
+toujours calculé par le code : `quantité × facteur`, avec la table versionnée `emission_factors`
+(`supabase/data/emission_factors.json`, généré par `node scripts/generate-factors.ts`).
 
-### Variables d'environnement (en plus de la v1)
+### Variables d'environnement (Vercel, Production)
 
 | Variable | Rôle |
 | --- | --- |
-| `ANTHROPIC_API_KEY` | API Claude, côté serveur seulement (`src/lib/ai/client.ts`, protégé par `server-only`). Sans clé : replis sans IA. |
-| `AI_MOCK=1` | Réponses simulées et déterministes (e2e, démo sans clé). |
-| `SUPABASE_SERVICE_ROLE_KEY` | Vérification des justificatifs (lecture du bucket privé) et purges. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Purge des justificatifs (30 jours) et des photos du fil (90 jours). |
+| `CRON_SECRET` | Protège les tâches Vercel Cron (purge, rappels). |
+| `VAPID_PRIVATE_KEY` | Rappels sur téléphone. |
 
 ### Migrations et tâches planifiées
 
 Appliquer toutes les migrations (`supabase db push`). Celles dont la première ligne dit « Supabase
-seulement » (`0032`, `0035`, `0037`) créent la clé des tâches IA dans Vault et programment `pg_cron` :
-plans du lundi, animateur (lundi 9 h et 14 h, milieu de semaine, vendredi), quiz du lundi. Elles appellent
-`https://pousse-pilote.vercel.app` : changer l'URL si le domaine est différent.
+seulement » créent la clé des tâches planifiées dans Vault (nommée « ia » par héritage) et programment
+`pg_cron`. Seule reste active la tâche de l'animateur (`pousse-animateur`, lundi 9 h et 14 h, milieu de
+semaine, vendredi). Elle appelle `https://pousse-pilote.vercel.app`.
 
 | Migration | Contenu |
 | --- | --- |
 | 0026 – 0028 | Facteurs d'émission, catalogue des actions, calcul sur facteurs, fil jamais automatique |
-| 0029 | Socle IA : journal `ai_calls`, quotas, cache |
+| 0029 – 0033, 0036, 0039, 0040 | Fonctions d'IA, retirées par 0042 (gardées pour l'historique) |
 | 0030 – 0031 | Publication proposée (photo facultative), Mon plan |
-| 0033 | Justificatifs : verdict seulement, photo effacée |
-| 0034, 0036 | Animateur du QG, quiz de la semaine |
-| 0038 – 0039 | Espace RSE : organisations, agrégats, rapports, export, journal IA de l'admin |
-| 0040 | Refus de l'IA par salarié, appliqué par la base |
+| 0034 – 0035 | Animateur du QG |
+| 0038 | Espace RSE : organisations, agrégats, export |
 | 0041 | Classement du rapport limité au mois |
+| 0042 | Retrait de l'IA |
 
 ### Données de démo
 
@@ -56,7 +55,7 @@ plans du lundi, animateur (lundi 9 h et 14 h, milieu de semaine, vendredi), quiz
 ### Tests v2
 
 ```bash
-npm test            # calcul, plafonds, parsing des sorties IA (réponses simulées), rapport, CSV
+npm test            # calcul, plafonds, saisie libre, plan, animateur, rapport, CSV
 npm run test:sql    # migrations et scénarios sur PostgreSQL 16 (dont parité TS/SQL du calcul)
 npm run test:e2e    # Playwright : action, confirmation, célébration, publication (Supabase local)
 ```
@@ -274,10 +273,9 @@ cloisonnement entre entreprises, classement anonyme (équipes de moins de 5 masq
 
 La CI GitHub (`.github/workflows/ci.yml`) vérifie à chaque commit de `v2` : installation, types Supabase
 régénérés, `typecheck`, `lint`, tests unitaires, tests SQL, `build`, puis le parcours Playwright sur un
-Supabase local avec l'IA simulée.
+Supabase local.
 
-Pas encore vérifié : les appels réels à l'API Claude (aucune clé dans l'environnement de développement),
-l'envoi des e-mails et le rendu sur de vrais téléphones.
+Pas encore vérifié : l'envoi des e-mails et le rendu sur de vrais téléphones.
 
 ## Limites connues et suites prévues
 

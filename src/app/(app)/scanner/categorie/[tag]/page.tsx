@@ -9,7 +9,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 export const metadata = { title: "Scanner · Pousse" };
 
 /**
- * Résultat du scanner par photo : la catégorie reconnue, son impact estimé (médiane Agribalyse des
+ * Un rayon choisi dans le scanner : son impact estimé (médiane Agribalyse des
  * produits de la catégorie, affichée comme une estimation) et des alternatives mieux notées.
  */
 export default async function CategoryPage({ params }: { params: Promise<{ tag: string }> }) {
@@ -26,7 +26,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ tag: 
     <>
       <Link href="/scanner" className="text-sm font-semibold text-sapin">‹ Scanner</Link>
       <section className="card flex flex-col gap-3">
-        <p className="label">Reconnu sur ta photo</p>
+        <p className="label">Rayon</p>
         <h1 className="font-display text-2xl leading-snug">{category.label}</h1>
         {estimate ? (
           <>
@@ -81,8 +81,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ tag: 
       ) : null}
 
       <p className="text-center text-xs leading-relaxed text-terre">
-        Catégorie reconnue par l&apos;IA de Pousse sur ta photo (qui n&apos;est pas gardée) ; l&apos;IA ne donne aucun
-        chiffre. Données Open Food Facts (ODbL), Green-Score et Agribalyse (ADEME).
+        Données Open Food Facts (ODbL), Green-Score et Agribalyse (ADEME).
       </p>
     </>
   );

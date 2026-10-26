@@ -13,7 +13,6 @@ export async function updatePreferences(form: FormData) {
       ...(name && name.length <= 40 ? { display_name: name } : {}),
       consent_team_stats: form.get("consent_team_stats") === "on",
       consent_feedback: form.get("consent_feedback") === "on",
-      consent_ai: form.get("consent_ai") === "on",
     })
     .eq("id", user.id);
   revalidatePath("/profil");

@@ -85,8 +85,8 @@ export function fillNames(text: string, names: string[]): string {
   return text.replace(/\{\{prenom_(\d+)\}\}/g, (_, i) => names[Number(i) - 1] ?? "").replace(/\s+,/g, ",").replace(/ {2,}/g, " ").trim();
 }
 
-/** Les messages sans IA : courts, chaleureux, au tutoiement. */
-export function fallbackMessage(f: Facts): string {
+/** Les messages de l'animateur : préparés, courts, chaleureux, au tutoiement. */
+export function animatorMessage(f: Facts): string {
   const body = f.lines.join(" ");
   const intro: Record<Slot, string> = {
     vote_open: "Bonjour l'équipe !",

@@ -66,12 +66,11 @@ jobs:
         run: bash scripts/ci/run.sh build npm run build
 
   e2e:
-    # Parcours principal dans un navigateur : pile Supabase locale, application compilée, IA simulée.
+    # Parcours principal dans un navigateur : pile Supabase locale, application compilée.
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      AI_MOCK: "1"
     steps:
       - uses: actions/checkout@v4
         with:
