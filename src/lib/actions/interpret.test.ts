@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { candidatesFor, convertQuantity, interpretItems, ruleParse, type ParsedItem } from "./interpret.ts";
-import { ACTION_BY_SLUG } from "../../co2/engine.ts";
-import { TRANSPORT_KG_PER_KM } from "../../co2/factors.ts";
-import type { Habits } from "../../co2/footprint.ts";
+import { candidatesFor, convertQuantity, interpretItems, parsePhrase, ruleParse, type ParsedItem } from "./interpret.ts";
+import { ACTION_BY_SLUG } from "../co2/engine.ts";
+import { TRANSPORT_KG_PER_KM } from "../co2/factors.ts";
+import type { Habits } from "../co2/footprint.ts";
 
 const h: Habits = {
   commuteMode: "voiture_seul",
@@ -23,16 +23,28 @@ const h: Habits = {
 
 const item = (action: string, quantity: number | null, unit = "", confidence = 0.95): ParsedItem => ({ action, quantity, unit, confidence });
 
-test("règle simple : « vélo jusqu'au bureau ce matin, 8 km » se passe de l'IA", () => {
+test("règle simple : « vélo jusqu'au bureau ce matin, 8 km »", () => {
   assert.deepEqual(ruleParse("vélo jusqu'au bureau ce matin, 8 km"), [item("velo", 8, "km", 0.9)]);
   assert.deepEqual(ruleParse("Télétravail aujourd'hui"), [item("teletravail", null, "", 0.9)]);
 });
 
-test("règle simple : dans le doute, on laisse l'IA (plusieurs gestes, plusieurs nombres, inconnu)", () => {
+test("règle simple : dans le doute, rien (plusieurs gestes, plusieurs nombres, inconnu)", () => {
   assert.equal(ruleParse("vélo 8 km puis déjeuner végé"), null);
   assert.equal(ruleParse("vélo 8 km aller et 9 km retour"), null);
   assert.equal(ruleParse("j'ai fait un truc bien"), null);
   assert.equal(ruleParse("vélo 2 repas"), null);
+});
+
+test("phrase à plusieurs gestes : découpée, chaque morceau reconnu seul", () => {
+  assert.deepEqual(parsePhrase("vélo 8 km puis déjeuner végé"), [item("velo", 8, "km", 0.9), item(ruleParse("déjeuner végé")![0].action, null, "", 0.9)]);
+  assert.deepEqual(parsePhrase("vélo jusqu'au bureau ce matin, 8 km"), [item("velo", 8, "km", 0.9)]);
+  assert.equal(parsePhrase("télétravail et déjeuner végé")?.length, 2);
+});
+
+test("phrase à plusieurs gestes : un morceau ambigu rend tout ambigu (on ne devine pas)", () => {
+  assert.equal(parsePhrase("vélo 8 km aller et 9 km retour"), null);
+  assert.equal(parsePhrase("j'ai fait un truc bien et un autre"), null);
+  assert.deepEqual(parsePhrase("vélo"), ruleParse("vélo"));
 });
 
 test("cartes : quantité convertie, aperçu du CO₂ calculé par le moteur", () => {
