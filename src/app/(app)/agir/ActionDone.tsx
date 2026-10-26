@@ -265,6 +265,10 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
           </p>
           )}
 
+          {action.notice ? (
+            <p role="status" className="rounded-2xl bg-peche px-4 py-2.5 text-[13px] font-semibold text-argile-fonce">{action.notice}</p>
+          ) : null}
+
           <div className="mt-auto flex flex-col gap-2 pt-2">
             {action.provisional ? (
               <button type="button" disabled className="btn-primary min-h-14 font-display text-[19px] font-normal">

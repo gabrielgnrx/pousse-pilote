@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { formatKg } from "@/lib/co2/challenges.ts";
 import { THEMES, type ActionItem, type Theme } from "@/lib/actions-catalog";
-import { logAction, logConfirmedAction, type LoggedAction } from "./actions";
+import { logAction, logSheet, type LoggedAction } from "./actions";
 import { boostedPoints, fmtMult, type Boost } from "@/lib/boosts";
 import { TEMPLATE_BY_ID } from "@/lib/co2/challenges.ts";
 import { ActionDone } from "./ActionDone";
@@ -50,7 +50,7 @@ export function ActionPicker({
   }, [items, query, theme]);
 
   const record = (item: ActionItem) => {
-    if (item.requiresConfirm) {
+    if (item.requiresConfirm || item.pick) {
       setError(null);
       setConfirmFor(item.key);
       return;
@@ -93,7 +93,7 @@ export function ActionPicker({
   const sendConfirmed = (form: FormData) => {
     setError(null);
     startTransition(async () => {
-      const res = await logConfirmedAction(form);
+      const res = await logSheet(form);
       if (res.ok) {
         setConfirmFor(null);
         setDone(res.action);
@@ -127,9 +127,13 @@ export function ActionPicker({
             <span className="block text-xs text-terre">
               {busy
                 ? "Enregistrement…"
-                : item.requiresConfirm
-                  ? "Sur l'honneur · plafonné selon ton bilan"
-                  : challenge
+                : item.pick === "items"
+                  ? "Choisis quoi et combien"
+                  : item.pick === "distance"
+                    ? "Indique la distance · sur l'honneur"
+                    : item.requiresConfirm
+                      ? "Sur l'honneur · plafonné selon ton bilan"
+                      : challenge
                   ? "Compte pour ton défi en cours"
                   : count > 0
                     ? `Fait ${count} fois ce mois-ci${doneToday[item.key] ? ", dont aujourd'hui" : ""}`
@@ -140,7 +144,7 @@ export function ActionPicker({
           </span>
           <span className="flex shrink-0 flex-col items-end gap-0.5">
             <span className={`text-sm font-bold ${item.kg > 0 ? "text-sapin" : "text-terre"}`}>
-              {item.kg > 0 ? `−${formatKg(item.kg)}` : "≈ 0 kg"}
+              {item.kg > 0 ? `${item.pick ? "dès " : ""}−${formatKg(item.kg)}` : "≈ 0 kg"}
             </span>
             <span className="text-xs font-semibold text-argile-fonce">+{boostedPoints(item.points, boost)}</span>
           </span>
@@ -201,18 +205,6 @@ export function ActionPicker({
             <h2 className="font-display text-[19px] normal-case">Ou en un tap · tes habitudes</h2>
             <ul className="flex flex-col gap-2">{favorites.map((k) => byKey[k]).filter(Boolean).map(row)}</ul>
           </section>
-          <section className="flex flex-col gap-2" aria-labelledby="applis">
-            <div>
-              <h2 id="applis" className="font-display text-[19px]">Achats via une appli durable · +30</h2>
-              <p className="text-xs text-terre">Vinted, Leboncoin, Back Market, Too Good To Go… Sur l&apos;honneur, 3 par semaine au plus.</p>
-            </div>
-            <ul className="flex flex-col gap-2">
-              {[...new Set(items.filter((i) => i.templateId.startsWith("appli_")).map((i) => i.templateId))]
-                .map((id) => items.find((i) => i.templateId === id)!)
-                .map((i) => ({ ...i, title: TEMPLATE_BY_ID[i.templateId]?.title ?? i.title }))
-                .map(row)}
-            </ul>
-          </section>
           <section className="flex flex-col gap-2">
             <h2 className="font-display text-[19px] normal-case">Ou par thème</h2>
             <div className="flex flex-wrap gap-2">
@@ -243,7 +235,7 @@ export function ActionPicker({
       </p>
 
       {confirmFor && byKey[confirmFor] ? (
-        <ConfirmSheet
+        <ActionSheet
           item={byKey[confirmFor]}
           boost={boosts[confirmFor]}
           pending={pending}
@@ -261,8 +253,11 @@ export function ActionPicker({
   );
 }
 
-/** Une action qui rapporte beaucoup : préciser ce qu'on a fait, et le confirmer sur l'honneur. */
-function ConfirmSheet({
+/**
+ * Les actions à préciser : vêtements ou appareils (quoi et combien), train (distance), et les grosses
+ * actions confirmées sur l'honneur.
+ */
+function ActionSheet({
   item,
   boost,
   pending,
@@ -277,13 +272,25 @@ function ConfirmSheet({
   onSubmit: (form: FormData) => void;
   onClose: () => void;
 }) {
-  const t = TEMPLATE_BY_ID[item.templateId];
+  const [qty, setQty] = useState<Record<string, number>>({});
+  const [km, setKm] = useState("");
+  const units = item.pick === "items" ? Object.values(qty).reduce((a, b) => a + b, 0) : 1;
+  const kg =
+    item.pick === "items"
+      ? (item.choices ?? []).reduce((sum, c) => sum + c.kg * (qty[c.variant] ?? 0), 0)
+      : item.pick === "distance"
+        ? null
+        : item.kg;
+  const ready = item.pick === "items" ? units > 0 : item.pick === "distance" ? Number(km.replace(",", ".")) >= 50 : true;
+  const step = (variant: string, delta: number, max: number) =>
+    setQty((q) => ({ ...q, [variant]: Math.min(max, Math.max(0, (q[variant] ?? 0) + delta)) }));
+
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-encre/60 sm:items-center"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="confirmation-titre"
+      aria-labelledby="action-titre"
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
       }}
@@ -295,37 +302,69 @@ function ConfirmSheet({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">
-              {item.templateId.startsWith("appli_") ? "Achat via une appli" : "Grosse action"} · sur l&apos;honneur
+              {item.pick === "items" ? "Qu'as-tu acheté ou gardé ?" : item.pick === "distance" ? "Quelle distance ?" : "Grosse action · sur l'honneur"}
             </p>
-            <h2 id="confirmation-titre" className="font-display text-xl leading-tight">{t?.title ?? item.title}</h2>
+            <h2 id="action-titre" className="font-display text-xl leading-tight">{item.title}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sable">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
         </div>
         <input type="hidden" name="template" value={item.templateId} />
-        {t && t.variants.length > 1 ? (
-          <label className="flex flex-col gap-1 text-sm font-bold">
-            {t.variantQuestion ?? "Quoi ?"}
-            <select name="variant" defaultValue={item.variant} className="input">
-              {t.variants.map((v) => (
-                <option key={v.key} value={v.key}>{v.label}</option>
-              ))}
-            </select>
+        <input type="hidden" name="variant" value={item.variant} />
+
+        {item.pick === "items" ? (
+          <ul className="flex flex-col gap-1.5">
+            {(item.choices ?? []).map((c) => {
+              const n = qty[c.variant] ?? 0;
+              return (
+                <li key={c.variant} className="flex min-h-12 items-center gap-3 rounded-2xl bg-papier px-3 py-2">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">{c.label}</span>
+                    <span className="block text-xs text-terre">{c.kg > 0 ? `−${formatKg(c.kg)} chacun` : "≈ 0 kg d'après ton bilan"}</span>
+                  </span>
+                  <input type="hidden" name={`qty_${c.variant}`} value={n} />
+                  <button type="button" onClick={() => step(c.variant, -1, c.max)} disabled={n === 0} aria-label={`Un ${c.label.toLowerCase()} de moins`} className="flex size-10 items-center justify-center rounded-full bg-sable font-bold disabled:opacity-40">−</button>
+                  <span className="w-5 text-center font-display text-lg" aria-live="polite">{n}</span>
+                  <button type="button" onClick={() => step(c.variant, 1, c.max)} disabled={n >= c.max} aria-label={`Un ${c.label.toLowerCase()} de plus`} className="flex size-10 items-center justify-center rounded-full bg-sauge font-bold text-sapin disabled:opacity-40">+</button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+
+        {item.pick === "distance" ? (
+          <label className="flex items-center gap-3 text-sm">
+            <span className="font-semibold">Distance de l&apos;aller</span>
+            <input
+              name="km"
+              type="number"
+              inputMode="decimal"
+              min={50}
+              max={1500}
+              required
+              value={km}
+              onChange={(e) => setKm(e.target.value)}
+              className="input h-11 w-28 py-0"
+              aria-describedby="km-unite"
+            />
+            <span id="km-unite" className="text-terre">km</span>
           </label>
-        ) : (
-          <input type="hidden" name="variant" value={item.variant} />
-        )}
-        <label className="flex items-start gap-3 rounded-2xl bg-sable p-3 text-sm leading-snug">
-          <input type="checkbox" name="confirm" required className="mt-0.5 size-5 shrink-0 accent-sapin" />
-          <span>
-            Je confirme l&apos;avoir fait. <span className="text-terre">Aucun justificatif n&apos;est demandé ; cette action est
-            plafonnée pour garder le compteur de l&apos;entreprise juste.</span>
-          </span>
-        </label>
+        ) : null}
+
+        {item.requiresConfirm ? (
+          <label className="flex items-start gap-3 rounded-2xl bg-sable p-3 text-sm leading-snug">
+            <input type="checkbox" name="confirm" required className="mt-0.5 size-5 shrink-0 accent-sapin" />
+            <span>
+              Je confirme l&apos;avoir fait. <span className="text-terre">Aucun justificatif n&apos;est demandé ; cette action est
+              plafonnée pour garder le compteur de l&apos;entreprise juste.</span>
+            </span>
+          </label>
+        ) : null}
+        {kg !== null && kg > 0 ? <p className="rounded-2xl bg-sauge px-3 py-2 text-[13px] text-sapin">≈ {formatKg(kg)} de CO₂ évités</p> : null}
         {error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{error}</p> : null}
-        <button type="submit" disabled={pending} className="btn-dark">
-          {pending ? "Enregistrement…" : `Valider · +${boostedPoints(item.points, boost)}`}
+        <button type="submit" disabled={pending || !ready} className="btn-dark disabled:opacity-60">
+          {pending ? "Enregistrement…" : `Valider · +${boostedPoints(item.points * Math.max(units, 1), boost)}`}
         </button>
       </form>
     </div>

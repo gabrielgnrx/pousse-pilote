@@ -42,6 +42,8 @@ export interface LoggedAction {
   capped?: boolean;
   /** Aperçu affiché avant la réponse de la base (interface optimiste). */
   provisional?: boolean;
+  /** Une partie n'a pas été comptée (plafond atteint en cours de route). */
+  notice?: string;
 }
 
 export type LogResult = { ok: true; action: LoggedAction } | { ok: false; error: string };
@@ -132,19 +134,70 @@ export async function logAction(templateId: string, variant: string): Promise<Lo
 }
 
 
-/** Une action qui rapporte beaucoup (train, réparation, achat via une appli) : confirmée sur l'honneur. */
-export async function logConfirmedAction(form: FormData): Promise<LogResult> {
-  if (form.get("confirm") !== "on") return { ok: false, error: ERRORS.confirm_required };
+/**
+ * Une action précisée dans sa fiche : vêtements ou appareils (une ligne par article choisi, chacune
+ * calculée avec son propre facteur), train (distance saisie), ou grosse action confirmée sur l'honneur.
+ * La base calcule tout et applique les plafonds ; on s'arrête au premier refus.
+ */
+export async function logSheet(form: FormData): Promise<LogResult> {
   const templateId = String(form.get("template") ?? "");
-  const variant = String(form.get("variant") ?? "base");
-  if (!TEMPLATE_BY_ID[templateId]?.requiresConfirm) return { ok: false, error: ERRORS.unknown_action };
-  const { supabase, user, profile } = await requireProfile();
-  const { data, error } = await supabase.rpc("log_action", { p_template: templateId, p_variant: variant });
-  if (error || !data) {
-    const code = error?.message ?? "";
-    return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
+  const t = TEMPLATE_BY_ID[templateId];
+  if (!t) return { ok: false, error: ERRORS.unknown_action };
+  if (t.requiresConfirm && form.get("confirm") !== "on") return { ok: false, error: ERRORS.confirm_required };
+
+  // Les lignes à enregistrer : [slug ou null, variante, quantité].
+  let lines: { slug: string | null; variant: string; quantity: number | null }[] = [];
+  if (templateId === "train") {
+    const km = Number(String(form.get("km") ?? "").replace(",", "."));
+    if (!Number.isFinite(km)) return { ok: false, error: ERRORS.quantity_required };
+    lines = [{ slug: "train", variant: "km", quantity: km }];
+  } else if (t.variants.length > 1 && String(form.get("variant") ?? "") === "*") {
+    for (const v of t.variants) {
+      const n = Number(form.get(`qty_${v.key}`) ?? 0);
+      if (!Number.isInteger(n) || n < 0 || n > 3) return { ok: false, error: ERRORS.quantity_out_of_range };
+      if (n > 0) lines.push({ slug: `${templateId}_${v.key}`, variant: v.key, quantity: n });
+    }
+    if (!lines.length) return { ok: false, error: "Choisis au moins un article." };
+  } else {
+    lines = [{ slug: null, variant: String(form.get("variant") ?? "base"), quantity: null }];
   }
-  return describe(supabase, user.id, profile.display_name, data);
+
+  const { supabase, user, profile } = await requireProfile();
+  const logged: unknown[] = [];
+  let failure: string | null = null;
+  for (const line of lines) {
+    const { data, error } = line.slug
+      ? await supabase.rpc("log_action_slug", { p_action: line.slug, p_quantity: line.quantity })
+      : await supabase.rpc("log_action", { p_template: templateId, p_variant: line.variant });
+    if (error || !data) {
+      const code = error?.message ?? "";
+      failure = ERRORS[code] ?? sqlErrorMessage(code);
+      break;
+    }
+    logged.push(data);
+  }
+  if (!logged.length) return { ok: false, error: failure ?? ERRORS.unknown_action };
+
+  const first = await describe(supabase, user.id, profile.display_name, logged[0]);
+  if (!first.ok || logged.length === 1) {
+    return first.ok && failure ? { ok: true, action: { ...first.action, notice: `Le reste n'a pas été compté : ${failure}` } } : first;
+  }
+  // Plusieurs articles : une seule célébration, avec la somme du CO₂ et des pousses.
+  const rows = logged as { kg: number; points: number; base_points?: number; units?: number }[];
+  const sum = (f: (r: (typeof rows)[number]) => number) => rows.reduce((a, r) => a + f(r), 0);
+  const labels = lines.slice(0, logged.length).map((l) => `${l.quantity} × ${(t.variants.find((v) => v.key === l.variant)?.label ?? l.variant).toLowerCase()}`);
+  return {
+    ok: true,
+    action: {
+      ...first.action,
+      title: `${templateId === "occasion" ? "Vêtements d'occasion" : "Appareils réparés ou reconditionnés"} · ${labels.join(", ")}`,
+      kg: sum((r) => Number(r.kg)),
+      points: sum((r) => Number(r.points)),
+      basePoints: sum((r) => Number(r.base_points ?? r.points)),
+      units: sum((r) => Number(r.units ?? 1)),
+      notice: failure ? `Le reste n'a pas été compté : ${failure}` : undefined,
+    },
+  };
 }
 
 async function describe(

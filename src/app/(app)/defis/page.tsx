@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { requireHabits } from "@/lib/session";
 import {
-  APP_TEMPLATES,
   CATEGORY_LABEL,
   TEMPLATE_BY_ID,
   TEMPLATES,
@@ -109,7 +108,7 @@ export default async function DefisPage({
       target: Number(c.target),
       endsOn: formatDay(c.ends_on, "short"),
       duel: d ? { other: d.other_name, theirs: d.theirs, status: d.status } : null,
-      href: t?.requiresConfirm ? `/agir?ajout=${t.id}:${c.variant}` : "/agir",
+      href: t?.requiresConfirm || t?.id === "occasion" ? `/agir?ajout=${t.id}:${c.variant}` : "/agir",
       duelHref: d ? undefined : `/defis/${c.id}/duel`,
     };
   });
@@ -261,27 +260,6 @@ export default async function DefisPage({
               </article>
             );
           })}
-
-          <section className="flex flex-col gap-3">
-            <div className="mt-2">
-              <h2 className="font-display text-lg">Achats via une appli durable</h2>
-              <p className="text-xs text-terre">30 pousses l&apos;achat, sur l&apos;honneur, 3 par semaine au plus.</p>
-            </div>
-            {APP_TEMPLATES.map((t) => (
-              <article key={t.id} className="flex items-center gap-3 rounded-[22px] bg-peche p-4 shadow-[inset_0_-4px_0_var(--color-peche-fonce)]">
-                <div className="flex-1">
-                  <span className="label">{CATEGORY_LABEL[t.category]} · sur l&apos;honneur</span>
-                  <h3 className="mt-1 font-bold">{t.title}</h3>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    <span className="chip bg-creme text-encre">+{t.pointsPerUnit} pousses par achat</span>
-                  </div>
-                </div>
-                <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
-                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
-                </Link>
-              </article>
-            ))}
-          </section>
 
           {expert.length ? (
             <section className="flex flex-col gap-3">

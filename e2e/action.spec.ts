@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * Parcours principal : enregistrer une action en langage naturel, la confirmer, voir la célébration,
+ * Parcours principal : enregistrer une action en saisie libre, la confirmer, voir la célébration,
  * la publier dans le fil.
  */
 test("enregistrer une action, la confirmer, la célébrer et la publier", async ({ page }) => {
@@ -36,4 +36,16 @@ test("enregistrer une action, la confirmer, la célébrer et la publier", async 
   });
   await expect(page.getByText("Publié ! Tes collègues peuvent maintenant t'encourager.")).toBeVisible();
   await expect(page.getByText("Premier vélotaf de la saison !")).toBeVisible();
+});
+
+test("vêtements d'occasion : choisir quoi et combien, en une seule action", async ({ page }) => {
+  await page.goto("/agir");
+  await page.getByRole("button", { name: "Achats" }).click();
+  await page.getByRole("button", { name: /Vêtement d'occasion/ }).click();
+  const sheet = page.getByRole("dialog");
+  await sheet.getByRole("button", { name: "Un jean de plus" }).click();
+  await sheet.getByRole("button", { name: "Un t-shirt de plus" }).click();
+  await sheet.getByRole("button", { name: "Un t-shirt de plus" }).click();
+  await sheet.getByRole("button", { name: /Valider · \+30/ }).click();
+  await expect(page.getByRole("dialog").getByText("Vêtements d'occasion · 2 × t-shirt, 1 × jean")).toBeVisible();
 });

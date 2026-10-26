@@ -125,7 +125,7 @@ test("plafonds : plusieurs unités d'un coup comptent toutes", () => {
 });
 
 test("plafonds : réparation et vacances en train sur 7 jours", () => {
-  assert.deepEqual(windowCap("reparation"), { units: 1, days: 7 });
+  assert.deepEqual(windowCap("reparation"), { units: 2, days: 7 }, "smartphone et ordinateur d'un coup (0045)");
   assert.deepEqual(windowCap("vacances_train"), { units: 1, days: 7 });
 });
 

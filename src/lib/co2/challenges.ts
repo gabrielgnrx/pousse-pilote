@@ -132,6 +132,7 @@ export const TEMPLATES: ChallengeTemplate[] = [
     unit: { one: "repas", many: "repas" },
     variantQuestion: "Au lieu d'un repas…",
     variants: [
+      { key: "repas", label: "habituel (d'après ton bilan)" },
       { key: "boeuf", label: "au bœuf" },
       { key: "autre", label: "au porc, poulet ou poisson" },
     ],
@@ -239,7 +240,7 @@ export const TEMPLATES: ChallengeTemplate[] = [
     ],
     proofHint: "Confirmation sur l'honneur",
     pointsPerUnit: 60,
-    dailyCap: 1,
+    dailyCap: 2,
     defaultTarget: 1,
     source: SOURCES.numerique,
     level: "expert",
@@ -325,8 +326,8 @@ GESTES.push(
 );
 
 /**
- * Achats via une appli de consommation durable : 30 pousses, mais seulement avec le reçu ou la
- * confirmation de commande en photo (gardée privée). Mêmes valeurs que 0021_defis_a_plusieurs.sql.
+ * Anciens achats « via une appli » (0021) : plus proposés depuis le 26/10/2026 (un achat d'occasion est
+ * un achat d'occasion, quel que soit l'endroit). Gardés pour afficher l'historique.
  */
 export const APP_TEMPLATES: ChallengeTemplate[] = [
   {
@@ -449,6 +450,17 @@ export function unitImpact(templateId: string, variantKey: string, h: Habits): U
       };
     }
     case "vege": {
+      if (variantKey === "repas") {
+        // Le repas habituel du bilan : bœuf et autres viandes, pondérés par les repas déclarés de chacun.
+        const meat = h.beefMealsWeek + h.otherMeatMealsWeek;
+        if (meat <= 0) return no("Tu n'as pas déclaré manger de viande ou de poisson.");
+        const usual = (h.beefMealsWeek * MEAL_KG.boeuf + h.otherMeatMealsWeek * OTHER_MEAT_MEAL_KG) / meat;
+        return {
+          kg: usual - MEAL_KG.vegetarien,
+          eligible: true,
+          formula: `repas habituel ${fmt(usual)} − ${fmt(MEAL_KG.vegetarien)} kg (${h.beefMealsWeek} bœuf, ${h.otherMeatMealsWeek} autres viandes par semaine)`,
+        };
+      }
       if (variantKey === "boeuf") {
         if (h.beefMealsWeek <= 0) return no("Tu n'as pas déclaré manger de bœuf.");
         return {
