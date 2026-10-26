@@ -15,7 +15,7 @@ export const BONUS = { seul: 20, duelSeul: 40, duelDeux: 30, equipe: 50, mise: 1
 export type Boost = { kind: "duel" | "equipe"; mult: number; label: string };
 
 /** L'action fait-elle avancer ce défi d'équipe ? (comme team_kind_count) */
-export function countsForTeam(kind: TeamKind, item: { templateId: string; category: string; requiresReceipt?: boolean }) {
+export function countsForTeam(kind: TeamKind, item: { templateId: string; category: string; requiresConfirm?: boolean }) {
   switch (kind) {
     case "actions":
       return true;
@@ -24,7 +24,8 @@ export function countsForTeam(kind: TeamKind, item: { templateId: string; catego
     case "nature":
       return item.category === "nature";
     case "preuve":
-      return !!item.requiresReceipt;
+      // Compte quand l'action est publiée avec une photo, pas au moment de l'enregistrer.
+      return false;
     default:
       return false;
   }

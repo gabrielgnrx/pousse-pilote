@@ -12,7 +12,7 @@ Postgres, stockage des photos). Pensée mobile d'abord, utilisable sur ordinateu
 La v2 ajoute :
 - **le + en saisie libre** : une phrase tapée ou dictée (« vélo 8 km puis déjeuner végé »), comprise par des
   règles (`src/lib/actions/interpret.ts`), confirmée par la personne, puis calculée par la base (`log_action_slug`) ;
-- **Mon plan** calculé chaque semaine par des règles, **justificatifs** privés effacés à 30 jours, **animateur**
+- **Mon plan** calculé chaque semaine par des règles, **grosses actions** sur l'honneur avec plafonds annuels calés sur le bilan, **animateur**
   du QG à messages préparés (vote du lundi, bilan du vendredi, relances, météo), **scanner par rayon** ;
 - **l'espace RSE** (`/entreprise` puis `/admin`) : lancement en self-serve, tableau de bord agrégé (rien sous
   5 personnes), rapport mensuel écrit par des règles, export PDF (impression) et CSV de la mobilité domicile-travail.
@@ -25,16 +25,18 @@ toujours calculé par le code : `quantité × facteur`, avec la table versionné
 
 | Variable | Rôle |
 | --- | --- |
-| `SUPABASE_SERVICE_ROLE_KEY` | Purge des justificatifs (30 jours) et des photos du fil (90 jours). |
-| `CRON_SECRET` | Protège les tâches Vercel Cron (purge, rappels). |
-| `VAPID_PRIVATE_KEY` | Rappels sur téléphone. |
+| `VAPID_PRIVATE_KEY` | Rappels sur téléphone (la seule variable secrète). |
+
+Les tâches planifiées (animateur, rappels, purge des photos) sont déclenchées par la base avec des clés
+créées dans Vault (migrations 0032, 0044) : aucun `CRON_SECRET` ni clé `service_role` dans Vercel.
 
 ### Migrations et tâches planifiées
 
 Appliquer toutes les migrations (`supabase db push`). Celles dont la première ligne dit « Supabase
 seulement » créent la clé des tâches planifiées dans Vault (nommée « ia » par héritage) et programment
-`pg_cron`. Seule reste active la tâche de l'animateur (`pousse-animateur`, lundi 9 h et 14 h, milieu de
-semaine, vendredi). Elle appelle `https://pousse-pilote.vercel.app`.
+`pg_cron` : l'animateur (`pousse-animateur`, lundi 9 h et 14 h, milieu de semaine, vendredi), les
+rappels (`pousse-rappels`) et la purge des photos (`pousse-purge`, Edge Function). Elles appellent
+`https://pousse-pilote.vercel.app` et le projet Supabase de production.
 
 | Migration | Contenu |
 | --- | --- |
@@ -45,6 +47,8 @@ semaine, vendredi). Elle appelle `https://pousse-pilote.vercel.app`.
 | 0038 | Espace RSE : organisations, agrégats, export |
 | 0041 | Classement du rapport limité au mois |
 | 0042 | Retrait de l'IA |
+| 0043 | Plus de justificatif : plafonds annuels calés sur le bilan |
+| 0044 | Rappels et purge des photos planifiés par la base (Supabase seulement) |
 
 ### Données de démo
 
@@ -161,10 +165,10 @@ service worker `public/sw.js` avec une page hors ligne). Sur Android et ordinate
 Rappel du soir (Web Push, à activer dans le profil) : vers 18 h, `/api/cron/rappels` relance les personnes
 abonnées qui n'ont encore rien fait dans la journée, au plus une fois par jour. La notification part
 **vide** (signature VAPID faite avec `node:crypto`, sans dépendance) : à l'arrivée, le téléphone lit le
-texte sur `/api/rappel` avec sa propre session (« Ta série de 4 jours s'arrête ce soir »). Pas besoin de
-clé secrète Supabase : la base vérifie elle-même `CRON_SECRET`, dont seule l'empreinte SHA-256 est
-stockée (table `cron_keys`). Variables : `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (publique, dans
-`.env.production`), `VAPID_PRIVATE_KEY` et `CRON_SECRET` (dans Vercel). Nouvelle paire de clés :
+texte sur `/api/rappel` avec sa propre session (« Ta série de 4 jours s'arrête ce soir »). La base
+déclenche la tâche (pg_cron, migration 0044) avec sa clé « rappels », qu'elle vérifie elle-même (seule
+l'empreinte SHA-256 est stockée dans `cron_keys`). Variables : `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (publique,
+dans `.env.production`) et `VAPID_PRIVATE_KEY` (dans Vercel). Nouvelle paire de clés :
 `node src/lib/push/vapid.ts`.
 
 ## Installation
@@ -205,12 +209,13 @@ secret (`update companies set join_code = '…'`) et créer les vraies entrepris
 
 ### Déployer sur Vercel
 
-Importer le dépôt, ajouter les variables de `.env.example` (dont `SUPABASE_SERVICE_ROLE_KEY` et
-`CRON_SECRET` pour la purge des photos), mettre `NEXT_PUBLIC_SITE_URL` à l'URL Vercel, et ajouter
+Importer le dépôt, ajouter `VAPID_PRIVATE_KEY`, mettre `NEXT_PUBLIC_SITE_URL` à l'URL Vercel, et ajouter
 `https://<ton-domaine>/auth/callback` aux Redirect URLs de Supabase.
 
-`vercel.json` programme chaque nuit la suppression des photos de plus de 90 jours
-(`/api/cron/purge-photos`), comme promis aux salariés.
+La suppression des photos (justificatifs à 30 jours, photos du fil à 90 jours), promise aux salariés, est
+faite chaque nuit par l'Edge Function Supabase `purge-photos` (`supabase/functions/`), déclenchée par
+pg_cron (migration 0044). Elle utilise la clé de service fournie par Supabase : aucune clé secrète
+Supabase n'est à copier dans Vercel. Déploiement : `supabase functions deploy purge-photos --no-verify-jwt`.
 
 ### Ajouter une entreprise pilote
 

@@ -7,7 +7,7 @@ const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta
 // La clé de l'API Claude ne peut pas atteindre le navigateur : lib/ai/client.ts importe « server-only »,
 // ce qui fait échouer la compilation si un composant client l'importe.
 const config = [
-  { ignores: [".next/**", "node_modules/**", "public/sw.js", "playwright-report/**", "test-results/**", "next-env.d.ts"] },
+  { ignores: [".next/**", "node_modules/**", "public/sw.js", "playwright-report/**", "test-results/**", "next-env.d.ts", "supabase/functions/**"] },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {

@@ -52,9 +52,9 @@ export default function MethodologiePage() {
       <Section title="Déclaration et plafonds">
         <p>
           Une action s&apos;enregistre en un tap avec le bouton +, sans preuve : elle rapporte ses pousses
-          tout de suite et compte dans tes défis et tes duels. Seuls les achats via une appli durable,
-          le train, les vacances en train et les réparations demandent un justificatif (reçu, billet ou facture),
-          qui reste privé. Une bonne habitude que tu as déjà rapporte autant de pousses qu&apos;un changement,
+          tout de suite et compte dans tes défis et tes duels. Les achats via une appli durable, le train, les
+          vacances en train et les réparations se confirment sur l&apos;honneur et ont un plafond annuel ou
+          hebdomadaire calé sur ton bilan. Une bonne habitude que tu as déjà rapporte autant de pousses qu&apos;un changement,
           sans CO₂ en plus. Publier une action dans le fil avec une photo est un choix,
           qui rapporte 5 pousses de plus.
         </p>
@@ -107,8 +107,8 @@ export default function MethodologiePage() {
       <Section title="Pour l'entreprise : comment parler du CO₂ évité">
         <p>
           Le chiffre de CO₂ évité est une <strong>estimation déclarative</strong> : les salariés déclarent leurs
-          actions, sans vérification (sauf un justificatif privé pour le train, les vacances en train, les
-          réparations et les achats via une appli). Chaque action est convertie avec les facteurs de
+          actions, sans vérification, dans des plafonds calés sur leur bilan (par jour, par semaine et, pour
+          le train et les réparations, par an). Chaque action est convertie avec les facteurs de
           l&apos;ADEME, et ne compte que si elle remplace une habitude déclarée dans le bilan.
         </p>
         <p>

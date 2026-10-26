@@ -37,8 +37,6 @@ export interface LoggedAction {
   boost: "duel" | "equipe" | null;
   /** Le duel en cours sur ce geste. */
   duel: { otherName: string; mine: number; theirs: number; target: number; endsOn: string; stakes: boolean } | null;
-  /** Achat validé avec un reçu (privé, jamais publié). */
-  receipt: boolean;
   /** Unités comptées (2 repas = 2) ; la distance saisie a été ramenée au trajet déclaré. */
   units?: number;
   capped?: boolean;
@@ -49,8 +47,6 @@ export interface LoggedAction {
 export type LogResult = { ok: true; action: LoggedAction } | { ok: false; error: string };
 
 // --- Saisie libre ------------------------------------------------------------------
-
-const RECEIPT_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
 export type ParseResponse =
   | { ok: true; cards: ConfirmCard[] }
@@ -95,26 +91,14 @@ export async function logParsedAction(form: FormData): Promise<LogResult> {
   });
   if (!input.success) return { ok: false, error: "Vérifie l'action et la quantité avant de valider." };
   const action = ACTION_BY_SLUG[input.data.slug];
+  if (TEMPLATE_BY_ID[action.template]?.requiresConfirm && form.get("confirm") !== "on") return { ok: false, error: ERRORS.confirm_required };
   const { supabase, user, profile } = await requireProfile();
-
-  let receiptPath: string | null = null;
-  const file = form.get("receipt");
-  if (file instanceof File && file.size > 0) {
-    const ext = RECEIPT_TYPES[file.type];
-    if (!ext) return { ok: false, error: "Justificatif en photo : JPEG, PNG ou WebP (une capture d'écran convient)." };
-    if (file.size > 5 * 1024 * 1024) return { ok: false, error: "Photo trop lourde (5 Mo maximum)." };
-    receiptPath = `${user.id}/recu-${crypto.randomUUID()}.${ext}`;
-    const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(receiptPath, file, { contentType: file.type, upsert: false });
-    if (upload) return { ok: false, error: "Envoi du justificatif impossible. Réessaie." };
-  }
 
   const { data, error } = await supabase.rpc("log_action_slug", {
     p_action: action.slug,
     p_quantity: input.data.quantity ?? null,
-    p_receipt: receiptPath,
   });
   if (error || !data) {
-    if (receiptPath) await supabase.storage.from(PROOF_BUCKET).remove([receiptPath]);
     const code = error?.message ?? "";
     return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
   }
@@ -127,8 +111,9 @@ const ERRORS: Record<string, string> = {
     "Plafond de la semaine atteint, d'après ton bilan (2 trajets par jour de bureau déclaré, 5 jours de télétravail, 3 achats d'occasion). Rendez-vous lundi !",
   unknown_action: "Cette action n'existe pas.",
   teletravail_conflict: "Un jour de télétravail ne se cumule pas avec un trajet domicile-travail le même jour.",
-  receipt_required: "Joins ton justificatif (reçu, billet ou facture) pour valider cette action.",
-  invalid_photo: "Ce justificatif n'a pas pu être enregistré. Réessaie.",
+  year_cap_reached:
+    "Plafond de l'année atteint pour cette action, d'après ton bilan (autant de voyages en train que de vols déclarés, 2 réparations par an).",
+  confirm_required: "Confirme sur l'honneur que tu l'as fait pour valider cette action.",
   quantity_out_of_range: "Cette quantité n'est pas possible pour cette action : corrige-la avant de valider.",
   quantity_required: "Indique la distance avant de valider.",
   quantity_not_allowed: "Cette action ne prend pas de quantité.",
@@ -136,6 +121,7 @@ const ERRORS: Record<string, string> = {
 
 /** Enregistre une action en un tap, sans preuve. Le CO₂ et les pousses sont calculés par la base. */
 export async function logAction(templateId: string, variant: string): Promise<LogResult> {
+  if (TEMPLATE_BY_ID[templateId]?.requiresConfirm) return { ok: false, error: ERRORS.confirm_required };
   const { supabase, user, profile } = await requireProfile();
   const { data, error } = await supabase.rpc("log_action", { p_template: templateId, p_variant: variant });
   if (error || !data) {
@@ -146,24 +132,15 @@ export async function logAction(templateId: string, variant: string): Promise<Lo
 }
 
 
-/** Un achat via une appli durable : le reçu est envoyé (privé), puis l'action est enregistrée. */
-export async function logActionWithReceipt(form: FormData): Promise<LogResult> {
-  const { supabase, user, profile } = await requireProfile();
+/** Une action qui rapporte beaucoup (train, réparation, achat via une appli) : confirmée sur l'honneur. */
+export async function logConfirmedAction(form: FormData): Promise<LogResult> {
+  if (form.get("confirm") !== "on") return { ok: false, error: ERRORS.confirm_required };
   const templateId = String(form.get("template") ?? "");
   const variant = String(form.get("variant") ?? "base");
-  const file = form.get("receipt");
-  if (!(file instanceof File) || file.size === 0) return { ok: false, error: ERRORS.receipt_required };
-  const ext = RECEIPT_TYPES[file.type];
-  if (!ext) return { ok: false, error: "Reçu en photo : JPEG, PNG ou WebP (une capture d'écran convient)." };
-  if (file.size > 5 * 1024 * 1024) return { ok: false, error: "Photo trop lourde (5 Mo maximum)." };
-
-  const path = `${user.id}/recu-${crypto.randomUUID()}.${ext}`;
-  const { error: upload } = await supabase.storage.from(PROOF_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
-  if (upload) return { ok: false, error: "Envoi du justificatif impossible. Réessaie." };
-
-  const { data, error } = await supabase.rpc("log_action", { p_template: templateId, p_variant: variant, p_receipt: path });
+  if (!TEMPLATE_BY_ID[templateId]?.requiresConfirm) return { ok: false, error: ERRORS.unknown_action };
+  const { supabase, user, profile } = await requireProfile();
+  const { data, error } = await supabase.rpc("log_action", { p_template: templateId, p_variant: variant });
   if (error || !data) {
-    await supabase.storage.from(PROOF_BUCKET).remove([path]);
     const code = error?.message ?? "";
     return { ok: false, error: ERRORS[code] ?? sqlErrorMessage(code) };
   }
@@ -189,7 +166,6 @@ async function describe(
     multiplier: number;
     boost: "duel" | "equipe" | null;
     duel: { other_name: string; mine: number; theirs: number; target: number; ends_on: string; stakes: boolean } | null;
-    receipt: boolean;
     units?: number;
     quantity?: number | null;
     capped?: boolean;
@@ -240,7 +216,6 @@ async function describe(
             stakes: !!r.duel.stakes,
           }
         : null,
-      receipt: !!r.receipt,
       units: Number(r.units ?? 1),
       capped: !!r.capped,
     },

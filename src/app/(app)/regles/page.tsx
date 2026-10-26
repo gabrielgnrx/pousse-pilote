@@ -22,9 +22,10 @@ export default function ReglesPage() {
           qui part de loin : une bonne habitude que tu as déjà (vélo, repas végé…) rapporte autant qu&apos;un
           changement, même si elle n&apos;évite pas de CO₂ en plus. Les petits gestes (escaliers, gourde…) rapportent
           5 pousses par jour au plus, tous confondus : ils comptent quand même pour ta série et tes quêtes. Le
-          train, les vacances en train et les réparations demandent un justificatif, gardé privé. Les trajets
-          sont plafonnés chaque semaine d&apos;après ton bilan (2 par jour de bureau déclaré), et le bilan se
-          refait une fois par mois au plus.
+          train, les vacances en train et les réparations se confirment sur l&apos;honneur et sont plafonnés chaque
+          année d&apos;après ton bilan (autant de voyages en train que de vols déclarés, 2 réparations). Les
+          trajets sont plafonnés chaque semaine (2 par jour de bureau déclaré), et le bilan se refait une fois
+          par mois au plus.
         </p>
         <table className="w-full text-left text-sm">
           <tbody>
@@ -50,8 +51,7 @@ export default function ReglesPage() {
             d&apos;équipe de la semaine ×2. Défi réussi seul : +20 ; défi d&apos;équipe atteint : +50 pour chaque
             contributeur.</li>
           <li><strong>Achats via une appli durable.</strong> Occasion (Vinted, Leboncoin, Back Market…) ou panier
-            anti-gaspi (Too Good To Go, Phenix…) : +30, seulement avec le reçu ou la confirmation de commande en photo.
-            Le justificatif reste privé : personne d&apos;autre ne le voit, et il est effacé au bout de 30 jours.</li>
+            anti-gaspi (Too Good To Go, Phenix…) : +30, sur l&apos;honneur, 3 achats par semaine au plus pour chacun.</li>
           <li><strong>Duels.</strong> Défie quelqu&apos;un d&apos;une autre équipe sur 7 jours, par exemple en lançant un
             défi. Les deux réussissent : +30 chacun ; un seul : +40. Chacun mise 10 pousses : ne pas atteindre
             l&apos;objectif te coûte ta mise. Refuser, ou ne pas répondre en 3 jours, ne coûte rien. Une mise perdue

@@ -41,7 +41,7 @@ test("à plusieurs, ça rapporte plus : ×2 équipe, ×1,5 duel", async () => {
   assert.equal(boostedPoints(0, { kind: "equipe", mult: 2, label: "" }), 0);
   assert.ok(countsForTeam("repas", { templateId: "vege", category: "alimentation" }));
   assert.ok(!countsForTeam("repas", { templateId: "velo", category: "transport" }));
-  assert.ok(countsForTeam("preuve", { templateId: "appli_antigaspi", category: "alimentation", requiresReceipt: true }));
+  assert.ok(!countsForTeam("preuve", { templateId: "appli_antigaspi", category: "alimentation", requiresConfirm: true }), "« avec photo » : compte à la publication");
   assert.equal(teamKindFor("velo", "transport"), null, "pas faisable par toute l'équipe");
   assert.equal(teamKindFor("compost", "nature"), "nature");
 });

@@ -59,12 +59,12 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
   // à défaut, les actions du quotidien qui comptent le plus pour toi.
   const score = (key: string) => (boosts[key] ? 2000 : 0) + (inChallenge.includes(key) ? 1000 : 0) + (counts[key] ?? 0);
   let favorites = items
-    .filter((i) => !i.requiresReceipt && score(i.key) > 0)
+    .filter((i) => !i.requiresConfirm && score(i.key) > 0)
     .sort((a, b) => score(b.key) - score(a.key) || b.kg - a.kg)
     .slice(0, 4);
   if (favorites.length < 3) {
     const extra = items
-      .filter((i) => !favorites.includes(i) && !i.requiresReceipt && ["trajets", "repas", "bureau"].includes(i.theme))
+      .filter((i) => !favorites.includes(i) && !i.requiresConfirm && ["trajets", "repas", "bureau"].includes(i.theme))
       .sort((a, b) => b.kg - a.kg || b.points - a.points)
       .slice(0, 4 - favorites.length);
     favorites = [...favorites, ...extra];
@@ -78,7 +78,7 @@ export default async function AgirPage({ searchParams }: { searchParams: Promise
       doneToday={doneToday}
       inChallenge={inChallenge}
       boosts={boosts}
-      openReceipt={ajout && items.some((i) => i.key === ajout && i.requiresReceipt) ? ajout : null}
+      openConfirm={ajout && items.some((i) => i.key === ajout && i.requiresConfirm) ? ajout : null}
       habits={habits}
     />
   );

@@ -44,14 +44,14 @@ export interface ConfirmCard {
   needsChoice: ChoiceReason | null;
   /** Actions proches, proposées à l'écran de choix. */
   candidates: string[];
-  /** Un justificatif sera demandé (train, vacances en train, réparation…). */
-  needsReceipt: boolean;
+  /** Une confirmation sur l'honneur sera demandée (train, vacances en train, réparation, applis). */
+  needsConfirm: boolean;
   /** Quantité reprise du bilan (trajet domicile-travail déclaré), affichée comme telle. */
   fromBilan: boolean;
 }
 
 /** Actions qui demandent un justificatif (même liste que requires_receipt en base). */
-const RECEIPT_TEMPLATES = new Set(["train", "vacances_train", "reparation", "appli_antigaspi", "appli_occasion"]);
+const CONFIRM_TEMPLATES = new Set(["train", "vacances_train", "reparation", "appli_antigaspi", "appli_occasion"]);
 const COMMUTE = new Set(["velo", "transports", "covoiturage"]);
 
 const fold = (s: string) =>
@@ -208,7 +208,7 @@ export function interpretItems(items: ParsedItem[], text: string, h: Habits | nu
       capped: preview && preview.ok ? preview.capped : false,
       needsChoice,
       candidates: needsChoice ? [action.slug, ...candidatesFor(text, 3, [action.slug])].slice(0, 3) : [],
-      needsReceipt: RECEIPT_TEMPLATES.has(action.template),
+      needsConfirm: CONFIRM_TEMPLATES.has(action.template),
       fromBilan,
     });
   }

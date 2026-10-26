@@ -30,7 +30,7 @@ export interface ActionItem {
   /** Pourquoi 0 kg, le cas échéant. */
   note?: string;
   /** Achat via une appli : il faut joindre le reçu. */
-  requiresReceipt?: boolean;
+  requiresConfirm?: boolean;
   category: string;
 }
 
@@ -112,7 +112,7 @@ export function actionItems(h: Habits): ActionItem[] {
         kg: impact.eligible ? impact.kg : 0,
         points: t.pointsPerUnit,
         note: impact.eligible ? undefined : impact.reason,
-        requiresReceipt: t.requiresReceipt,
+        requiresConfirm: t.requiresConfirm,
         category: t.category,
       };
     }),

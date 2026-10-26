@@ -90,9 +90,9 @@ test("cartes : trajet sans distance → trajet déclaré, signalé comme tel ; k
   assert.equal(big.previewKg, Math.round(12 * TRANSPORT_KG_PER_KM.voiture_thermique * 1000) / 1000);
 });
 
-test("cartes : justificatif signalé pour le train ; train sans distance → à saisir", () => {
+test("cartes : confirmation demandée pour le train ; train sans distance → à saisir", () => {
   const [t] = interpretItems([item("train", null)], "train pour Lyon", h);
-  assert.equal(t.needsReceipt, true);
+  assert.equal(t.needsConfirm, true);
   assert.equal(t.quantity, null);
 });
 

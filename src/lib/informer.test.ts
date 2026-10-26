@@ -26,8 +26,8 @@ test("bouton + : une ligne par variante, le CO₂ vient du bilan", () => {
   const items = actionItems(h);
   const n = [...TEMPLATES, ...GESTES, ...APP_TEMPLATES].reduce((s, t) => s + t.variants.length, 0);
   assert.equal(items.length, n);
-  assert.ok(items.filter((i) => i.templateId.startsWith("appli_")).every((i) => i.points === 30 && i.requiresReceipt), "achats via appli : 30 pousses, avec reçu");
-  assert.ok(["train", "vacances_train", "reparation"].every((id) => items.filter((i) => i.templateId === id).every((i) => i.requiresReceipt)), "grosses actions : justificatif");
+  assert.ok(items.filter((i) => i.templateId.startsWith("appli_")).every((i) => i.points === 30 && i.requiresConfirm), "achats via appli : 30 pousses, sur l'honneur");
+  assert.ok(["train", "vacances_train", "reparation"].every((id) => items.filter((i) => i.templateId === id).every((i) => i.requiresConfirm)), "grosses actions : sur l'honneur");
   assert.equal(items.find((i) => i.key === "appli_occasion:jean")?.kg, unitImpact("occasion", "jean", h).kg, "même CO₂ que l'occasion");
   assert.equal(items.find((i) => i.key === "velo:base")?.kg, 10 * 0.1106);
   assert.equal(items.find((i) => i.key === "train:500")?.kg, 0, "aucun vol déclaré : 0 kg");

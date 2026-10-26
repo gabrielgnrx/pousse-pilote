@@ -11,7 +11,7 @@ export interface ActiveChallenge {
   endsOn: string;
   /** Duel lié au défi : adversaire et score. */
   duel: { other: string; theirs: number; status: string } | null;
-  /** Où enregistrer une fois de plus (le bouton +, ou directement le reçu pour un achat). */
+  /** Où enregistrer une fois de plus (le bouton +, ou directement la confirmation pour une grosse action). */
   href?: string;
   /** Pour un défi lancé seul : la page qui le passe en duel. */
   duelHref?: string;
