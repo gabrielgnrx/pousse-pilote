@@ -109,7 +109,7 @@ export default async function DefisPage({
       target: Number(c.target),
       endsOn: formatDay(c.ends_on, "short"),
       duel: d ? { other: d.other_name, theirs: d.theirs, status: d.status } : null,
-      href: t?.requiresReceipt ? `/agir?ajout=${t.id}:${c.variant}` : "/agir",
+      href: t?.requiresConfirm ? `/agir?ajout=${t.id}:${c.variant}` : "/agir",
       duelHref: d ? undefined : `/defis/${c.id}/duel`,
     };
   });
@@ -265,12 +265,12 @@ export default async function DefisPage({
           <section className="flex flex-col gap-3">
             <div className="mt-2">
               <h2 className="font-display text-lg">Achats via une appli durable</h2>
-              <p className="text-xs text-terre">30 pousses l&apos;achat, avec ton reçu ou ta confirmation de commande (gardé privé).</p>
+              <p className="text-xs text-terre">30 pousses l&apos;achat, sur l&apos;honneur, 3 par semaine au plus.</p>
             </div>
             {APP_TEMPLATES.map((t) => (
               <article key={t.id} className="flex items-center gap-3 rounded-[22px] bg-peche p-4 shadow-[inset_0_-4px_0_var(--color-peche-fonce)]">
                 <div className="flex-1">
-                  <span className="label">{CATEGORY_LABEL[t.category]} · reçu obligatoire</span>
+                  <span className="label">{CATEGORY_LABEL[t.category]} · sur l&apos;honneur</span>
                   <h3 className="mt-1 font-bold">{t.title}</h3>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     <span className="chip bg-creme text-encre">+{t.pointsPerUnit} pousses par achat</span>

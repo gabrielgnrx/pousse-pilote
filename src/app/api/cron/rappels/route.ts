@@ -1,26 +1,25 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { pushConfig, sendEmptyPush } from "@/lib/push";
+import { bearer } from "@/lib/supabase/cron";
 
 /**
- * Rappel de fin d'après-midi (Vercel Cron, vercel.json) aux personnes qui ont activé les rappels et
- * n'ont encore rien fait aujourd'hui. Pas de clé secrète Supabase : la base vérifie elle-même
- * CRON_SECRET (son empreinte est dans la table cron_keys).
+ * Rappel de fin d'après-midi aux personnes qui ont activé les rappels et n'ont encore rien fait
+ * aujourd'hui. Appelée par la base (pg_cron, migration 0044) avec la clé « rappels » : la base la
+ * vérifie elle-même (son empreinte est dans cron_keys), aucun secret n'est à copier dans Vercel.
  */
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
   const push = pushConfig();
-  if (!secret || !push) {
-    return NextResponse.json({ skipped: "CRON_SECRET ou clés VAPID manquants" });
-  }
-  if (request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "non autorisé" }, { status: 401 });
-  }
+  if (!push) return NextResponse.json({ skipped: "clés VAPID manquantes" });
+  const secret = bearer(request);
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     auth: { persistSession: false },
   });
   const { data: due, error } = await db.rpc("reminders_due", { p_token: secret });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    const status = error.message.includes("forbidden") ? 401 : 500;
+    return NextResponse.json({ error: status === 401 ? "non autorisé" : "erreur" }, { status });
+  }
 
   const rows = (due ?? []) as { endpoint: string; streak: number }[];
   const results = await Promise.all(rows.map(async (r) => [r.endpoint, await sendEmptyPush(r.endpoint, push)] as const));

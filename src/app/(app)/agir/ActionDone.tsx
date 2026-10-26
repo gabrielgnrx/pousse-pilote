@@ -266,11 +266,6 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
           )}
 
           <div className="mt-auto flex flex-col gap-2 pt-2">
-            {action.receipt ? (
-              <p className="rounded-2xl bg-sable px-3 py-2 text-[13px] text-brun">
-                Ton justificatif reste privé : tes collègues ne le voient jamais, même si tu publies l&apos;action.
-              </p>
-            ) : null}
             {action.provisional ? (
               <button type="button" disabled className="btn-primary min-h-14 font-display text-[19px] font-normal">
                 Un instant…

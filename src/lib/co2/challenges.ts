@@ -45,8 +45,8 @@ export interface ChallengeTemplate {
   level?: "standard" | "expert";
   /** Explication courte affichée dans le catalogue pour les défis expert. */
   pitch?: string;
-  /** Achat via une appli durable : reçu ou confirmation de commande obligatoire (gardé privé). */
-  requiresReceipt?: boolean;
+  /** Action qui rapporte beaucoup : confirmation sur l'honneur, et plafond annuel calé sur le bilan (0043). */
+  requiresConfirm?: boolean;
 }
 
 export const CATEGORY_LABEL: Record<Category, string> = {
@@ -118,12 +118,12 @@ export const TEMPLATES: ChallengeTemplate[] = [
       { key: "500", label: "500 km" },
       { key: "800", label: "800 km" },
     ],
-    proofHint: "Photo du billet",
+    proofHint: "Confirmation sur l'honneur",
     pointsPerUnit: 30,
     dailyCap: 2,
     defaultTarget: 3,
     source: SOURCES.transport,
-    requiresReceipt: true,
+    requiresConfirm: true,
   },
   {
     id: "vege",
@@ -218,14 +218,14 @@ export const TEMPLATES: ChallengeTemplate[] = [
     title: "Vacances en train au lieu du long-courrier",
     unit: { one: "aller-retour évité", many: "allers-retours évités" },
     variants: [{ key: "base", label: "Une destination en train plutôt qu'un vol long-courrier" }],
-    proofHint: "Photo du billet de train ou de la réservation",
+    proofHint: "Confirmation sur l'honneur",
     pointsPerUnit: 150,
     dailyCap: 1,
     defaultTarget: 1,
     source: SOURCES.transport,
     level: "expert",
     pitch: "Le plus gros geste possible : un aller-retour long-courrier pèse à lui seul près de 2 tonnes.",
-    requiresReceipt: true,
+    requiresConfirm: true,
   },
   {
     id: "reparation",
@@ -237,14 +237,14 @@ export const TEMPLATES: ChallengeTemplate[] = [
       { key: "smartphone", label: "Smartphone" },
       { key: "ordinateur", label: "Ordinateur, tablette ou console" },
     ],
-    proofHint: "Photo de la facture de réparation ou de l'appareil réparé",
+    proofHint: "Confirmation sur l'honneur",
     pointsPerUnit: 60,
     dailyCap: 1,
     defaultTarget: 1,
     source: SOURCES.numerique,
     level: "expert",
     pitch: "La fabrication fait l'essentiel de l'empreinte d'un appareil : le garder, c'est l'éviter.",
-    requiresReceipt: true,
+    requiresConfirm: true,
   },
 ];
 
@@ -345,12 +345,12 @@ export const APP_TEMPLATES: ChallengeTemplate[] = [
       { key: "smartphone", label: "Smartphone reconditionné" },
       { key: "ordinateur", label: "Ordinateur, tablette ou console reconditionné" },
     ],
-    proofHint: "Reçu ou confirmation de commande de l'appli",
+    proofHint: "Confirmation sur l'honneur",
     pointsPerUnit: 30,
     dailyCap: 2,
     defaultTarget: 3,
     source: SOURCES.habillement,
-    requiresReceipt: true,
+    requiresConfirm: true,
   },
   {
     id: "appli_antigaspi",
@@ -358,12 +358,12 @@ export const APP_TEMPLATES: ChallengeTemplate[] = [
     title: "Panier anti-gaspi via une appli (Too Good To Go, Phenix…)",
     unit: { one: "panier", many: "paniers" },
     variants: [{ key: "base", label: "Un panier d'invendus récupéré" }],
-    proofHint: "Reçu ou confirmation de commande de l'appli",
+    proofHint: "Confirmation sur l'honneur",
     pointsPerUnit: 30,
     dailyCap: 1,
     defaultTarget: 4,
     source: SOURCES.alimentation,
-    requiresReceipt: true,
+    requiresConfirm: true,
   },
 ];
 

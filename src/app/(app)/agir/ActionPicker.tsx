@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { formatKg } from "@/lib/co2/challenges.ts";
 import { THEMES, type ActionItem, type Theme } from "@/lib/actions-catalog";
-import { logAction, logActionWithReceipt, type LoggedAction } from "./actions";
+import { logAction, logConfirmedAction, type LoggedAction } from "./actions";
 import { boostedPoints, fmtMult, type Boost } from "@/lib/boosts";
 import { TEMPLATE_BY_ID } from "@/lib/co2/challenges.ts";
 import { ActionDone } from "./ActionDone";
@@ -21,7 +21,7 @@ export function ActionPicker({
   doneToday,
   inChallenge,
   boosts,
-  openReceipt,
+  openConfirm,
   habits,
 }: {
   items: ActionItem[];
@@ -30,7 +30,7 @@ export function ActionPicker({
   doneToday: Record<string, boolean>;
   inChallenge: string[];
   boosts: Record<string, Boost>;
-  openReceipt: string | null;
+  openConfirm: string | null;
   habits: Habits;
 }) {
   const [query, setQuery] = useState("");
@@ -39,7 +39,7 @@ export function ActionPicker({
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<LoggedAction | null>(null);
-  const [receiptFor, setReceiptFor] = useState<string | null>(openReceipt);
+  const [confirmFor, setConfirmFor] = useState<string | null>(openConfirm);
 
   const byKey = useMemo(() => Object.fromEntries(items.map((i) => [i.key, i])), [items]);
   const list = useMemo(() => {
@@ -50,9 +50,9 @@ export function ActionPicker({
   }, [items, query, theme]);
 
   const record = (item: ActionItem) => {
-    if (item.requiresReceipt) {
+    if (item.requiresConfirm) {
       setError(null);
-      setReceiptFor(item.key);
+      setConfirmFor(item.key);
       return;
     }
     setError(null);
@@ -77,7 +77,6 @@ export function ActionPicker({
       multiplier: 1,
       boost: null,
       duel: null,
-      receipt: false,
       provisional: true,
     });
     startTransition(async () => {
@@ -91,12 +90,12 @@ export function ActionPicker({
     });
   };
 
-  const sendReceipt = (form: FormData) => {
+  const sendConfirmed = (form: FormData) => {
     setError(null);
     startTransition(async () => {
-      const res = await logActionWithReceipt(form);
+      const res = await logConfirmedAction(form);
       if (res.ok) {
-        setReceiptFor(null);
+        setConfirmFor(null);
         setDone(res.action);
       } else setError(res.error);
     });
@@ -128,10 +127,8 @@ export function ActionPicker({
             <span className="block text-xs text-terre">
               {busy
                 ? "Enregistrement…"
-                : item.requiresReceipt
-                  ? item.templateId.startsWith("appli_")
-                    ? "Reçu obligatoire · gardé privé"
-                    : "Justificatif obligatoire · gardé privé"
+                : item.requiresConfirm
+                  ? "Sur l'honneur · plafonné selon ton bilan"
                   : challenge
                   ? "Compte pour ton défi en cours"
                   : count > 0
@@ -207,7 +204,7 @@ export function ActionPicker({
           <section className="flex flex-col gap-2" aria-labelledby="applis">
             <div>
               <h2 id="applis" className="font-display text-[19px]">Achats via une appli durable · +30</h2>
-              <p className="text-xs text-terre">Vinted, Leboncoin, Back Market, Too Good To Go… Avec ton reçu, gardé privé.</p>
+              <p className="text-xs text-terre">Vinted, Leboncoin, Back Market, Too Good To Go… Sur l&apos;honneur, 3 par semaine au plus.</p>
             </div>
             <ul className="flex flex-col gap-2">
               {[...new Set(items.filter((i) => i.templateId.startsWith("appli_")).map((i) => i.templateId))]
@@ -240,20 +237,20 @@ export function ActionPicker({
       </Link>
 
       <p className="text-center text-xs text-terre">
-        Pas de preuve demandée, sauf un justificatif privé pour les achats via une appli, le train, les vacances en train et les
-        réparations. Des plafonds gardent le compteur de l&apos;entreprise juste : 2 trajets et 2 repas par jour, et chaque semaine
-        2 trajets par jour de bureau déclaré dans ton bilan. Les petits gestes rapportent 5 pousses par jour au plus, tous confondus.
+        Pas de preuve demandée : chaque action se déclare sur l&apos;honneur. Des plafonds gardent le compteur de l&apos;entreprise
+        juste : 2 trajets et 2 repas par jour, chaque semaine 2 trajets par jour de bureau déclaré dans ton bilan, et chaque année
+        autant de voyages en train que de vols déclarés. Les petits gestes rapportent 5 pousses par jour au plus, tous confondus.
       </p>
 
-      {receiptFor && byKey[receiptFor] ? (
-        <ReceiptSheet
-          item={byKey[receiptFor]}
-          boost={boosts[receiptFor]}
+      {confirmFor && byKey[confirmFor] ? (
+        <ConfirmSheet
+          item={byKey[confirmFor]}
+          boost={boosts[confirmFor]}
           pending={pending}
           error={error}
-          onSubmit={sendReceipt}
+          onSubmit={sendConfirmed}
           onClose={() => {
-            setReceiptFor(null);
+            setConfirmFor(null);
             setError(null);
           }}
         />
@@ -264,8 +261,8 @@ export function ActionPicker({
   );
 }
 
-/** Un achat via une appli : choisir ce qu'on a acheté et joindre le reçu (ou une capture de la confirmation). */
-function ReceiptSheet({
+/** Une action qui rapporte beaucoup : préciser ce qu'on a fait, et le confirmer sur l'honneur. */
+function ConfirmSheet({
   item,
   boost,
   pending,
@@ -286,7 +283,7 @@ function ReceiptSheet({
       className="fixed inset-0 z-40 flex items-end justify-center bg-encre/60 sm:items-center"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="recu-titre"
+      aria-labelledby="confirmation-titre"
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
       }}
@@ -298,9 +295,9 @@ function ReceiptSheet({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">
-              {item.templateId.startsWith("appli_") ? "Achat via une appli · reçu obligatoire" : "Justificatif obligatoire"}
+              {item.templateId.startsWith("appli_") ? "Achat via une appli" : "Grosse action"} · sur l&apos;honneur
             </p>
-            <h2 id="recu-titre" className="font-display text-xl leading-tight">{t?.title ?? item.title}</h2>
+            <h2 id="confirmation-titre" className="font-display text-xl leading-tight">{t?.title ?? item.title}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sable">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
@@ -319,14 +316,16 @@ function ReceiptSheet({
         ) : (
           <input type="hidden" name="variant" value={item.variant} />
         )}
-        <label className="flex flex-col gap-1 text-sm font-bold">
-          {item.templateId.startsWith("appli_") ? "Ton reçu ou ta confirmation de commande" : (t?.proofHint ?? "Ton justificatif")}
-          <span className="text-xs font-normal text-terre">Une photo ou une capture d&apos;écran. Il reste privé : personne d&apos;autre ne le voit, et il est effacé au bout de 30 jours.</span>
-          <input name="receipt" type="file" accept="image/jpeg,image/png,image/webp" required className="text-sm font-normal" />
+        <label className="flex items-start gap-3 rounded-2xl bg-sable p-3 text-sm leading-snug">
+          <input type="checkbox" name="confirm" required className="mt-0.5 size-5 shrink-0 accent-sapin" />
+          <span>
+            Je confirme l&apos;avoir fait. <span className="text-terre">Aucun justificatif n&apos;est demandé ; cette action est
+            plafonnée pour garder le compteur de l&apos;entreprise juste.</span>
+          </span>
         </label>
         {error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{error}</p> : null}
         <button type="submit" disabled={pending} className="btn-dark">
-          {pending ? "Envoi…" : `Valider avec ${item.templateId.startsWith("appli_") ? "le reçu" : "le justificatif"} · +${boostedPoints(item.points, boost)}`}
+          {pending ? "Enregistrement…" : `Valider · +${boostedPoints(item.points, boost)}`}
         </button>
       </form>
     </div>

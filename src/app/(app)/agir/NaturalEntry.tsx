@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { formatKg } from "@/lib/co2/challenges.ts";
+import { TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
 import { ACTION_BY_SLUG, computeAvoided } from "@/lib/co2/engine.ts";
 import type { Habits } from "@/lib/co2/footprint.ts";
 import type { ConfirmCard } from "@/lib/actions/interpret.ts";
 import { themeOf } from "@/lib/actions-catalog";
-import { compressImage } from "@/lib/image/compress";
 import { logParsedAction, parseActionText, type LoggedAction } from "./actions";
 
 /* Web Speech API : présente sur Chrome et Safari, absente ailleurs (le champ texte suffit alors). */
@@ -185,12 +184,12 @@ function ConfirmCardView({
   const [quantity, setQuantity] = useState<string>(card.quantity === null ? "" : String(card.quantity));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const receiptRef = useRef<HTMLInputElement>(null);
+  const [honor, setHonor] = useState(false);
 
   const q = quantity === "" ? null : Number(quantity.replace(",", "."));
   const preview = computeAvoided(slug, q, habits);
   const quantityMissing = action.kind === "distance" ? q === null && !["velo", "transports", "covoiturage"].includes(action.template) : false;
-  const needsReceipt = ["train", "vacances_train", "reparation", "appli_antigaspi", "appli_occasion"].includes(action.template);
+  const needsConfirm = !!TEMPLATE_BY_ID[action.template]?.requiresConfirm;
 
   const confirm = async () => {
     if (!preview.ok) {
@@ -201,15 +200,14 @@ function ConfirmCardView({
       setError("Indique la distance avant de valider.");
       return;
     }
-    const file = receiptRef.current?.files?.[0];
-    if (needsReceipt && !file) {
-      setError("Joins ton justificatif (billet, réservation ou facture) : il reste privé.");
+    if (needsConfirm && !honor) {
+      setError("Confirme sur l'honneur que tu l'as fait pour valider cette action.");
       return;
     }
     const form = new FormData();
     form.set("slug", slug);
     if (q !== null) form.set("quantity", String(q));
-    if (file) form.set("receipt", await compressImage(file));
+    if (needsConfirm) form.set("confirm", "on");
     setError(null);
     // Interface optimiste : la célébration s'ouvre avec l'aperçu, puis prend les chiffres de la base.
     onProvisional({
@@ -231,7 +229,6 @@ function ConfirmCardView({
       multiplier: 1,
       boost: null,
       duel: null,
-      receipt: needsReceipt,
       provisional: true,
     } satisfies LoggedAction);
     startTransition(async () => {
@@ -286,10 +283,10 @@ function ConfirmCardView({
       ) : null}
       {card.fromBilan && slug === card.slug ? <p className="-mt-2 text-xs text-terre">Distance de ton trajet déclaré dans ton bilan.</p> : null}
 
-      {needsReceipt ? (
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold">Justificatif (gardé privé, effacé sous 30 jours)</span>
-          <input ref={receiptRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="text-sm" />
+      {needsConfirm ? (
+        <label className="flex items-start gap-3 rounded-2xl bg-sable p-3 text-sm leading-snug">
+          <input type="checkbox" checked={honor} onChange={(e) => setHonor(e.target.checked)} className="mt-0.5 size-5 shrink-0 accent-sapin" />
+          <span>Je confirme l&apos;avoir fait. <span className="text-terre">Aucun justificatif : cette action est plafonnée selon ton bilan.</span></span>
         </label>
       ) : null}
 

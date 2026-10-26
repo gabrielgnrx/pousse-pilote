@@ -18,7 +18,7 @@ export default function ConfidentialitePage() {
         <p>
           Ton prénom et ton équipe, tes messages dans le chat de ton équipe, et seulement les actions et les défis
           que tu choisis de publier dans le fil interne : après chaque action, Pousse te propose de la publier,
-          jamais d&apos;office. Tes justificatifs ne sont jamais visibles par tes collègues.
+          jamais d&apos;office.
         </p>
       </Section>
       <Section title="Ce que fait Pousse de tes données">
@@ -44,7 +44,8 @@ export default function ConfidentialitePage() {
       </Section>
       <Section title="Conservation et droits">
         <p>
-          Justificatifs effacés au bout de 30 jours ; photos publiées dans le fil supprimées après 90 jours. Tu peux
+          Aucun justificatif n&apos;est demandé ; ceux déposés avant le 26/10/2026 sont effacés au bout de 30 jours.
+          Photos publiées dans le fil supprimées après 90 jours. Tu peux
           télécharger toutes tes données ou supprimer ton
           compte à tout moment depuis ton profil. La participation est volontaire et sans lien avec ton
           évaluation professionnelle.
