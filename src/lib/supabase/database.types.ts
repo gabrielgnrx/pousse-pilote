@@ -1163,6 +1163,11 @@ isOneToOne: false
 "open_seed_roll":
 { Args: { "p_roll": number,"p_user": string }; Returns: Json
                            },
+"period_cap":
+{ Args: { "p_habits": Omit<Database["public"]['Tables']["habits"]['Row'], Database["public"]['Tables']["habits"]['ComputedFields']>,"p_template": string }; Returns: {
+              "cap": number,"days": number
+            }[]
+                           },
 "pgp_armor_headers":
 { Args: { "": string }; Returns: Record<string, unknown>[]
                            },
