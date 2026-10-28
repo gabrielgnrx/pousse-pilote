@@ -36,10 +36,10 @@ export function DailyQuests({ daily }: { daily: DailyState }) {
     );
   }
   return (
-    <section className="flex flex-col gap-2 rounded-[24px] border border-trait bg-papier p-4" aria-labelledby="quetes">
+    <section className="flex flex-col gap-2 rounded-[24px] bg-papier p-4" aria-labelledby="quetes">
       <div className="flex items-center justify-between">
-        <h2 id="quetes" className="font-display text-lg">Quêtes du jour</h2>
-        <span className="chip bg-peche text-argile-fonce">
+        <h2 id="quetes" className="font-display text-xl">Quêtes du jour</h2>
+        <span className="chip bg-pollen-pale text-pollen-texte">
           {done}/{order.length} · +{POINTS.quete} pousses
         </span>
       </div>
@@ -55,7 +55,7 @@ export function DailyQuests({ daily }: { daily: DailyState }) {
               >
                 <span
                   aria-hidden="true"
-                  className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 ${ok ? "border-sapin bg-sapin text-sapin-clair" : "border-terre/50"}`}
+                  className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 ${ok ? "border-chloro bg-chloro text-white" : "border-trait"}`}
                 >
                   {ok ? (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="M5 12l5 5 9-10" /></svg>

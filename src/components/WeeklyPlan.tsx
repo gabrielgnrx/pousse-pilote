@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
+import { CATEGORY_LABEL, TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
 import type { PlanEntry } from "@/lib/plan/weekly.ts";
 
 const SIGNAL: Record<PlanEntry["signal"], { label: string; className: string } | null> = {
   nouveau: null,
   en_cours: { label: "En cours", className: "bg-sauge text-sapin" },
-  sur_sa_lancee: { label: "Sur ta lancée", className: "bg-feuille text-encre" },
-  abandonne: { label: "À reprendre en douceur", className: "bg-peche text-argile-fonce" },
+  sur_sa_lancee: { label: "Sur ta lancée", className: "bg-pollen text-encre" },
+  abandonne: { label: "À reprendre en douceur", className: "bg-pollen-pale text-pollen-texte" },
 };
 
 const LEVELS = [
@@ -32,47 +32,45 @@ export function WeeklyPlan({
   return (
     <section aria-labelledby="plan-semaine" className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between">
-        <h2 id="plan-semaine" className="font-display text-[21px]">Ton plan de la semaine</h2>
-        <span className="text-xs text-terre">recalculé chaque lundi</span>
+        <h2 id="plan-semaine" className="font-display text-xl">Proposés pour toi</h2>
+        <span className="text-[13px] text-brun">recalculé chaque lundi</span>
       </div>
-      <ol className="flex flex-col gap-2.5">
-        {items.map((e, i) => {
+      <ol className="flex flex-col gap-2">
+        {items.map((e) => {
           const t = TEMPLATE_BY_ID[e.template_id];
           if (!t) return null;
           const badge = SIGNAL[e.signal];
           const current = feasibility[e.template_id];
           return (
-            <li key={e.template_id} className="card flex flex-col gap-2.5">
-              <div className="flex items-start gap-3">
-                <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sapin font-display text-lg text-sapin-clair">
-                  {i + 1}
-                </span>
+            <li key={e.template_id} className="flex flex-col gap-3 rounded-[20px] bg-papier py-3 pr-3 pl-4">
+              <div className="flex items-center gap-3">
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold leading-snug">{t.title}</h3>
+                  <p className="label">{CATEGORY_LABEL[t.category]}</p>
+                  <h3 className="mt-0.5 text-base leading-snug font-bold">{t.title}</h3>
                   <p className="mt-1 text-sm leading-snug text-brun">{e.reason}</p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    <span className="chip bg-sauge text-sapin">≈ {formatKg(e.kg_year)} évités par an</span>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span className="chip bg-sauge text-sapin">≈ −{formatKg(e.kg_year)} par an</span>
                     {badge ? <span className={`chip ${badge.className}`}>{badge.label}</span> : null}
                   </div>
                 </div>
                 <Link
                   href={`/defis/nouveau/${t.id}`}
                   aria-label={`Lancer : ${t.title}`}
-                  className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre"
+                  className="flex size-12 shrink-0 items-center justify-center rounded-full bg-chloro text-white transition active:scale-95"
                 >
-                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                 </Link>
               </div>
-              <form action={setFeasibility} className="flex flex-wrap items-center gap-1.5">
+              <form action={setFeasibility} className="flex flex-wrap items-center gap-1.5 border-t border-sable pt-2.5">
                 <input type="hidden" name="template" value={e.template_id} />
-                <span className="text-xs font-semibold text-terre">C&apos;est faisable pour toi ?</span>
+                <span className="w-full text-xs font-semibold text-brun">C&apos;est faisable pour toi ?</span>
                 {LEVELS.map((l) => (
                   <button
                     key={l.id}
                     name="level"
                     value={l.id}
                     aria-pressed={current === l.id}
-                    className={`min-h-9 rounded-full px-3 text-xs font-semibold ${current === l.id ? "bg-sapin text-sapin-clair" : "border border-trait bg-papier text-brun"}`}
+                    className={`min-h-9 rounded-full px-3 text-xs font-bold ${current === l.id ? "bg-nuit text-white" : "bg-sable text-sapin"}`}
                   >
                     {l.label}
                   </button>
@@ -82,7 +80,7 @@ export function WeeklyPlan({
           );
         })}
       </ol>
-      <p className="text-xs text-terre">
+      <p className="text-xs text-brun">
         Classés selon ce qui pèse le plus dans ton bilan et ce que tu juges faisable. Le CO₂ est calculé avec les
         facteurs de l&apos;ADEME.
       </p>
