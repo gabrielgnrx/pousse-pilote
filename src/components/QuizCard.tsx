@@ -31,7 +31,7 @@ export function QuizCard({ initial }: { initial: Quiz }) {
     <section id="quiz" className="card flex scroll-mt-4 flex-col gap-3 py-3.5" aria-labelledby="quiz-titre">
       <div className="flex items-center justify-between gap-2">
         <h2 id="quiz-titre" className="font-display text-base">Quiz du jour</h2>
-        <span className="chip bg-peche text-argile-fonce">
+        <span className="chip bg-pollen-pale text-pollen-texte">
           {finished ? `${quiz.score}/${quiz.total}` : `Question ${Math.min(position, quiz.total)}/${quiz.total} · ${quiz.score} juste${quiz.score > 1 ? "s" : ""}`}
         </span>
       </div>
@@ -42,7 +42,7 @@ export function QuizCard({ initial }: { initial: Quiz }) {
           return (
             <li
               key={i}
-              className={`h-1.5 rounded-full ${d ? (d.correct ? "bg-sapin" : "bg-argile") : i === quiz.answered ? "bg-terre/50" : "bg-trait"}`}
+              className={`h-1.5 rounded-full ${d ? (d.correct ? "bg-chloro" : "bg-alerte") : i === quiz.answered ? "bg-terre/50" : "bg-trait"}`}
             >
               <span className="sr-only">{d ? (d.correct ? "juste" : "faux") : "à venir"}</span>
             </li>
@@ -72,7 +72,7 @@ export function QuizCard({ initial }: { initial: Quiz }) {
               );
             })}
           </ul>
-          <p className={`text-sm font-bold ${reveal.correct ? "text-sapin" : "text-argile-fonce"}`}>
+          <p className={`text-sm font-bold ${reveal.correct ? "text-sapin" : "text-alerte"}`}>
             {reveal.correct ? "Bien vu ! +1 pousse" : "Raté."}
           </p>
           <p className="text-xs leading-relaxed text-brun">{reveal.explanation}</p>
@@ -139,7 +139,7 @@ export function QuizCard({ initial }: { initial: Quiz }) {
           <p className="text-xs text-terre">10 nouvelles questions demain, jamais déjà posées.</p>
         </div>
       )}
-      {error ? <p role="alert" className="text-xs font-semibold text-argile-fonce">{error}</p> : null}
+      {error ? <p role="alert" className="text-xs font-semibold text-alerte">{error}</p> : null}
     </section>
   );
 }

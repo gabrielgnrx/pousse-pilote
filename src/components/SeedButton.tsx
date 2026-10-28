@@ -60,7 +60,7 @@ export function SeedButton({ opened }: { opened?: { plant: string | null; points
         </span>
         <span className="btn-dark min-h-9 px-3.5 text-sm">{shaking ? "…" : "Ouvrir"}</span>
       </button>
-      {error ? <p role="alert" className="text-xs font-semibold text-argile-fonce">{error}</p> : null}
+      {error ? <p role="alert" className="text-xs font-semibold text-alerte">{error}</p> : null}
     </div>
   );
 }

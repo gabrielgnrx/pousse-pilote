@@ -42,34 +42,92 @@ export default async function ProfilPage() {
         </span>
         <div>
           <h1 className="font-display text-2xl">{profile.display_name}</h1>
-          <p className="text-sm text-terre">{user.email}</p>
+          <p className="text-sm text-brun">{user.email}</p>
         </div>
       </section>
 
-      <Link href="/jardin" className="relative flex flex-col gap-2.5 overflow-hidden rounded-[24px] bg-sapin p-5 text-sapin-clair">
-        <Mascot size={64} grown className="absolute top-3 right-4" />
+      <h2 className="label -mb-2">Ta progression</h2>
+      <Link href="/jardin" className="relative flex flex-col gap-2.5 overflow-hidden rounded-[24px] bg-sapin p-5 text-white">
+        <Mascot size={64} grown pot="#17462a" className="absolute top-3 right-4" />
         <span className="relative flex flex-col gap-1 pr-24">
           <span className="text-[13px] font-semibold text-sapin-pale">Niveau {level.index + 1} · {level.name}</span>
           <span className="font-display text-[40px] leading-none">{e.points.total.toLocaleString("fr-FR")} <span className="font-sans text-[15px] text-sapin-pale">pousses</span></span>
         </span>
         <span
-          className="relative h-2.5 overflow-hidden rounded-full bg-sapin-fonce"
+          className="relative h-2.5 overflow-hidden rounded-full bg-white/15"
           role="progressbar"
           aria-label={level.next ? `Vers le niveau ${level.next.name}` : "Niveau maximum"}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(level.progress * 100)}
         >
-          <span className="block h-full rounded-full bg-feuille" style={{ width: `${Math.max(3, level.progress * 100)}%` }} />
+          <span className="block h-full rounded-full bg-pollen" style={{ width: `${Math.max(3, level.progress * 100)}%` }} />
         </span>
         <span className="flex items-center justify-between gap-2 text-[13px]">
           <span className="text-sapin-pale">
             {level.next ? `Encore ${level.next.missing.toLocaleString("fr-FR")} pour devenir ${level.next.name}` : "Niveau maximum atteint"}
           </span>
-          <span className="shrink-0 font-semibold text-feuille">Mon jardin ›</span>
+          <span className="shrink-0 font-bold text-pollen">Mon jardin ›</span>
         </span>
       </Link>
 
+      <section className="card flex flex-col gap-2">
+        <p className="label">Ton impact · la planète</p>
+        <div className="flex gap-4">
+          <p className="flex-1">
+            <span className="block font-display text-2xl">{formatKg(e.kgAvoided)}</span>
+            <span className="text-xs text-terre">de CO₂ évités par tes défis</span>
+          </p>
+          <p className="flex-1">
+            <span className="block font-display text-2xl">{doneChallenges ?? 0}</span>
+            <span className="text-xs text-terre">défi{(doneChallenges ?? 0) > 1 ? "s" : ""} réussi{(doneChallenges ?? 0) > 1 ? "s" : ""}</span>
+          </p>
+        </div>
+        {e.influence.kg > 0 ? (
+          <p className="text-xs text-terre">
+            Et {formatKg(e.influence.kg)} évités par les collègues que tu as inspirés.
+          </p>
+        ) : null}
+      </section>
+
+      <section id="pousses" className="card flex scroll-mt-4 flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <p className="label">Tes pousses · le jeu</p>
+          <Link href="/regles" className="text-xs font-bold underline underline-offset-2">Le barème</Link>
+        </div>
+        <p>
+          <span className="font-display text-4xl">{e.points.total.toLocaleString("fr-FR")}</span>
+          <span className="ml-1.5 text-sm font-semibold">pousses depuis le début</span>
+          <span className="block text-xs text-terre">
+            dont {e.week.points} cette semaine
+            {e.streak > 0 ? ` · série de ${e.streak} jour${e.streak > 1 ? "s" : ""} d'affilée` : ""}
+          </span>
+        </p>
+        <ul className="flex flex-col text-sm">
+          {[
+            { l: "Défis validés", v: e.points.defis },
+            ...(e.points.maintien ? [{ l: "Habitudes gardées (ancien barème)", v: e.points.maintien }] : []),
+            {
+              l: `Collègues inspirés${e.influence.challenges > 0 ? ` (${e.influence.challenges} défi${e.influence.challenges > 1 ? "s" : ""})` : ""}`,
+              v: e.points.influence,
+            },
+            ...(e.points.temoin ? [{ l: "Témoin pour un collègue (ancien barème)", v: e.points.temoin }] : []),
+            { l: "Quêtes du jour et séries", v: e.points.bonus },
+            { l: "Meilleurs choix au scanner", v: e.points.scan },
+            { l: "Quiz, graines, défis d'équipe et duels", v: e.points.jeu },
+            ...(e.points.penalite < 0 ? [{ l: "Mises perdues en duel", v: e.points.penalite }] : []),
+          ].map((r) => (
+            <li key={r.l} className="flex justify-between border-t border-sable py-2">
+              <span>{r.l}</span>
+              <span className={`font-bold ${r.v < 0 ? "text-alerte" : "text-sapin"}`}>{r.v < 0 ? r.v : `+${r.v}`}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <RecentGains items={e.recent.slice(0, 8)} />
+
+      {fp ? <h2 className="label -mb-2">Ton bilan</h2> : null}
       {fp ? (
         <Link href="/bilan" className="card flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-2">
@@ -98,75 +156,20 @@ export default async function ProfilPage() {
         </Link>
       ) : null}
 
-      <nav aria-label="Mon espace" className="flex flex-col overflow-hidden rounded-[20px] border border-trait bg-papier">
+      <h2 className="label -mb-2">Réglages</h2>
+      <nav aria-label="Mon espace" className="flex flex-col overflow-hidden rounded-[20px] bg-papier">
         {[
           { href: "/notifications", label: "Notifications" },
           { href: "/regles", label: "Le barème des pousses" },
         ].map((l, i) => (
-          <Link key={l.href} href={l.href} className={`flex min-h-[52px] items-center justify-between px-4 text-[15px] font-semibold ${i ? "border-t border-encre/10" : ""}`}>
+          <Link key={l.href} href={l.href} className={`flex min-h-[52px] items-center justify-between px-4 text-[15px] font-semibold ${i ? "border-t border-sable" : ""}`}>
             {l.label}
             <span aria-hidden="true" className="text-terre">›</span>
           </Link>
         ))}
       </nav>
 
-      <section id="pousses" className="card flex scroll-mt-4 flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <p className="label">Tes pousses · le jeu</p>
-          <Link href="/regles" className="text-xs font-bold underline underline-offset-2">Le barème</Link>
-        </div>
-        <p>
-          <span className="font-display text-4xl">{e.points.total}</span>
-          <span className="ml-1.5 text-sm font-semibold">pousses depuis le début</span>
-          <span className="block text-xs text-terre">
-            dont {e.week.points} cette semaine
-            {e.streak > 0 ? ` · série de ${e.streak} jour${e.streak > 1 ? "s" : ""} d'affilée` : ""}
-          </span>
-        </p>
-        <ul className="flex flex-col text-sm">
-          {[
-            { l: "Défis validés", v: e.points.defis },
-            ...(e.points.maintien ? [{ l: "Habitudes gardées (ancien barème)", v: e.points.maintien }] : []),
-            {
-              l: `Collègues inspirés${e.influence.challenges > 0 ? ` (${e.influence.challenges} défi${e.influence.challenges > 1 ? "s" : ""})` : ""}`,
-              v: e.points.influence,
-            },
-            ...(e.points.temoin ? [{ l: "Témoin pour un collègue (ancien barème)", v: e.points.temoin }] : []),
-            { l: "Quêtes du jour et séries", v: e.points.bonus },
-            { l: "Meilleurs choix au scanner", v: e.points.scan },
-            { l: "Quiz, graines, défis d'équipe et duels", v: e.points.jeu },
-            ...(e.points.penalite < 0 ? [{ l: "Mises perdues en duel", v: e.points.penalite }] : []),
-          ].map((r) => (
-            <li key={r.l} className="flex justify-between border-t border-encre/10 py-1.5">
-              <span>{r.l}</span>
-              <span className={`font-bold ${r.v < 0 ? "text-argile-fonce" : ""}`}>{r.v < 0 ? r.v : `+${r.v}`}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <RecentGains items={e.recent.slice(0, 8)} />
-
       <PhoneCard vapidKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null} />
-
-      <section className="card flex flex-col gap-2">
-        <p className="label">Ton impact · la planète</p>
-        <div className="flex gap-4">
-          <p className="flex-1">
-            <span className="block font-display text-2xl">{formatKg(e.kgAvoided)}</span>
-            <span className="text-xs text-terre">de CO₂ évités par tes défis</span>
-          </p>
-          <p className="flex-1">
-            <span className="block font-display text-2xl">{doneChallenges ?? 0}</span>
-            <span className="text-xs text-terre">défi{(doneChallenges ?? 0) > 1 ? "s" : ""} réussi{(doneChallenges ?? 0) > 1 ? "s" : ""}</span>
-          </p>
-        </div>
-        {e.influence.kg > 0 ? (
-          <p className="text-xs text-terre">
-            Et {formatKg(e.influence.kg)} évités par les collègues que tu as inspirés.
-          </p>
-        ) : null}
-      </section>
 
       <form action={updatePreferences} className="card flex flex-col gap-3">
         <p className="label">Profil et confidentialité</p>
@@ -178,11 +181,11 @@ export default async function ProfilPage() {
           Rien n&apos;est publié dans le fil sans ton accord : après chaque action ou défi, Pousse te propose de le partager.
         </p>
         <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" name="consent_team_stats" defaultChecked={profile.consent_team_stats} className="mt-0.5 size-5 accent-sapin" />
+          <input type="checkbox" name="consent_team_stats" defaultChecked={profile.consent_team_stats} className="mt-0.5 size-5 accent-chloro" />
           <span>Mes pousses comptent pour mon équipe (totaux anonymes). Sans cette case, tu comptes quand même dans l&apos;effectif de ton équipe, avec 0 pousse.</span>
         </label>
         <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" name="consent_feedback" defaultChecked={profile.consent_feedback} className="mt-0.5 size-5 accent-sapin" />
+          <input type="checkbox" name="consent_feedback" defaultChecked={profile.consent_feedback} className="mt-0.5 size-5 accent-chloro" />
           <span>Pousse peut me proposer un court questionnaire.</span>
         </label>
         <SubmitButton className="btn-dark text-sm" pendingLabel="Enregistrement…">Enregistrer</SubmitButton>
@@ -196,12 +199,12 @@ export default async function ProfilPage() {
         <Link href="/methodologie" className="font-bold underline">Méthodologie de calcul</Link>
       </section>
 
-      <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
+      <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-pollen-pale p-4">
         <span className="flex-1">
           <span className="block text-sm font-bold">30 secondes pour améliorer Pousse ?</span>
           <span className="block text-xs text-brun">3 questions sur ta semaine</span>
         </span>
-        <span className="btn-primary min-h-10 px-4 text-sm">Répondre</span>
+        <span className="flex min-h-10 items-center rounded-full bg-nuit px-4 text-sm font-bold text-white">Répondre</span>
       </Link>
 
       <form action={signOut}>

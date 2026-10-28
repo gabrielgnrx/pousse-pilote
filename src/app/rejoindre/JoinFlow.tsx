@@ -47,7 +47,7 @@ export function CodeStep({ state, onRestart, next }: { state: JoinState; onResta
           <SubmitButton pendingLabel="Vérification…">Valider le code</SubmitButton>
         </form>
       ) : (
-        <p className="rounded-2xl bg-sable px-4 py-3 text-sm text-brun">
+        <p className="rounded-[20px] bg-sable px-4 py-3 text-sm text-brun">
           Sur téléphone, si le lien s&apos;ouvre dans un autre navigateur, reviens ici avec ce navigateur-là
           et choisis « J&apos;ai déjà un compte ».
         </p>
@@ -86,7 +86,7 @@ function RequestForm({
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-5 px-6 py-8">
       <div className="flex items-center gap-3">
         <Logo />
-        <span className="chip bg-sapin text-sapin-clair">Pilote entreprise</span>
+        <span className="chip bg-nuit text-white">Pilote entreprise</span>
       </div>
 
       {state.sentTo ? (
@@ -103,7 +103,7 @@ function RequestForm({
                 type="button"
                 aria-pressed={mode === t.id}
                 onClick={() => setMode(t.id)}
-                className={`flex h-10 flex-1 items-center justify-center rounded-full text-sm font-bold ${mode === t.id ? "bg-sapin text-sapin-clair" : "text-brun"}`}
+                className={`flex h-10 flex-1 items-center justify-center rounded-full text-sm font-bold ${mode === t.id ? "bg-papier text-encre" : "text-brun"}`}
               >
                 {t.label}
               </button>

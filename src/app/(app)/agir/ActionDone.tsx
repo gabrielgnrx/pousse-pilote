@@ -289,7 +289,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
                   className="text-sm"
                   onChange={(e) => void compressInput(e.currentTarget)}
                 />
-                {state.error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{state.error}</p> : null}
+                {state.error ? <p role="alert" className="text-sm font-semibold text-alerte">{state.error}</p> : null}
                 <button type="submit" disabled={sending} className="btn-primary">{sending ? "Publication…" : "Publier dans le fil"}</button>
                 <button type="button" onClick={() => setPublishing(false)} className="min-h-11 text-[13px] font-semibold text-terre underline underline-offset-2">
                   Finalement, garder pour moi

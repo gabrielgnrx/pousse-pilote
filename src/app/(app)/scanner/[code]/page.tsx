@@ -97,7 +97,7 @@ export default async function ProductPage({
         </p>
       ) : null}
       {erreur ? (
-        <p role="alert" className="-mt-2 rounded-2xl bg-peche px-4 py-3 text-sm font-semibold text-argile-fonce">{erreur}</p>
+        <p role="alert" className="-mt-2 rounded-2xl bg-peche px-4 py-3 text-sm font-semibold text-alerte">{erreur}</p>
       ) : null}
 
       <section className="card flex flex-col gap-3">

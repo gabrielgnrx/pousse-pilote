@@ -47,14 +47,14 @@ export default async function InformerPage() {
           { href: "#saison", label: "De saison" },
           { href: "#actu", label: "Actus" },
         ].map((c) => (
-          <a key={c.href} href={c.href} className="flex min-h-10 shrink-0 items-center rounded-full border border-trait bg-papier px-3.5 text-sm font-medium">
+          <a key={c.href} href={c.href} className="flex min-h-10 shrink-0 items-center rounded-full bg-sable px-3.5 text-sm font-bold text-sapin">
             {c.label}
           </a>
         ))}
       </nav>
 
-      <Link href="/scanner" className="flex items-center gap-3.5 rounded-[24px] bg-sapin p-[18px] text-sapin-clair">
-        <span className="flex size-14 shrink-0 items-center justify-center rounded-[20px] bg-feuille text-encre">
+      <Link href="/scanner" className="flex items-center gap-3.5 rounded-[24px] bg-sapin p-[18px] text-white">
+        <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-pollen text-encre">
           <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2" />
             <path d="M8 8v8M11 8v8M14 8v8M17 8v8" />
@@ -67,10 +67,10 @@ export default async function InformerPage() {
       </Link>
 
       {quiz ? (
-        <Link id="quiz" href="/quiz" className="flex scroll-mt-4 flex-col gap-2 rounded-[24px] bg-peche p-4 text-encre">
+        <Link id="quiz" href="/quiz" className="flex scroll-mt-4 flex-col gap-2 rounded-[24px] bg-pollen-pale p-4 text-encre">
           <span className="flex items-center justify-between">
             <span className="font-display text-xl">Quiz du jour</span>
-            <span className="rounded-full bg-argile px-2.5 py-1 text-xs font-semibold text-white">jusqu&apos;à 15 pousses</span>
+            <span className="rounded-full bg-pollen px-2.5 py-1 text-xs font-bold text-encre">jusqu&apos;à 15 pousses</span>
           </span>
           <span className="text-[15px] leading-snug text-encre">
             {quiz.current
@@ -79,7 +79,7 @@ export default async function InformerPage() {
                 : "10 questions sur ce qui pèse vraiment, chiffres ADEME"
               : `Terminé : ${quiz.score}/${quiz.total}. 10 nouvelles questions demain.`}
           </span>
-          <span className="flex min-h-11 items-center self-start rounded-[14px] bg-argile px-4 text-sm font-semibold text-white">{quiz.current ? (quiz.answered > 0 ? "Continuer le quiz" : "Jouer") : "Revoir mes réponses"}</span>
+          <span className="mt-1 flex min-h-11 items-center self-start rounded-full bg-nuit px-5 text-sm font-bold text-white">{quiz.current ? (quiz.answered > 0 ? "Continuer le quiz" : "Jouer") : "Revoir mes réponses"}</span>
         </Link>
       ) : null}
 
@@ -87,7 +87,7 @@ export default async function InformerPage() {
         <section id="fiches" className="flex scroll-mt-4 flex-col gap-2" aria-labelledby="fiches-titre">
           <div>
             <h2 id="fiches-titre" className="font-display text-xl">Les fiches</h2>
-            <p className="text-sm text-terre">Pourquoi ça compte et comment s&apos;y prendre, d&apos;après ton bilan.</p>
+            <p className="text-sm text-brun">Pourquoi ça compte et comment s&apos;y prendre, d&apos;après ton bilan.</p>
           </div>
           <ul className="grid grid-cols-2 gap-2.5">
             {fiches.map(({ t, e }) => (
@@ -96,9 +96,15 @@ export default async function InformerPage() {
                   href={`/informer/geste/${t.id}`}
                   className={`flex h-full flex-col gap-1.5 rounded-[20px] p-3 ${t.id === featured.id ? "border-2 border-chloro bg-papier" : "bg-papier"}`}
                 >
-                  <span className="text-[11px] font-bold tracking-[0.06em] text-argile-fonce uppercase">
-                    {t.id === featured.id ? "La fiche de la semaine" : `${verbOf(t.id)} · ${CATEGORY_LABEL[t.category]}`}
-                  </span>
+                  {t.id === featured.id ? (
+                    <span className="self-start rounded-full bg-pollen px-2 py-0.5 text-[11px] font-extrabold tracking-wider text-encre uppercase">
+                      Fiche de la semaine
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-bold tracking-wider text-brun uppercase">
+                      {verbOf(t.id)} · {CATEGORY_LABEL[t.category]}
+                    </span>
+                  )}
                   <span className="text-sm leading-snug font-bold">{t.title}</span>
                   <span className="mt-auto text-[13px] font-bold text-sapin">jusqu&apos;à −{formatKg(e.maxKg)} par {t.unit.one}</span>
                 </Link>
@@ -115,12 +121,12 @@ export default async function InformerPage() {
             <li key={r.id}>
               <details className="card group py-3">
                 <summary className="flex cursor-pointer list-none items-center gap-3">
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-peche">
-                    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7a5a12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0Z" /><path d="M12 7c0-2 1-3 3-3" /></svg>
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-sauge">
+                    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1e5634" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0Z" /><path d="M12 7c0-2 1-3 3-3" /></svg>
                   </span>
                   <span className="flex-1">
                     <span className="block font-bold">{r.name}</span>
-                    <span className="block text-xs text-terre">{r.minutes} min · {r.protein}</span>
+                    <span className="block text-xs text-brun">{r.minutes} min · {r.protein}</span>
                   </span>
                   <span aria-hidden="true" className="text-terre transition group-open:rotate-90">›</span>
                 </summary>
@@ -147,7 +153,7 @@ export default async function InformerPage() {
       </section>
 
       {/* De saison ce mois-ci : ce qu'on met dans son panier. */}
-      <section id="saison" className="flex scroll-mt-4 flex-col gap-3 rounded-[24px] bg-sapin p-5 text-sapin-clair" aria-labelledby="saison-titre">
+      <section id="saison" className="flex scroll-mt-4 flex-col gap-3 rounded-[24px] bg-sapin p-5 text-white" aria-labelledby="saison-titre">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold tracking-wider uppercase opacity-90">Ce mois-ci dans ton panier</p>
@@ -169,7 +175,7 @@ export default async function InformerPage() {
           <p className="text-xs font-bold opacity-90">Fruits</p>
           <ul className="flex flex-wrap gap-1.5">
             {fruits.map((p) => (
-              <li key={p.name} className="rounded-full bg-abricot/90 px-2.5 py-1 text-[13px] font-semibold text-encre">{p.name}</li>
+              <li key={p.name} className="rounded-full bg-pollen px-2.5 py-1 text-[13px] font-semibold text-encre">{p.name}</li>
             ))}
           </ul>
         </div>
@@ -180,7 +186,7 @@ export default async function InformerPage() {
           Une mangue venue par avion pèse 16 fois plus qu&apos;une mangue venue par bateau. Hors saison, beaucoup de produits viennent
           de serres chauffées ou de loin.
         </p>
-        <Link href="/informer/saison" className="flex min-h-11 items-center justify-center rounded-full bg-sapin-clair text-sm font-bold text-sapin">
+        <Link href="/informer/saison" className="flex min-h-11 items-center justify-center rounded-full bg-white px-3 text-center text-sm font-bold text-sapin">
           Le calendrier complet, avec le CO₂ de chaque produit ›
         </Link>
       </section>
@@ -189,7 +195,7 @@ export default async function InformerPage() {
       <section id="actu" className="flex scroll-mt-4 flex-col gap-3" aria-labelledby="actu-titre">
         <div>
           <h2 id="actu-titre" className="font-display text-xl">L&apos;actu qui fait du bien</h2>
-          <p className="text-sm text-terre">Les bonnes nouvelles pour la planète, relayées des médias plusieurs fois par jour.</p>
+          <p className="text-sm text-brun">Les bonnes nouvelles pour la planète, relayées des médias plusieurs fois par jour.</p>
         </div>
         {news.length ? (
           <>
