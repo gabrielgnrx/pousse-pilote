@@ -102,7 +102,7 @@ export function NaturalEntry({
   return (
     <div className="relative flex flex-col gap-3">
       <form
-        className="flex items-center gap-2 rounded-[20px] bg-papier p-1.5 pl-4 text-encre"
+        className="flex items-center gap-2 rounded-[20px] bg-papier p-1.5 pl-4 text-encre shadow-[inset_0_0_0_1.5px_var(--color-trait)] focus-within:shadow-[inset_0_0_0_1.5px_var(--color-chloro)]"
         onSubmit={(e) => {
           e.preventDefault();
           submit(text);
@@ -124,7 +124,7 @@ export function NaturalEntry({
             onClick={dictate}
             aria-label={listening ? "Arrêter la dictée" : "Dicter mon action"}
             aria-pressed={listening}
-            className={`flex size-11 shrink-0 items-center justify-center rounded-[14px] ${listening ? "animate-pousse-pop bg-argile text-white" : "bg-sauge text-sapin"}`}
+            className={`flex size-11 shrink-0 items-center justify-center rounded-[14px] ${listening ? "animate-pousse-pop bg-alerte text-white" : "bg-sauge text-sapin"}`}
           >
             <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <rect x="9" y="3" width="6" height="11" rx="3" />
@@ -136,12 +136,12 @@ export function NaturalEntry({
           {pending ? "…" : "OK"}
         </button>
       </form>
-      <p className="relative text-xs text-sapin-pale">
+      <p className="relative text-xs text-brun">
         {listening ? "Je t'écoute…" : "Écris ou dicte ce que tu as fait. Tu confirmes avant tout enregistrement."}
       </p>
 
       {notice ? (
-        <p role="status" className="rounded-2xl bg-peche px-4 py-3 text-sm font-semibold text-argile-fonce">{notice}</p>
+        <p role="status" className="rounded-[20px] bg-pollen-pale px-4 py-3 text-sm font-semibold text-pollen-texte">{notice}</p>
       ) : null}
 
       {cards.length ? (
@@ -253,7 +253,7 @@ function ConfirmCardView({
           {choices.map((s) => (
             <label
               key={s}
-              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-2xl border px-3 py-2 text-sm ${s === slug ? "border-sapin bg-sauge font-semibold" : "border-trait"}`}
+              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-2xl border px-3 py-2 text-sm ${s === slug ? "border-chloro bg-sauge font-semibold" : "border-trait"}`}
             >
               <input type="radio" name={`choix-${card.slug}`} value={s} checked={s === slug} onChange={() => setSlug(s)} className="accent-sapin" />
               {ACTION_BY_SLUG[s]?.label}
@@ -298,7 +298,7 @@ function ConfirmCardView({
           : `Quantité possible : de ${action.min} à ${action.max} ${action.unit}.`}
       </p>
 
-      {error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm font-semibold text-alerte">{error}</p> : null}
       <button type="button" onClick={confirm} disabled={pending} className="btn-dark">
         {pending ? "Enregistrement…" : "Valider"}
       </button>
