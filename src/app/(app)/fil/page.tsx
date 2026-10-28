@@ -208,7 +208,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
               when={relativeTime(p.created_at)}
               caption={p.caption ?? title}
               gain={Number(p.kg) > 0 ? `−${formatKg(Number(p.kg))}` : `+${p.points} pousses`}
-              photoUrl={p.proof_photo_path ? photoUrl.get(p.proof_photo_path) : undefined}
+              photoUrl={(p.proof_photo_path ? photoUrl.get(p.proof_photo_path) : null) ?? undefined}
               cheers={postCheers.length}
               cheered={postCheers.some((c) => c.user_id === user.id)}
               mine={mine}
