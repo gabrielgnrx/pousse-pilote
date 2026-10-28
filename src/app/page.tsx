@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Logo, Sprout } from "@/components/Logo";
+import { Logo } from "@/components/Logo";
+import { Mascot } from "@/components/Mascot";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -24,8 +25,8 @@ export default async function Home() {
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-6 py-8">
       <Logo />
       <div className="flex flex-1 items-center justify-center">
-        <div className="flex size-44 items-center justify-center rounded-full bg-sable">
-          <Sprout size={110} />
+        <div className="flex size-48 items-end justify-center rounded-full bg-sable pb-4">
+          <Mascot size={130} grown pot="#c9dcc0" />
         </div>
       </div>
       <h1 className="font-display text-4xl leading-tight">Moins de CO₂, plus de fun.</h1>
@@ -33,7 +34,7 @@ export default async function Home() {
         Calcule ton empreinte pour de vrai, relève des défis avec tes collègues et regarde-la
         fondre, semaine après semaine.
       </p>
-      <div className="flex gap-4 text-sm font-semibold text-terre">
+      <div className="flex gap-4 text-sm font-semibold text-brun">
         <span>15 questions</span>
         <span>2 minutes</span>
         <span>Zéro jugement</span>

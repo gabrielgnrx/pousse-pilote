@@ -41,8 +41,8 @@ export function WelcomeForm({
                 type="button"
                 aria-pressed={team === t.id}
                 onClick={() => setTeam(t.id)}
-                className={`min-h-12 rounded-2xl border-2 px-3 text-sm font-bold ${
-                  team === t.id ? "border-sapin bg-sauge" : "border-transparent bg-sable"
+                className={`min-h-12 rounded-[14px] border-2 px-3 text-sm font-bold ${
+                  team === t.id ? "border-chloro bg-sauge" : "border-transparent bg-sable"
                 }`}
               >
                 {t.name}

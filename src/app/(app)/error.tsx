@@ -12,7 +12,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
   return (
     <section role="alert" className="card mt-6 flex flex-col items-center gap-3 py-8 text-center">
       <span className="flex size-14 items-center justify-center rounded-full bg-peche" aria-hidden="true">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8a3c1c" strokeWidth="2" strokeLinecap="round">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6b4e0a" strokeWidth="2" strokeLinecap="round">
           <path d="M12 8v5M12 16.5v.5" />
           <circle cx="12" cy="12" r="9" />
         </svg>

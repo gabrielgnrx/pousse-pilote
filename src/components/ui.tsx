@@ -23,7 +23,7 @@ export function SubmitButton({
 export function FormError({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
-    <p role="alert" className="rounded-2xl bg-peche px-4 py-3 text-sm font-semibold text-argile-fonce">
+    <p role="alert" className="rounded-[20px] bg-pollen-pale px-4 py-3 text-sm font-semibold text-alerte">
       {message}
     </p>
   );

@@ -3,18 +3,13 @@ import { nextBilanAllowed } from "@/lib/bilan-lock";
 import { redirect } from "next/navigation";
 import { requireHabits } from "@/lib/session";
 import { computeFootprint, type BilanAnswers, type Footprint } from "@/lib/co2/footprint.ts";
+import { FOOTPRINT_PARTS } from "@/lib/co2/footprint-parts.ts";
 import { actionPlan } from "@/lib/co2/plan.ts";
 import { TEMPLATE_BY_ID, carKmEquivalent, formatKg } from "@/lib/co2/challenges.ts";
 import { headStartKgYear, keptHabits, remainingBigItems } from "@/lib/co2/engagement.ts";
 import { formatInstant } from "@/lib/dates";
 
-const CATEGORIES: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
-  { key: "transport", label: "Transports", color: "#e8a27c" },
-  { key: "alimentation", label: "Alimentation", color: "#b5c890" },
-  { key: "logement", label: "Chauffage", color: "#e9c9a3" },
-  { key: "consommation", label: "Vêtements et électronique", color: "#8fa06a" },
-  { key: "services", label: "Services publics (part commune)", color: "#6f7d52" },
-];
+const CATEGORIES = FOOTPRINT_PARTS.map((c) => ({ ...c, label: c.long }));
 
 const tonnes = (kg: number) => (kg / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 
@@ -61,7 +56,7 @@ export default async function BilanPage() {
         </p>
       </div>
 
-      <section className="rounded-[20px] bg-sapin p-5 text-sapin-clair">
+      <section className="rounded-[24px] bg-sapin p-5 text-white">
         <p className="flex items-baseline gap-2">
           <span className="font-display text-5xl">{tonnes(fp.total_kg)}</span>
           <span className="text-sm">t CO₂e par an (estimation)</span>
@@ -77,7 +72,7 @@ export default async function BilanPage() {
         </p>
       </section>
 
-      <ul className="card flex flex-col divide-y divide-encre/10 p-0">
+      <ul className="card flex flex-col divide-y divide-sable p-0">
         {CATEGORIES.map((c) => (
           <li key={c.key} className="flex items-center gap-3 px-4 py-3">
             <span className="size-3.5 rounded" style={{ background: c.color }} aria-hidden="true" />
@@ -87,7 +82,7 @@ export default async function BilanPage() {
         ))}
       </ul>
       <section className="card flex flex-col gap-2 text-sm leading-relaxed" aria-labelledby="perimetre">
-        <h2 id="perimetre" className="font-display text-lg">Ce que ce bilan compte, et ce qu&apos;il ne compte pas</h2>
+        <h2 id="perimetre" className="font-display text-xl">Ce que ce bilan compte, et ce qu&apos;il ne compte pas</h2>
         <p>
           <strong>Compté :</strong> tes trajets, l&apos;avion, tes repas, l&apos;eau en bouteille, le chauffage, les
           vêtements et l&apos;électronique neufs, plus une part fixe de 1 t pour les services publics.
@@ -109,9 +104,9 @@ export default async function BilanPage() {
       </section>
 
       {kept.length ? (
-        <section className="flex flex-col gap-3 rounded-[20px] bg-sauge p-4 text-[#1f5134]">
+        <section className="flex flex-col gap-3 rounded-[20px] bg-sauge p-4 text-sapin">
           <div>
-            <h2 className="font-display text-lg">Ce que tu fais déjà</h2>
+            <h2 className="font-display text-xl">Ce que tu fais déjà</h2>
             {headStartYear >= 1 ? (
               <p className="mt-1 text-sm leading-snug">
                 Tes habitudes évitent déjà environ <strong>{formatKg(headStartYear)} par an</strong> par rapport à
@@ -136,9 +131,9 @@ export default async function BilanPage() {
 
       {bigItems.length ? (
         <section className="card flex flex-col gap-2">
-          <h2 className="font-display text-lg">Tes plus gros postes restants</h2>
+          <h2 className="font-display text-xl">Tes plus gros postes restants</h2>
           <p className="-mt-1 text-xs text-terre">Là où il reste le plus à gagner, d&apos;après tes réponses.</p>
-          <ul className="flex flex-col divide-y divide-encre/10">
+          <ul className="flex flex-col divide-y divide-sable">
             {bigItems.map((b) => {
               const t = TEMPLATE_BY_ID[b.templateId];
               return (
@@ -150,7 +145,7 @@ export default async function BilanPage() {
                     </p>
                   </div>
                   {t ? (
-                    <Link href={`/defis/nouveau/${t.id}`} className="flex h-10 items-center rounded-full bg-sable px-3.5 text-xs font-bold">
+                    <Link href={`/defis/nouveau/${t.id}`} className="flex h-10 items-center rounded-full bg-sable px-3.5 text-xs font-bold text-sapin">
                       {t.level === "expert" ? "Défi expert" : "Voir le défi"}
                     </Link>
                   ) : null}
@@ -162,7 +157,7 @@ export default async function BilanPage() {
       ) : null}
 
       <section className="card flex flex-col gap-3">
-        <h2 className="font-display text-lg">Ta trajectoire</h2>
+        <h2 className="font-display text-xl">Ta trajectoire</h2>
         <div className="flex gap-3">
           <div className="flex-1">
             <p className="text-xs text-terre">Déjà évité avec tes défis</p>
@@ -170,7 +165,7 @@ export default async function BilanPage() {
             <p className="text-xs text-terre">soit {carKmEquivalent(avoided)} km en voiture</p>
           </div>
           {plan.length ? (
-            <div className="flex-1 border-l border-encre/10 pl-3">
+            <div className="flex-1 border-l border-sable pl-3">
               <p className="text-xs text-terre">Si tu suis ton plan</p>
               <p className="font-display text-2xl">
                 {tonnes(fp.total_kg)} → {tonnes(fp.total_kg - planKg)} t
@@ -178,29 +173,29 @@ export default async function BilanPage() {
             </div>
           ) : null}
         </div>
-        <p className="rounded-xl bg-sauge px-3 py-2 text-sm font-semibold text-[#1f5134]">
+        <p className="rounded-[14px] bg-sauge px-3 py-2 text-sm font-semibold text-sapin">
           Prochain bilan conseillé : {formatInstant(nextBilan)}
         </p>
       </section>
 
       <section className="flex flex-col gap-3">
         <div>
-          <h2 className="font-display text-lg">Ton plan d&apos;action</h2>
+          <h2 className="font-display text-xl">Ton plan d&apos;action</h2>
           <p className="text-xs text-terre">Les actions qui réduisent le plus ton empreinte, calculés sur tes réponses.</p>
         </div>
         {plan.map((p, i) => (
           <article key={p.templateId} className="card flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-full bg-sapin font-display text-sm text-sapin-clair">
+              <span className="flex size-7 items-center justify-center rounded-full bg-nuit font-display text-sm text-white">
                 {i + 1}
               </span>
-              <h3 className="flex-1 font-display">{p.title}</h3>
+              <h3 className="flex-1 text-base font-bold">{p.title}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="chip bg-sauge text-sapin">−{formatKg(p.kgYear)} CO₂ / an</span>
               <span className="chip bg-creme font-semibold">{p.basis}</span>
             </div>
-            <Link href={`/defis/nouveau/${p.templateId}?variante=${p.variant}`} className="btn-primary mt-1">
+            <Link href={`/defis/nouveau/${p.templateId}?variante=${p.variant}`} className="btn-dark mt-1">
               Lancer le défi
             </Link>
           </article>

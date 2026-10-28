@@ -21,7 +21,7 @@ export default async function FicheGestePage({ params }: { params: Promise<{ id:
       </Link>
 
       <div>
-        <p className="text-xs font-bold tracking-wider text-argile-fonce uppercase">
+        <p className="text-xs font-bold tracking-wider text-chloro uppercase">
           {verbOf(t.id)} · {CATEGORY_LABEL[t.category]}
         </p>
         <h1 className="mt-1 font-display text-[26px] leading-tight">{t.title}</h1>
@@ -61,7 +61,7 @@ export default async function FicheGestePage({ params }: { params: Promise<{ id:
             </li>
           ))}
         </ol>
-        {fiche.trap ? <p className="mt-1 rounded-xl bg-peche px-3 py-2 text-sm text-[#3f4a3c]"><strong>Piège :</strong> {fiche.trap}</p> : null}
+        {fiche.trap ? <p className="mt-1 rounded-[14px] bg-pollen-pale px-3 py-2 text-sm text-brun"><strong>Piège :</strong> {fiche.trap}</p> : null}
       </section>
 
       <div className="flex flex-col gap-2">
