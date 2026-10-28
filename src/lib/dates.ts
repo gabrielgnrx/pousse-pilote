@@ -50,6 +50,20 @@ export function formatInstant(iso: string | Date, month: "long" | "short" = "lon
   return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month, timeZone: TZ });
 }
 
+/** Jour (AAAA-MM-JJ, heure de Paris) d'un horodatage : pour regrouper le fil par jour. */
+export function parisDay(iso: string | Date): string {
+  return new Date(iso).toLocaleDateString("sv-SE", { timeZone: TZ });
+}
+
+/** Repère de jour du fil : « Aujourd'hui », « Hier » ou « 17 octobre ». */
+export function dayLabel(iso: string | Date): string {
+  const day = parisDay(iso);
+  const today = todayParis();
+  if (day === today) return "Aujourd'hui";
+  if (day === addDays(today, -1)) return "Hier";
+  return formatDay(day);
+}
+
 export function relativeTime(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 60) return "à l'instant";

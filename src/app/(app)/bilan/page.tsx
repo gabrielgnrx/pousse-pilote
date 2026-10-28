@@ -9,7 +9,7 @@ import { headStartKgYear, keptHabits, remainingBigItems } from "@/lib/co2/engage
 import { formatInstant } from "@/lib/dates";
 
 const CATEGORIES: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
-  { key: "transport", label: "Transports", color: "#e8a27c" },
+  { key: "transport", label: "Transports", color: "#f2c14e" },
   { key: "alimentation", label: "Alimentation", color: "#b5c890" },
   { key: "logement", label: "Chauffage", color: "#e9c9a3" },
   { key: "consommation", label: "Vêtements et électronique", color: "#8fa06a" },
@@ -109,7 +109,7 @@ export default async function BilanPage() {
       </section>
 
       {kept.length ? (
-        <section className="flex flex-col gap-3 rounded-[20px] bg-sauge p-4 text-[#1f5134]">
+        <section className="flex flex-col gap-3 rounded-[20px] bg-sauge p-4 text-sapin">
           <div>
             <h2 className="font-display text-lg">Ce que tu fais déjà</h2>
             {headStartYear >= 1 ? (
@@ -178,7 +178,7 @@ export default async function BilanPage() {
             </div>
           ) : null}
         </div>
-        <p className="rounded-xl bg-sauge px-3 py-2 text-sm font-semibold text-[#1f5134]">
+        <p className="rounded-xl bg-sauge px-3 py-2 text-sm font-semibold text-sapin">
           Prochain bilan conseillé : {formatInstant(nextBilan)}
         </p>
       </section>

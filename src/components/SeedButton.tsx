@@ -29,7 +29,7 @@ export function SeedButton({ opened }: { opened?: { plant: string | null; points
   if (result) {
     const rare = result.plant ? RARE_BY_KEY[result.plant] : null;
     return (
-      <div role="status" className="animate-pousse-pop flex items-center gap-3 rounded-xl bg-abricot px-3 py-2 text-[#3a1606]">
+      <div role="status" className="animate-pousse-pop flex items-center gap-3 rounded-xl bg-abricot px-3 py-2 text-encre">
         {rare ? <PlantArt shape={rare.shape} color={rare.color} accent={rare.accent} stage={4} size={44} /> : <span className="font-display text-2xl">+{result.points}</span>}
         <p className="flex-1 text-sm">
           {rare ? (
@@ -47,7 +47,7 @@ export function SeedButton({ opened }: { opened?: { plant: string | null; points
         type="button"
         onClick={open}
         disabled={shaking}
-        className="flex min-h-12 items-center gap-3 rounded-xl bg-abricot px-3 py-2 text-left text-[#3a1606]"
+        className="flex min-h-12 items-center gap-3 rounded-xl bg-abricot px-3 py-2 text-left text-encre"
       >
         <svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" className={shaking ? "animate-seed-shake" : "animate-seed-wobble"}>
           <ellipse cx="12" cy="13" rx="6" ry="8" fill="#8a5a33" />

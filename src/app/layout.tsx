@@ -1,16 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Calistoga, Inter } from "next/font/google";
+import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
 import { SwRegister } from "@/components/SwRegister";
 
-const calistoga = Calistoga({
+// Titres et chiffres : Bricolage Grotesque (700, 800). Texte : Figtree.
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-calistoga",
+  weight: ["700", "800"],
+  variable: "--font-bricolage",
 });
-const inter = Inter({
+const figtree = Figtree({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-figtree",
 });
 
 export const metadata: Metadata = {
@@ -27,14 +28,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f6f3ea",
+  themeColor: "#f3f6f0",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${calistoga.variable} ${inter.variable}`}>
+    <html lang="fr" className={`${bricolage.variable} ${figtree.variable}`}>
       <body className="min-h-dvh">
         {children}
         <SwRegister />

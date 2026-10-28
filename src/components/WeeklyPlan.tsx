@@ -58,7 +58,7 @@ export function WeeklyPlan({
                 <Link
                   href={`/defis/nouveau/${t.id}`}
                   aria-label={`Lancer : ${t.title}`}
-                  className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]"
+                  className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre"
                 >
                   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                 </Link>

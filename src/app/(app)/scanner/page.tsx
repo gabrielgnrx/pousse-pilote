@@ -60,7 +60,7 @@ export default async function ScannerPage() {
         </ul>
       </details>
 
-      <p className="rounded-2xl bg-peche px-4 py-3 text-sm text-[#3f4a3c]">
+      <p className="rounded-2xl bg-peche px-4 py-3 text-sm text-brun">
         <strong>+5 pousses</strong> chaque fois que tu choisis une alternative mieux notée, jusqu&apos;à 3 fois par
         jour{swapsToday ? ` (${Math.min(3, swapsToday)}/3 aujourd'hui)` : ""}.
       </p>

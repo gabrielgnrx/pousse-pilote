@@ -112,7 +112,7 @@ export function ActionPicker({
           type="button"
           onClick={() => record(item)}
           disabled={pending}
-          className="flex min-h-16 w-full items-center gap-3 rounded-[20px] bg-papier p-3 text-left shadow-[inset_0_-3px_0_var(--color-sable)] transition active:translate-y-px disabled:opacity-60"
+          className="flex min-h-16 w-full items-center gap-3 rounded-[20px] bg-papier p-3 text-left transition active:translate-y-px disabled:opacity-60"
         >
           <span className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-sauge">
             <ThemeIcon theme={item.theme} />
@@ -120,7 +120,7 @@ export function ActionPicker({
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] leading-snug font-semibold">{item.title}</span>
             {boost ? (
-              <span className={`mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${boost.kind === "equipe" ? "bg-abricot text-[#3a1606]" : "bg-sapin text-sapin-clair"}`}>
+              <span className={`mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${boost.kind === "equipe" ? "bg-abricot text-encre" : "bg-sapin text-sapin-clair"}`}>
                 {boost.label} · {fmtMult(boost.mult)}
               </span>
             ) : null}
@@ -155,12 +155,12 @@ export function ActionPicker({
 
   return (
     <>
-      <div className="relative flex flex-col gap-1 overflow-hidden rounded-[28px_28px_28px_10px] bg-sapin p-5 text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]">
+      <div className="relative flex flex-col gap-1 overflow-hidden rounded-[24px] bg-sapin p-5 text-sapin-clair">
         <svg aria-hidden="true" width="150" height="130" viewBox="0 0 170 150" className="absolute -top-5 -right-9">
           <path d="M30 130C20 70 60 20 150 10c10 70-30 120-120 120Z" fill="#2c6a45" />
           <path d="M150 10C110 50 70 90 34 128" stroke="#3f7f57" strokeWidth="3" fill="none" />
         </svg>
-        <p className="relative text-[13px] font-semibold text-[#c8dcc4]">Une action, aujourd&apos;hui</p>
+        <p className="relative text-[13px] font-semibold text-sapin-pale">Une action, aujourd&apos;hui</p>
         <h1 className="relative font-display text-[28px] leading-tight">Qu&apos;as-tu fait de bien ?</h1>
         <NaturalEntry
           habits={habits}
@@ -174,7 +174,7 @@ export function ActionPicker({
       </div>
 
       <label className="flex h-[50px] items-center gap-2 rounded-2xl border border-trait bg-papier px-4">
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5b6458" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4-4" /></svg>
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a5a4e" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4-4" /></svg>
         <span className="sr-only">Chercher une action</span>
         <input
           type="search"
@@ -297,7 +297,7 @@ function ActionSheet({
     >
       <form
         action={onSubmit}
-        className="flex max-h-[90dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-creme p-5 sm:rounded-[28px]"
+        className="flex max-h-[90dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-creme p-5 sm:rounded-[24px]"
       >
         <div className="flex items-start justify-between gap-3">
           <div>

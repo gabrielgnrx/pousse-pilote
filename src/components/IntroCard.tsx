@@ -4,7 +4,7 @@ import { dismissIntro } from "@/lib/intro-actions";
 /** Affiché tant que la personne n'a pas cliqué « C'est compris ». */
 export function IntroCard() {
   return (
-    <section className="flex flex-col gap-3 rounded-[24px] bg-peche p-4 text-[#3a1606] shadow-[inset_0_-4px_0_var(--color-peche-fonce)]" aria-labelledby="intro">
+    <section className="flex flex-col gap-3 rounded-[24px] bg-peche p-4 text-encre" aria-labelledby="intro">
       <h2 id="intro" className="font-display text-lg">Comment ça marche</h2>
       <ol className="flex flex-col gap-2.5 text-sm leading-snug">
         <li className="flex gap-2.5">

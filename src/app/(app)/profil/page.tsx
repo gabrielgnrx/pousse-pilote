@@ -12,7 +12,7 @@ import { Mascot } from "@/components/Mascot";
 import type { Footprint } from "@/lib/co2/footprint.ts";
 
 const FP_PARTS: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
-  { key: "transport", label: "Transports", color: "#e8a27c" },
+  { key: "transport", label: "Transports", color: "#f2c14e" },
   { key: "alimentation", label: "Alimentation", color: "#b5c890" },
   { key: "logement", label: "Chauffage", color: "#e9c9a3" },
   { key: "consommation", label: "Achats", color: "#8fa06a" },
@@ -37,7 +37,7 @@ export default async function ProfilPage() {
   return (
     <>
       <section className="flex items-center gap-4">
-        <span className="flex size-16 items-center justify-center rounded-full bg-[#e9c9a8] font-display text-2xl text-[#4a2a12]">
+        <span className="flex size-16 items-center justify-center rounded-full bg-pollen-pale font-display text-2xl text-encre">
           {profile.display_name.charAt(0).toUpperCase()}
         </span>
         <div>
@@ -46,11 +46,11 @@ export default async function ProfilPage() {
         </div>
       </section>
 
-      <Link href="/jardin" className="relative flex flex-col gap-2.5 overflow-hidden rounded-[28px_28px_28px_10px] bg-sapin p-5 text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]">
+      <Link href="/jardin" className="relative flex flex-col gap-2.5 overflow-hidden rounded-[24px] bg-sapin p-5 text-sapin-clair">
         <Mascot size={64} grown className="absolute top-3 right-4" />
         <span className="relative flex flex-col gap-1 pr-24">
-          <span className="text-[13px] font-semibold text-[#c8dcc4]">Niveau {level.index + 1} · {level.name}</span>
-          <span className="font-display text-[40px] leading-none">{e.points.total.toLocaleString("fr-FR")} <span className="font-sans text-[15px] text-[#dfe9da]">pousses</span></span>
+          <span className="text-[13px] font-semibold text-sapin-pale">Niveau {level.index + 1} · {level.name}</span>
+          <span className="font-display text-[40px] leading-none">{e.points.total.toLocaleString("fr-FR")} <span className="font-sans text-[15px] text-sapin-pale">pousses</span></span>
         </span>
         <span
           className="relative h-2.5 overflow-hidden rounded-full bg-sapin-fonce"
@@ -63,7 +63,7 @@ export default async function ProfilPage() {
           <span className="block h-full rounded-full bg-feuille" style={{ width: `${Math.max(3, level.progress * 100)}%` }} />
         </span>
         <span className="flex items-center justify-between gap-2 text-[13px]">
-          <span className="text-[#dfe9da]">
+          <span className="text-sapin-pale">
             {level.next ? `Encore ${level.next.missing.toLocaleString("fr-FR")} pour devenir ${level.next.name}` : "Niveau maximum atteint"}
           </span>
           <span className="shrink-0 font-semibold text-feuille">Mon jardin ›</span>
@@ -98,7 +98,7 @@ export default async function ProfilPage() {
         </Link>
       ) : null}
 
-      <nav aria-label="Mon espace" className="flex flex-col overflow-hidden rounded-[22px] border border-trait bg-papier">
+      <nav aria-label="Mon espace" className="flex flex-col overflow-hidden rounded-[20px] border border-trait bg-papier">
         {[
           { href: "/notifications", label: "Notifications" },
           { href: "/regles", label: "Le barème des pousses" },
@@ -199,7 +199,7 @@ export default async function ProfilPage() {
       <Link href="/avis" className="flex items-center gap-3 rounded-[20px] bg-peche p-4">
         <span className="flex-1">
           <span className="block text-sm font-bold">30 secondes pour améliorer Pousse ?</span>
-          <span className="block text-xs text-[#3f4a3c]">3 questions sur ta semaine</span>
+          <span className="block text-xs text-brun">3 questions sur ta semaine</span>
         </span>
         <span className="btn-primary min-h-10 px-4 text-sm">Répondre</span>
       </Link>

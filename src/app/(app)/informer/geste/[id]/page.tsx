@@ -61,7 +61,7 @@ export default async function FicheGestePage({ params }: { params: Promise<{ id:
             </li>
           ))}
         </ol>
-        {fiche.trap ? <p className="mt-1 rounded-xl bg-peche px-3 py-2 text-sm text-[#3f4a3c]"><strong>Piège :</strong> {fiche.trap}</p> : null}
+        {fiche.trap ? <p className="mt-1 rounded-xl bg-peche px-3 py-2 text-sm text-brun"><strong>Piège :</strong> {fiche.trap}</p> : null}
       </section>
 
       <div className="flex flex-col gap-2">

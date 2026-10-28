@@ -61,7 +61,7 @@ export function QuizCard({ initial }: { initial: Quiz }) {
                 <li
                   key={i}
                   className={`flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-sm ${
-                    isAnswer ? "bg-sauge font-bold text-[#1f5134]" : isWrongPick ? "bg-peche line-through" : "bg-creme opacity-60"
+                    isAnswer ? "bg-sauge font-bold text-sapin" : isWrongPick ? "bg-peche line-through" : "bg-creme opacity-60"
                   }`}
                 >
                   <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full border-2 border-terre/40 text-xs font-bold">

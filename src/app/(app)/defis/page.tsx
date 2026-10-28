@@ -145,7 +145,7 @@ export default async function DefisPage({
       </nav>
 
       {cree ? (
-        <p role="status" className="animate-pousse-pop rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#1f5134]">
+        <p role="status" className="animate-pousse-pop rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-sapin">
           Défi lancé ! Il est juste en dessous : enregistre chaque fois que tu le fais avec le bouton +.
         </p>
       ) : null}
@@ -162,7 +162,7 @@ export default async function DefisPage({
           <DuelStrip duels={duels.filter((d) => d.status === "pending" && d.role === "opponent")} />
 
           {teamWeek?.chosen ? (
-            <Link href="/equipes" className="flex flex-col gap-2.5 rounded-[24px] bg-peche p-4 text-[#3a1606] shadow-[inset_0_-4px_0_var(--color-peche-fonce)]">
+            <Link href="/equipes" className="flex flex-col gap-2.5 rounded-[24px] bg-peche p-4 text-encre">
               <span className="flex items-center justify-between">
                 <span className="rounded-full bg-argile px-2.5 py-0.5 text-[11px] font-bold text-white uppercase">Équipe · {fmtMult(MODES.equipe.mult)}</span>
                 <span className="text-xs">jusqu&apos;à dimanche</span>
@@ -205,9 +205,9 @@ export default async function DefisPage({
                 {succeeded.map((c) => {
                   const t = TEMPLATE_BY_ID[c.template_id];
                   return (
-                    <li key={c.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#e4eddc] px-4 py-2.5">
-                      <span className="text-sm font-bold text-[#1f5134]">{t ? actionTitle(t.id, c.variant) : "Défi"}</span>
-                      <span className="shrink-0 text-xs font-bold text-[#1f5134]">{formatKg(progress.get(c.id)?.kg ?? 0)} évités</span>
+                    <li key={c.id} className="flex items-center justify-between gap-3 rounded-2xl bg-sauge px-4 py-2.5">
+                      <span className="text-sm font-bold text-sapin">{t ? actionTitle(t.id, c.variant) : "Défi"}</span>
+                      <span className="shrink-0 text-xs font-bold text-sapin">{formatKg(progress.get(c.id)?.kg ?? 0)} évités</span>
                     </li>
                   );
                 })}
@@ -254,7 +254,7 @@ export default async function DefisPage({
                     </span>
                   </div>
                 </div>
-                <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
+                <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre">
                   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                 </Link>
               </article>
@@ -272,7 +272,7 @@ export default async function DefisPage({
                 </p>
               </div>
               {expert.map(({ t, e }) => (
-                <article key={t.id} className="flex items-center gap-3 rounded-[22px] bg-sapin p-4 text-sapin-clair shadow-[inset_0_-5px_0_var(--color-sapin-fonce)] [&_.label]:text-[#c8dcc4] [&_p]:text-[#c8dcc4]">
+                <article key={t.id} className="flex items-center gap-3 rounded-[20px] bg-sapin p-4 text-sapin-clair [&_.label]:text-sapin-pale [&_p]:text-sapin-pale">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="label">{CATEGORY_LABEL[t.category]}</span>
@@ -287,7 +287,7 @@ export default async function DefisPage({
                       </span>
                     </div>
                   </div>
-                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
+                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre">
                     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                   </Link>
                 </article>
@@ -313,7 +313,7 @@ export default async function DefisPage({
                       <span className="chip bg-sable text-brun">0 kg en plus</span>
                     </div>
                   </div>
-                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)]">
+                  <Link href={`/defis/nouveau/${t.id}`} aria-label={`Lancer : ${t.title}`} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-feuille text-encre">
                     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                   </Link>
                 </article>
@@ -328,7 +328,7 @@ export default async function DefisPage({
                 Ils remplacent une habitude que tu n&apos;as pas déclarée : ils ne rapporteraient aucun CO₂ réel.
               </p>
               {notForYou.map(({ t, e }) => (
-                <div key={t.id} className="rounded-2xl border-[1.5px] border-dashed border-[#d8d0bd] px-4 py-3">
+                <div key={t.id} className="rounded-2xl border-[1.5px] border-dashed border-trait px-4 py-3">
                   <p className="text-sm font-bold text-brun">{t.title}</p>
                   <p className="text-xs text-terre">{e.reason}</p>
                 </div>

@@ -31,7 +31,7 @@ export function DuelForm({
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(DUEL_KINDS).map(([k, v]) => (
             <label key={k} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-creme px-3 text-sm has-[:checked]:bg-sauge has-[:checked]:font-bold">
-              <input type="radio" name="kind" value={k} defaultChecked={k === (defaultKind ?? "repas")} className="accent-[#1f5134]" />
+              <input type="radio" name="kind" value={k} defaultChecked={k === (defaultKind ?? "repas")} className="accent-chloro" />
               {v.label}
             </label>
           ))}

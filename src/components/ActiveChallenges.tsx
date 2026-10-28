@@ -49,7 +49,7 @@ export function ActiveChallenges({ items, cancel }: { items: ActiveChallenge[]; 
             </div>
             {confirm === c.id ? (
               <div className="flex flex-col gap-2 rounded-xl bg-peche p-3">
-                <p className="text-sm font-semibold text-[#3f4a3c]">
+                <p className="text-sm font-semibold text-brun">
                   Annuler ce défi ?{" "}
                   {c.duel
                     ? "Le duel, lui, continue : pour garder ta mise de 10 pousses, il faudra quand même atteindre l'objectif."

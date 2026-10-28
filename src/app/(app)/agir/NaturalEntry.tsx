@@ -102,7 +102,7 @@ export function NaturalEntry({
   return (
     <div className="relative flex flex-col gap-3">
       <form
-        className="flex items-center gap-2 rounded-[20px] bg-papier p-1.5 pl-4 text-encre shadow-[inset_0_-3px_0_var(--color-sable)]"
+        className="flex items-center gap-2 rounded-[20px] bg-papier p-1.5 pl-4 text-encre"
         onSubmit={(e) => {
           e.preventDefault();
           submit(text);
@@ -136,7 +136,7 @@ export function NaturalEntry({
           {pending ? "…" : "OK"}
         </button>
       </form>
-      <p className="relative text-xs text-[#dfe9da]">
+      <p className="relative text-xs text-sapin-pale">
         {listening ? "Je t'écoute…" : "Écris ou dicte ce que tu as fait. Tu confirmes avant tout enregistrement."}
       </p>
 

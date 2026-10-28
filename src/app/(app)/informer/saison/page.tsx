@@ -58,7 +58,7 @@ export default async function SaisonPage({ searchParams }: { searchParams: Promi
       ))}
 
       {next.length ? (
-        <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-[#1f5134]">
+        <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-sapin">
           <strong>Le mois prochain :</strong> {next.map((p) => p.name.toLowerCase()).join(", ")}.
         </p>
       ) : null}
