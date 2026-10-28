@@ -3,18 +3,13 @@ import { nextBilanAllowed } from "@/lib/bilan-lock";
 import { redirect } from "next/navigation";
 import { requireHabits } from "@/lib/session";
 import { computeFootprint, type BilanAnswers, type Footprint } from "@/lib/co2/footprint.ts";
+import { FOOTPRINT_PARTS } from "@/lib/co2/footprint-parts.ts";
 import { actionPlan } from "@/lib/co2/plan.ts";
 import { TEMPLATE_BY_ID, carKmEquivalent, formatKg } from "@/lib/co2/challenges.ts";
 import { headStartKgYear, keptHabits, remainingBigItems } from "@/lib/co2/engagement.ts";
 import { formatInstant } from "@/lib/dates";
 
-const CATEGORIES: { key: keyof Footprint["byCategory"]; label: string; color: string }[] = [
-  { key: "transport", label: "Transports", color: "#f2c14e" },
-  { key: "alimentation", label: "Alimentation", color: "#b5c890" },
-  { key: "logement", label: "Chauffage", color: "#e9c9a3" },
-  { key: "consommation", label: "Vêtements et électronique", color: "#8fa06a" },
-  { key: "services", label: "Services publics (part commune)", color: "#6f7d52" },
-];
+const CATEGORIES = FOOTPRINT_PARTS.map((c) => ({ ...c, label: c.long }));
 
 const tonnes = (kg: number) => (kg / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 
