@@ -43,13 +43,13 @@ export function isIslandPath(path: string): boolean {
 }
 
 /**
- * Le monde du jeu, monté une fois pour toute l'appli : l'île en 3D en plein écran, derrière tout le
+ * Le monde du jeu, monté une fois pour toute l'appli : l'île illustrée en plein écran, derrière tout le
  * reste. Elle se met en pause quand une rubrique est ouverte par-dessus.
  */
 export function IslandProvider({ initial, children }: { initial: IslandData; children: React.ReactNode }) {
   const path = usePathname();
   const playing = isIslandPath(path);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<IslandScene | null>(null);
   const [status, setStatus] = useState<"chargement" | "pret" | "erreur">("chargement");
   const [own, setOwn] = useState(initial);
@@ -150,8 +150,8 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
     let scene: IslandScene | null = null;
     import("./scene.ts")
       .then(({ createIslandScene }) => {
-        if (disposed || !canvasRef.current) return;
-        scene = createIslandScene(canvasRef.current, {
+        if (disposed || !hostRef.current) return;
+        scene = createIslandScene(hostRef.current, {
           onTileTap: (x, z) => handlers.current.onTileTap(x, z),
           onEmptyTap: () => handlers.current.onEmptyTap(),
         });
@@ -240,14 +240,14 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
   const name = data.name.split(" ")[0] ?? data.name;
   return (
     <IslandContext.Provider value={value}>
-      <div className="fixed inset-0 overflow-hidden bg-[#bfe0ea]">
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 block h-full w-full touch-none select-none"
+      <div className="fixed inset-0 overflow-hidden bg-[#8ecbe0]">
+        <div
+          ref={hostRef}
+          className="absolute inset-0 select-none"
           role="img"
           aria-label={
             data.plants.length
-              ? `${mine ? "Ton île" : `L'île de ${name}`}, vue en 3D : ${data.plants
+              ? `${mine ? "Ton île" : `L'île de ${name}`}, vue d'en haut : ${data.plants
                   .map((p) => {
                     const l = lookOf(p);
                     return l ? `${l.name} (${STAGE_NAMES[l.stage]})` : "";

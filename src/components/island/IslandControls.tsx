@@ -63,7 +63,7 @@ export function IslandControls() {
       ) : null}
       {status === "erreur" ? (
         <div className="absolute inset-x-4 top-1/3 mx-auto flex max-w-sm flex-col items-center gap-3 rounded-[24px] bg-papier p-6 text-center">
-          <p className="text-sm">Ton appareil n&apos;arrive pas à afficher l&apos;île en 3D.</p>
+          <p className="text-sm">Ton appareil n&apos;arrive pas à afficher l&apos;île.</p>
           <Link href="/jardin" className="btn-ghost pointer-events-auto text-sm">
             Voir ma collection
           </Link>

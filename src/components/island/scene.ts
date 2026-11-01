@@ -1,20 +1,15 @@
 /**
- * La scène 3D de l'île (three.js, sans React) : l'île flottant sur un lagon, les plantes posées sur une
- * grille, le vent, l'heure de Paris (jour, aube, nuit), Tigou la mascotte et les petites fêtes quand
- * une graine pousse. Le composant IslandGame la pilote par l'interface IslandScene.
+ * La scène de l'île en 2D (SVG animé, sans bibliothèque) : une île illustrée vue de trois quarts sur la
+ * mer, le ciel selon l'heure de Paris, le vent dans les plantes, Tigou, et de petites fêtes quand une
+ * graine pousse. Le composant IslandProvider la pilote par l'interface IslandScene.
  */
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ISLAND_TILES, checkTile, lookOf, type IslandPlant, type Seed } from "@/lib/game/island.ts";
-import { buildMascot, buildPlant, disposeMaterials, jitter, mat, mesh, rand, shade, stageScale } from "./models.ts";
-
-export const TILE = 1.05;
-const GROUND = 0.55;
+import { TIGOU_SVG, plantSvg, rand, shade, stageScale } from "./sprites.ts";
 
 export interface IslandSceneEvents {
-  /** Un emplacement touché (mode plantation, ou une plante touchée hors mode plantation). */
+  /** Une case touchée (vide ou avec une plante). */
   onTileTap: (x: number, z: number) => void;
-  /** Ni plante ni emplacement : un toucher dans le vide. */
+  /** Ni plante ni case : un toucher dans le vide. */
   onEmptyTap: () => void;
 }
 
@@ -23,17 +18,32 @@ export interface IslandScene {
   setPlanting(seed: Pick<Seed, "key" | "rare"> | null): void;
   setSelected(tile: { x: number; z: number } | null): void;
   celebrate(x: number, z: number, kind: "nouvelle" | "grandit" | "stade"): void;
-  /** En pause, l'île garde sa dernière image et ne consomme plus rien (une rubrique est ouverte). */
+  /** En pause, les animations s'arrêtent (une rubrique est ouverte par-dessus). */
   setPaused(paused: boolean): void;
   dispose(): void;
 }
 
+const NS = "http://www.w3.org/2000/svg";
+/** Demi-largeur et demi-hauteur d'une case en losange. */
+const TW = 34;
+const TH = 19;
+
+export function project(x: number, z: number): { sx: number; sy: number } {
+  return { sx: (x - z) * TW, sy: (x + z) * TH };
+}
+
+function unproject(sx: number, sy: number): { fx: number; fz: number } {
+  const a = sx / TW;
+  const b = sy / TH;
+  return { fx: (a + b) / 2, fz: (b - a) / 2 };
+}
+
 type Phase = "jour" | "aube" | "nuit";
 
-const PALETTES: Record<Phase, { sky: string; hemiSky: string; hemiGround: string; hemi: number; sun: string; sunI: number; sunPos: [number, number, number]; water: string; grass: string; cloud: string }> = {
-  jour: { sky: "#bfe0ea", hemiSky: "#eef8ff", hemiGround: "#6b8a4a", hemi: 1.1, sun: "#fff3dc", sunI: 2.6, sunPos: [6, 10, 5], water: "#5fb3c2", grass: "#8cc06a", cloud: "#ffffff" },
-  aube: { sky: "#f3cfa8", hemiSky: "#ffe4c8", hemiGround: "#5d6b3a", hemi: 0.9, sun: "#ffb27a", sunI: 2.2, sunPos: [9, 4.5, 3], water: "#6aa7b8", grass: "#93b866", cloud: "#ffe9d8" },
-  nuit: { sky: "#17283b", hemiSky: "#3e5d80", hemiGround: "#16241c", hemi: 0.55, sun: "#b4c8ff", sunI: 0.9, sunPos: [-5, 9, -3], water: "#2b4c62", grass: "#4f7a4a", cloud: "#6f8299" },
+const SKY: Record<Phase, { top: string; bottom: string; seaTop: string; seaBottom: string; sun: string; night: number }> = {
+  jour: { top: "#8ecbe0", bottom: "#d8eef2", seaTop: "#7cc3cf", seaBottom: "#4f9fb3", sun: "#fff4c9", night: 0 },
+  aube: { top: "#f2a98a", bottom: "#fbe3c4", seaTop: "#e7b8a2", seaBottom: "#5d93a8", sun: "#ffd27a", night: 0.08 },
+  nuit: { top: "#0f1d33", bottom: "#2b3f63", seaTop: "#2c4766", seaBottom: "#17304a", sun: "#f3efd8", night: 0.38 },
 };
 
 function parisHour(): number {
@@ -43,285 +53,287 @@ function parisHour(): number {
   return h + m / 60;
 }
 
-function phaseAt(h: number): Phase {
+export function phaseAt(h: number): Phase {
   if (h < 6.5 || h >= 21) return "nuit";
   if (h < 8.5 || h >= 18.5) return "aube";
   return "jour";
 }
 
+const CSS = `
+.pi { -webkit-tap-highlight-color: transparent; user-select: none; }
+.pi-sway { animation: pi-sway var(--d, 3.4s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+.pi-bob { animation: pi-bob 1.6s ease-in-out infinite; }
+.pi-blink { transform-box: fill-box; transform-origin: center; animation: pi-blink 4.2s infinite; }
+.pi-leaf { animation: pi-sway 2.2s ease-in-out infinite; }
+.pi-cloud { animation: pi-cloud var(--d, 70s) ease-in-out infinite alternate; }
+.pi-shimmer { animation: pi-shimmer var(--d, 4s) ease-in-out infinite; animation-delay: var(--delay, 0s); opacity: 0; }
+.pi-foam { transform-box: fill-box; transform-origin: center; animation: pi-foam 3.6s ease-in-out infinite; }
+.pi-mote { animation: pi-mote var(--d, 7s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+.pi-twinkle { transform-box: fill-box; transform-origin: center; animation: pi-twinkle var(--d, 2.4s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+.pi-boat { animation: pi-boat 90s linear infinite; }
+.pi-rock { animation: pi-rock 3s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.pi-tile { transform-box: fill-box; transform-origin: center; animation: pi-tile-in 0.35s cubic-bezier(.2,.9,.3,1.3) both; animation-delay: var(--delay, 0s); }
+.pi-select { transform-box: fill-box; transform-origin: center; animation: pi-pulse 1s ease-in-out infinite; }
+.pi-arrow { animation: pi-arrow 0.8s ease-in-out infinite; }
+.pi-paused, .pi-paused * { animation-play-state: paused !important; }
+@keyframes pi-sway { 0%, 100% { transform: rotate(-2.2deg); } 50% { transform: rotate(2.2deg); } }
+@keyframes pi-bob { 0%, 100% { transform: scale(1.03, 0.97); } 50% { transform: scale(0.98, 1.03); } }
+@keyframes pi-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes pi-cloud { from { transform: translateX(-60px); } to { transform: translateX(60px); } }
+@keyframes pi-shimmer { 0%, 100% { opacity: 0; transform: translateX(-8px); } 50% { opacity: 0.85; transform: translateX(8px); } }
+@keyframes pi-foam { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.95; transform: scale(1.02); } }
+@keyframes pi-mote { 0%, 100% { transform: translate(0, 0); opacity: 0.2; } 50% { transform: translate(10px, -18px); opacity: 0.9; } }
+@keyframes pi-twinkle { 0%, 100% { opacity: 0.25; transform: scale(0.7); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes pi-boat { from { transform: translateX(-260px); } to { transform: translateX(260px); } }
+@keyframes pi-rock { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes pi-tile-in { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+@keyframes pi-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.75; } }
+@keyframes pi-arrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) {
+  .pi * { animation: none !important; }
+  .pi-shimmer { opacity: 0.5; }
+}
+`;
+
+function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}, parent?: Element): SVGElementTagNameMap[K] {
+  const node = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+  parent?.appendChild(node);
+  return node;
+}
+
+/** Un contour d'île irrégulier, reproductible. */
+function blobPath(rx: number, ry: number, seed: number, wobble: number): string {
+  const n = 28;
+  const pts: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const k = 1 + (rand(seed + i) - 0.5) * wobble;
+    pts.push([Math.cos(a) * rx * k, Math.sin(a) * ry * k]);
+  }
+  let d = "";
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n]!;
+    const p1 = pts[i]!;
+    const p2 = pts[(i + 1) % n]!;
+    const p3 = pts[(i + 2) % n]!;
+    if (i === 0) d += `M${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return `${d} Z`;
+}
+
+const diamond = (s = 1) => `M0 ${-TH * s} L${TW * s} 0 L0 ${TH * s} L${-TW * s} 0 Z`;
+
 interface PlantNode {
   plant: IslandPlant;
   stage: number;
-  group: THREE.Group;
-  scale: number;
-  velocity: number;
-  target: number;
-  phase: number;
+  root: SVGGElement;
+  pop: SVGGElement;
+  body: SVGGElement;
 }
 
-interface Particle {
-  mesh: THREE.Mesh;
-  velocity: THREE.Vector3;
-  life: number;
-  maxLife: number;
-  size: number;
-  active: boolean;
-}
+export function createIslandScene(host: HTMLElement, events: IslandSceneEvents): IslandScene {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const svg = el("svg", { class: "pi", width: "100%", height: "100%", preserveAspectRatio: "xMidYMid meet" });
+  svg.style.display = "block";
+  host.appendChild(svg);
+  const style = el("style", {}, svg);
+  style.textContent = CSS;
 
-function roundedSquare(size: number, radius: number): THREE.ShapeGeometry {
-  const s = size / 2;
-  const r = radius;
-  const shape = new THREE.Shape();
-  shape.moveTo(-s + r, -s);
-  shape.lineTo(s - r, -s);
-  shape.quadraticCurveTo(s, -s, s, -s + r);
-  shape.lineTo(s, s - r);
-  shape.quadraticCurveTo(s, s, s - r, s);
-  shape.lineTo(-s + r, s);
-  shape.quadraticCurveTo(-s, s, -s, s - r);
-  shape.lineTo(-s, -s + r);
-  shape.quadraticCurveTo(-s, -s, -s + r, -s);
-  const geo = new THREE.ShapeGeometry(shape, 4);
-  geo.rotateX(-Math.PI / 2);
-  return geo;
-}
+  const defs = el("defs", {}, svg);
+  defs.innerHTML = `
+    <linearGradient id="pi-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" id="pi-sky-top"/><stop offset="1" id="pi-sky-bottom"/></linearGradient>
+    <linearGradient id="pi-sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" id="pi-sea-top"/><stop offset="1" id="pi-sea-bottom"/></linearGradient>
+    <radialGradient id="pi-sun-glow"><stop offset="0" stop-color="#fff" stop-opacity="0.9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="pi-grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a6d27c"/><stop offset="1" stop-color="#7fb35c"/></linearGradient>
+    <linearGradient id="pi-cliff" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a77d4c"/><stop offset="1" stop-color="#6e4f2f"/></linearGradient>
+    <radialGradient id="pi-firefly"><stop offset="0" stop-color="#fff6b0"/><stop offset="0.4" stop-color="#ffe27a" stop-opacity="0.7"/><stop offset="1" stop-color="#ffe27a" stop-opacity="0"/></radialGradient>`;
 
-export function createIslandScene(canvas: HTMLCanvasElement, events: IslandSceneEvents): IslandScene {
-  const reduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // Ciel et mer : très grands, ils débordent du cadre quel que soit le format de l'écran.
+  const HORIZON = -190;
+  const back = el("g", {}, svg);
+  el("rect", { x: -1500, y: -1500, width: 3000, height: 1500 + HORIZON, fill: "url(#pi-sky)" }, back);
+  const sunGroup = el("g", {}, back);
+  const sunGlow = el("circle", { cx: 110, cy: -300, r: 70, fill: "url(#pi-sun-glow)" }, sunGroup);
+  const sun = el("circle", { cx: 110, cy: -300, r: 22 }, sunGroup);
+  const stars = el("g", {}, back);
+  for (let i = 0; i < 40; i++) {
+    el("circle", { cx: -260 + rand(i + 700) * 520, cy: -560 + rand(i + 800) * 340, r: 0.8 + rand(i + 900) * 1.4, fill: "#fff", class: "pi-twinkle", style: `--d:${2 + rand(i) * 3}s;--delay:${-rand(i + 3) * 3}s` }, stars);
+  }
+  const clouds = el("g", {}, back);
+  for (let c = 0; c < 4; c++) {
+    const g = el("g", { class: "pi-cloud", style: `--d:${55 + c * 17}s;animation-delay:${-c * 13}s` }, clouds);
+    const x = -170 + c * 110 + rand(c) * 40;
+    const y = -370 + rand(c + 5) * 130;
+    const s = 0.7 + rand(c + 9) * 0.6;
+    el("path", { d: `M${x - 34 * s} ${y} a${16 * s} ${16 * s} 0 0 1 ${22 * s} ${-14 * s} a${20 * s} ${20 * s} 0 0 1 ${36 * s} ${-4 * s} a${14 * s} ${14 * s} 0 0 1 ${18 * s} ${18 * s} Z`, fill: "#ffffff", opacity: 0.92, class: "pi-cloud-shape" }, g);
+  }
+  el("rect", { x: -1500, y: HORIZON, width: 3000, height: 2500, fill: "url(#pi-sea)" }, back);
+  el("path", { d: `M-1500 ${HORIZON} L1500 ${HORIZON}`, stroke: "#ffffff", "stroke-opacity": 0.35, "stroke-width": 1.5 }, back);
+  // Un voilier traverse l'horizon, une fois par minute et demie.
+  const boat = el("g", { class: "pi-boat" }, back);
+  el("path", { d: `M-10 ${HORIZON + 6} L10 ${HORIZON + 6} L7 ${HORIZON + 10} L-7 ${HORIZON + 10} Z`, fill: "#6b4a2b" }, boat);
+  el("path", { d: `M0 ${HORIZON + 5} L0 ${HORIZON - 16} L10 ${HORIZON + 3} Z`, fill: "#fbfaf4" }, boat);
+  el("path", { d: `M-1 ${HORIZON + 4} L-1 ${HORIZON - 10} L-8 ${HORIZON + 3} Z`, fill: "#e98a6a" }, boat);
+  const shimmer = el("g", {}, back);
+  for (let i = 0; i < 26; i++) {
+    const x = -240 + rand(i + 40) * 480;
+    const y = HORIZON + 20 + rand(i + 60) * 520;
+    if (Math.abs(x) < 190 && y > -150 && y < 170) continue;
+    const w = 8 + rand(i + 80) * 16;
+    el("path", { d: `M${x} ${y} l${w} 0`, stroke: "#ffffff", "stroke-width": 2, "stroke-linecap": "round", class: "pi-shimmer", style: `--d:${3 + rand(i) * 3}s;--delay:${-rand(i + 1) * 4}s` }, shimmer);
+  }
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 140);
-  camera.position.set(7.4, 7.2, 8.6);
-
-  const controls = new OrbitControls(camera, canvas);
-  controls.target.set(0, 0.5, 0);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.enablePan = false;
-  controls.minDistance = 6.5;
-  controls.maxDistance = 26;
-  controls.minPolarAngle = 0.45;
-  controls.maxPolarAngle = 1.22;
-  controls.rotateSpeed = 0.7;
-  controls.autoRotate = !reduced;
-  controls.autoRotateSpeed = 0.35;
-  controls.update();
-  let lastInteraction = 0;
-  const onControlStart = () => {
-    controls.autoRotate = false;
-    lastInteraction = performance.now();
-  };
-  controls.addEventListener("start", onControlStart);
-
-  // Lumières et ciel ----------------------------------------------------------------------------
-  const hemi = new THREE.HemisphereLight("#ffffff", "#6b8a4a", 1);
-  scene.add(hemi);
-  const sun = new THREE.DirectionalLight("#ffffff", 2.5);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
-  sun.shadow.camera.left = -7;
-  sun.shadow.camera.right = 7;
-  sun.shadow.camera.top = 7;
-  sun.shadow.camera.bottom = -7;
-  sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 30;
-  sun.shadow.bias = -0.0006;
-  sun.shadow.normalBias = 0.02;
-  scene.add(sun);
-  scene.fog = new THREE.Fog("#bfe0ea", 20, 46);
-
-  // Lagon : un plan découpé en facettes, animé par deux houles.
-  const waterGeo = new THREE.PlaneGeometry(70, 70, 56, 56);
-  waterGeo.rotateX(-Math.PI / 2);
-  const waterBase = Float32Array.from((waterGeo.getAttribute("position") as THREE.BufferAttribute).array as ArrayLike<number>);
-  const waterMat = new THREE.MeshStandardMaterial({ color: "#5fb3c2", flatShading: true, roughness: 0.35, metalness: 0.05 });
-  const water = new THREE.Mesh(waterGeo, waterMat);
-  water.receiveShadow = true;
-  scene.add(water);
-
-  // L'île : plage, socle de terre, plateau d'herbe bien plat où l'on plante.
-  const grassMat = new THREE.MeshStandardMaterial({ color: "#8cc06a", flatShading: true, roughness: 0.95 });
-  const beach = mesh(jitter(new THREE.CylinderGeometry(5.0, 5.7, 0.5, 34, 1), 0.07, 3), "#e6d3a3", 0, 0, 0);
-  const dirt = mesh(jitter(new THREE.CylinderGeometry(4.35, 4.85, 0.36, 34, 1), 0.06, 5), "#9a7449", 0, 0.2, 0);
-  const grassGeo = jitter(new THREE.CylinderGeometry(4.25, 4.36, 0.18, 34, 1), 0.05, 9, 0.09);
-  const grass = new THREE.Mesh(grassGeo, grassMat);
-  grass.position.y = GROUND - 0.09;
-  grass.receiveShadow = true;
-  scene.add(beach, dirt, grass);
-
-  // Décor du bord : rochers, touffes, galets (hors des emplacements, au-delà du rayon 3,6).
-  const decor = new THREE.Group();
+  // L'île : ombre dans l'eau, écume, plage, falaise, herbe ----------------------------------------
+  const islandG = el("g", {}, svg);
+  el("path", { d: blobPath(200, 112, 3, 0.08), transform: "translate(0 26)", fill: "#14261b", opacity: 0.16 }, islandG);
+  el("path", { d: blobPath(201, 114, 7, 0.07), transform: "translate(0 15)", fill: "#ffffff", opacity: 0.7, class: "pi-foam" }, islandG);
+  el("path", { d: blobPath(196, 110, 7, 0.07), transform: "translate(0 14)", fill: "#ead7a4" }, islandG);
+  el("path", { d: blobPath(184, 102, 11, 0.06), transform: "translate(0 18)", fill: "url(#pi-cliff)" }, islandG);
+  el("path", { d: blobPath(184, 102, 11, 0.06), transform: "translate(0 2)", fill: "url(#pi-grass)" }, islandG);
+  el("path", { d: blobPath(150, 80, 17, 0.12), transform: "translate(-18 -10)", fill: "#b5dc8b", opacity: 0.45 }, islandG);
+  // Petits détails du bord : rochers, galets, touffes d'herbe et fleurettes.
+  const edge = el("g", {}, islandG);
   for (let i = 0; i < 9; i++) {
     const a = (i / 9) * Math.PI * 2 + rand(i) * 0.4;
-    const r = 4.8 + rand(i + 20) * 0.5;
-    const rock = mesh(jitter(new THREE.IcosahedronGeometry(0.22 + rand(i + 3) * 0.2, 0), 0.04, i), shade("#9aa39a", rand(i) * 0.08 - 0.04), Math.cos(a) * r, 0.25, Math.sin(a) * r);
-    rock.scale.y = 0.7;
-    decor.add(rock);
+    const x = Math.cos(a) * 192;
+    const y = Math.sin(a) * 104 + 18;
+    const r = 6 + rand(i + 3) * 7;
+    el("ellipse", { cx: x, cy: y, rx: r, ry: r * 0.7, fill: shade("#9aa39a", (rand(i) - 0.5) * 0.12) }, edge);
+    el("ellipse", { cx: x - r * 0.3, cy: y - r * 0.25, rx: r * 0.4, ry: r * 0.22, fill: "#c3cbc3" }, edge);
   }
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < 30; i++) {
     const a = rand(i + 50) * Math.PI * 2;
-    const r = 3.75 + rand(i + 80) * 0.4;
-    const blade = mesh(new THREE.ConeGeometry(0.05, 0.2 + rand(i) * 0.12, 4), shade("#6f9a4e", rand(i + 9) * 0.1 - 0.05), Math.cos(a) * r, GROUND + 0.1, Math.sin(a) * r);
-    decor.add(blade);
-  }
-  scene.add(decor);
-
-  // Nuages qui tournent lentement.
-  const cloudMat = new THREE.MeshStandardMaterial({ color: "#ffffff", flatShading: true, roughness: 1 });
-  const clouds = new THREE.Group();
-  for (let c = 0; c < 4; c++) {
-    const cloud = new THREE.Group();
-    for (let i = 0; i < 4; i++) {
-      const puff = new THREE.Mesh(jitter(new THREE.IcosahedronGeometry(0.55 + rand(c * 10 + i) * 0.35, 1), 0.06, c * 10 + i), cloudMat);
-      puff.position.set(i * 0.6 - 0.9, rand(c + i) * 0.25, rand(c * 3 + i) * 0.4);
-      puff.scale.y = 0.6;
-      cloud.add(puff);
+    const k = 0.84 + rand(i + 80) * 0.1;
+    const x = Math.cos(a) * 176 * k;
+    const y = Math.sin(a) * 96 * k;
+    const { fx, fz } = unproject(x, y);
+    if (fx * fx + fz * fz <= 12.5) continue;
+    if (rand(i + 90) > 0.6) {
+      el("circle", { cx: x, cy: y - 3, r: 2.4, fill: rand(i) > 0.5 ? "#f6f1e3" : "#f2c14e" }, edge);
+    } else {
+      el("path", { d: `M${x - 4} ${y} q2 -9 4 -10 q1 6 0 10 M${x} ${y} q3 -7 6 -8 q-1 5 -3 8`, fill: shade("#6f9a4e", (rand(i) - 0.5) * 0.1) }, edge);
     }
-    const a = (c / 4) * Math.PI * 2;
-    cloud.position.set(Math.cos(a) * 11, 5.5 + rand(c) * 2, Math.sin(a) * 11);
-    clouds.add(cloud);
   }
-  scene.add(clouds);
 
-  // Pollen le jour, lucioles la nuit ; étoiles la nuit.
-  const POLLEN = 70;
-  const pollenGeo = new THREE.BufferGeometry();
-  const pollenPos = new Float32Array(POLLEN * 3);
-  for (let i = 0; i < POLLEN; i++) {
+  // Cases (mode plantation) et sélection --------------------------------------------------------
+  const tilesG = el("g", { "pointer-events": "none" }, svg);
+  const selection = el("g", { "pointer-events": "none" }, svg);
+  selection.style.display = "none";
+  el("path", { d: diamond(0.94), fill: "#2e7a4c", "fill-opacity": 0.18, stroke: "#2e7a4c", "stroke-width": 3, "stroke-linejoin": "round", class: "pi-select" }, selection);
+
+  // Plantes et Tigou : un seul calque trié par profondeur. Puis la nuit, les lucioles, la flèche et les fêtes.
+  const world = el("g", {}, svg);
+  const night = el("rect", { x: -1500, y: -1500, width: 3000, height: 3000, fill: "#0b1630", "pointer-events": "none", opacity: 0 }, svg);
+  const motes = el("g", { "pointer-events": "none" }, svg);
+  const arrowG = el("g", { "pointer-events": "none" }, svg);
+  arrowG.style.display = "none";
+  const arrow = el("g", { class: "pi-arrow" }, arrowG);
+  el("path", { d: "M-10 -56 L10 -56 L0 -42 Z", fill: "#f2c14e", stroke: "#8a6512", "stroke-width": 1.5, "stroke-linejoin": "round" }, arrow);
+  const fx = el("g", { "pointer-events": "none" }, svg);
+  for (let i = 0; i < 18; i++) {
     const a = rand(i + 300) * Math.PI * 2;
-    const r = rand(i + 400) * 4.5;
-    pollenPos.set([Math.cos(a) * r, GROUND + 0.3 + rand(i + 500) * 2, Math.sin(a) * r], i * 3);
+    const r = rand(i + 400);
+    el("circle", { cx: Math.cos(a) * 170 * r, cy: Math.sin(a) * 90 * r - 30 - rand(i + 500) * 40, r: 1.6, fill: "#fffbe8", class: "pi-mote", style: `--d:${6 + rand(i) * 6}s;--delay:${-rand(i + 2) * 8}s` }, motes);
   }
-  pollenGeo.setAttribute("position", new THREE.BufferAttribute(pollenPos, 3));
-  const pollenBase = Float32Array.from(pollenPos);
-  const pollenMat = new THREE.PointsMaterial({ color: "#fffbe8", size: 0.06, transparent: true, opacity: 0.8, depthWrite: false });
-  const pollen = new THREE.Points(pollenGeo, pollenMat);
-  scene.add(pollen);
 
-  const starGeo = new THREE.BufferGeometry();
-  const starPos = new Float32Array(260 * 3);
-  for (let i = 0; i < 260; i++) {
-    const a = rand(i + 900) * Math.PI * 2;
-    const y = 0.15 + rand(i + 1200) * 0.85;
-    const r = Math.sqrt(1 - y * y);
-    starPos.set([Math.cos(a) * r * 50, y * 50, Math.sin(a) * r * 50], i * 3);
-  }
-  starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
-  const starMat = new THREE.PointsMaterial({ color: "#ffffff", size: 0.35, transparent: true, opacity: 0.85, fog: false, depthWrite: false });
-  const stars = new THREE.Points(starGeo, starMat);
-  scene.add(stars);
-
-  let phase: Phase | null = null;
-  const applyPhase = () => {
-    const next = phaseAt(parisHour());
-    if (next === phase) return;
-    phase = next;
-    const p = PALETTES[next];
-    scene.background = new THREE.Color(p.sky);
-    (scene.fog as THREE.Fog).color.set(p.sky);
-    hemi.color.set(p.hemiSky);
-    hemi.groundColor.set(p.hemiGround);
-    hemi.intensity = p.hemi;
-    sun.color.set(p.sun);
-    sun.intensity = p.sunI;
-    sun.position.set(...p.sunPos);
-    waterMat.color.set(p.water);
-    grassMat.color.set(p.grass);
-    cloudMat.color.set(p.cloud);
-    stars.visible = next === "nuit";
-    const night = next === "nuit";
-    pollenMat.color.set(night ? "#ffe27a" : "#fffbe8");
-    pollenMat.size = night ? 0.1 : 0.06;
-    pollenMat.blending = night ? THREE.AdditiveBlending : THREE.NormalBlending;
-    pollenMat.needsUpdate = true;
-  };
-  applyPhase();
-  const phaseTimer = window.setInterval(applyPhase, 60_000);
-
-  // Emplacements (visibles seulement en mode plantation) -------------------------------------------
-  const tileGeo = roundedSquare(0.9, 0.16);
-  const freeMat = new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.42, depthWrite: false });
-  const growMat = new THREE.MeshBasicMaterial({ color: "#f2c14e", transparent: true, opacity: 0.75, depthWrite: false });
-  const tiles = new THREE.Group();
-  const tileMeshes = new Map<string, THREE.Mesh>();
-  for (const t of ISLAND_TILES) {
-    const m = new THREE.Mesh(tileGeo, freeMat);
-    m.position.set(t.x * TILE, GROUND + 0.012, t.z * TILE);
-    m.renderOrder = 1;
-    tiles.add(m);
-    tileMeshes.set(`${t.x},${t.z}`, m);
-  }
-  tiles.visible = false;
-  scene.add(tiles);
-
-  const selection = new THREE.Group();
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.36, 0.47, 36), new THREE.MeshBasicMaterial({ color: "#2e7a4c", transparent: true, opacity: 0.95, depthWrite: false }));
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.y = GROUND + 0.02;
-  const arrow = mesh(new THREE.ConeGeometry(0.12, 0.26, 4), "#f2c14e", 0, GROUND + 1.6, 0);
-  arrow.rotation.x = Math.PI;
-  arrow.castShadow = false;
-  selection.add(ring, arrow);
-  selection.visible = false;
-  scene.add(selection);
-
-  // Plantes ------------------------------------------------------------------------------------------
-  const plantsGroup = new THREE.Group();
-  scene.add(plantsGroup);
   const nodes = new Map<string, PlantNode>();
-  let currentPlants: IslandPlant[] = [];
+  let initialized = false;
+  let current: IslandPlant[] = [];
   let planting: Pick<Seed, "key" | "rare"> | null = null;
-
   const seedOf = (p: IslandPlant) => p.x * 31 + p.z * 17 + p.species.length * 7;
 
-  const makeNode = (plant: IslandPlant, startScale: number): PlantNode | null => {
-    const look = lookOf(plant);
-    if (!look) return null;
-    const group = buildPlant(look, seedOf(plant));
-    group.position.set(plant.x * TILE, GROUND, plant.z * TILE);
-    group.rotation.y = rand(seedOf(plant)) * Math.PI * 2;
-    group.scale.setScalar(Math.max(0.001, startScale));
-    group.userData.tile = { x: plant.x, z: plant.z };
-    if (look.rare) {
-      for (let i = 0; i < 3; i++) {
-        const sparkle = mesh(new THREE.OctahedronGeometry(0.04, 0), "#f2c14e", 0, 0, 0, "#f2c14e");
-        sparkle.castShadow = false;
-        sparkle.userData.sparkle = i;
-        group.add(sparkle);
-      }
-    }
-    plantsGroup.add(group);
-    return { plant, stage: look.stage, group, scale: startScale, velocity: 0, target: stageScale(look.stage), phase: rand(seedOf(plant) + 1) * Math.PI * 2 };
+  const tigou = el("g", {}, world);
+  const tigouFace = el("g", {}, tigou);
+  tigouFace.innerHTML = TIGOU_SVG;
+  let tigouPos = project(2.6, 1.9);
+  tigouPos = { sx: tigouPos.sx + 6, sy: tigouPos.sy + 8 };
+  tigou.style.transform = `translate(${tigouPos.sx}px, ${tigouPos.sy}px)`;
+  tigou.dataset.depth = String(tigouPos.sy);
+
+  const sortWorld = () => {
+    const kids = Array.from(world.children) as SVGGElement[];
+    kids.sort((a, b) => Number(a.dataset.depth ?? 0) - Number(b.dataset.depth ?? 0));
+    for (const k of kids) world.appendChild(k);
   };
 
-  const removeNode = (n: PlantNode) => {
-    plantsGroup.remove(n.group);
-    n.group.traverse((o) => {
-      if (o instanceof THREE.Mesh) o.geometry.dispose();
-    });
+  const draw = (n: PlantNode) => {
+    const look = lookOf(n.plant);
+    if (!look) return;
+    n.body.setAttribute("transform", `scale(${stageScale(look.stage)})`);
+    let extra = "";
+    if (look.rare) {
+      for (let i = 0; i < 3; i++) {
+        const x = -20 + i * 20;
+        const y = -50 - (i % 2) * 22;
+        extra += `<path d="M${x} ${y - 5} L${x + 1.4} ${y - 1.4} L${x + 5} ${y} L${x + 1.4} ${y + 1.4} L${x} ${y + 5} L${x - 1.4} ${y + 1.4} L${x - 5} ${y} L${x - 1.4} ${y - 1.4} Z" fill="#f2c14e" class="pi-twinkle" style="--delay:${-i * 0.7}s"/>`;
+      }
+    }
+    n.body.innerHTML = plantSvg(look, seedOf(n.plant)) + extra;
+    n.stage = look.stage;
+  };
+
+  const makeNode = (p: IslandPlant): PlantNode => {
+    const { sx, sy } = project(p.x, p.z);
+    const root = el("g", { transform: `translate(${sx} ${sy})`, "data-tile": `${p.x},${p.z}` }, world);
+    root.dataset.depth = String(sy);
+    el("ellipse", { cx: 0, cy: 0, rx: 18, ry: 6, fill: "#14261b", opacity: 0.16 }, root);
+    const sway = el("g", { class: "pi-sway", style: `--d:${3 + rand(seedOf(p)) * 1.6}s;--delay:${-rand(seedOf(p) + 1) * 3}s` }, root);
+    const pop = el("g", {}, sway);
+    const body = el("g", {}, pop);
+    // Une zone invisible facilite le toucher des petites plantes.
+    el("path", { d: diamond(0.9), fill: "transparent" }, root);
+    const n: PlantNode = { plant: p, stage: -1, root, pop, body };
+    draw(n);
+    return n;
+  };
+
+  const animatePop = (n: PlantNode, strong: boolean) => {
+    if (reduced) return;
+    const frames = strong
+      ? [
+          { transform: "scale(0.2, 0.05)", opacity: 0.4 },
+          { transform: "scale(1.22, 1.12)", opacity: 1, offset: 0.55 },
+          { transform: "scale(0.92, 1.04)", offset: 0.78 },
+          { transform: "scale(1, 1)" },
+        ]
+      : [{ transform: "scale(1, 1)" }, { transform: "scale(1.12, 0.9)", offset: 0.3 }, { transform: "scale(0.95, 1.08)", offset: 0.65 }, { transform: "scale(1, 1)" }];
+    n.pop.animate(frames, { duration: strong ? 720 : 520, easing: "cubic-bezier(.2,.8,.3,1)" });
   };
 
   const refreshTiles = () => {
-    tiles.visible = planting !== null;
+    tilesG.replaceChildren();
     if (!planting) return;
-    for (const t of ISLAND_TILES) {
-      const m = tileMeshes.get(`${t.x},${t.z}`);
-      if (!m) continue;
-      const check = checkTile(currentPlants, planting, t.x, t.z);
-      m.visible = check === "nouvelle" || check === "grandit";
-      m.material = check === "grandit" ? growMat : freeMat;
-    }
+    ISLAND_TILES.forEach((t) => {
+      const check = checkTile(current, planting!, t.x, t.z);
+      if (check !== "nouvelle" && check !== "grandit") return;
+      const { sx, sy } = project(t.x, t.z);
+      const g = el("g", { transform: `translate(${sx} ${sy})` }, tilesG);
+      el(
+        "path",
+        {
+          d: diamond(0.86),
+          fill: check === "grandit" ? "#f2c14e" : "#ffffff",
+          "fill-opacity": check === "grandit" ? 0.7 : 0.38,
+          stroke: check === "grandit" ? "#d9a42c" : "#ffffff",
+          "stroke-opacity": 0.8,
+          "stroke-width": 1.5,
+          "stroke-linejoin": "round",
+          class: "pi-tile",
+          style: `--delay:${(Math.abs(t.x) + Math.abs(t.z)) * 0.035}s`,
+        },
+        g,
+      );
+    });
   };
 
   const setPlants = (plants: IslandPlant[]) => {
-    currentPlants = plants;
+    current = plants;
     const seen = new Set<string>();
     for (const p of plants) {
       const key = `${p.x},${p.z}`;
@@ -330,249 +342,163 @@ export function createIslandScene(canvas: HTMLCanvasElement, events: IslandScene
       const look = lookOf(p);
       if (!look) continue;
       if (!old) {
-        const n = makeNode(p, 0);
-        if (n) nodes.set(key, n);
+        const n = makeNode(p);
+        nodes.set(key, n);
+        if (initialized) animatePop(n, true);
         continue;
       }
-      if (old.plant.species !== p.species || old.plant.rare !== p.rare || old.stage !== look.stage) {
-        // Nouveau stade : nouveau modèle, qui part petit et rebondit jusqu'à sa taille.
-        removeNode(old);
-        const n = makeNode(p, old.stage === look.stage ? old.scale : stageScale(look.stage) * 0.35);
-        if (n) nodes.set(key, n);
-      } else {
-        if (p.fed !== old.plant.fed) old.velocity += 2.2;
-        old.plant = p;
-      }
+      const changed = old.plant.species !== p.species || old.plant.rare !== p.rare || old.stage !== look.stage;
+      const fed = old.plant.fed !== p.fed;
+      old.plant = p;
+      if (changed) {
+        draw(old);
+        animatePop(old, true);
+      } else if (fed) animatePop(old, false);
     }
     for (const [key, n] of nodes) {
       if (!seen.has(key)) {
-        removeNode(n);
+        n.root.remove();
         nodes.delete(key);
       }
     }
+    sortWorld();
     refreshTiles();
+    initialized = true;
   };
 
-  // Tigou ----------------------------------------------------------------------------------------------
-  const tigou = buildMascot();
-  const home = new THREE.Vector3(3.75, GROUND, 0.9);
-  tigou.root.position.copy(home);
-  scene.add(tigou.root);
-  let hop: { from: THREE.Vector3; to: THREE.Vector3; t: number; jumps: number } | null = null;
-  let blinkAt = 2;
-
-  // Particules : feuilles, pollen et gouttes ---------------------------------------------------------
-  const particleGeo = new THREE.TetrahedronGeometry(0.05, 0);
-  const dropGeo = new THREE.SphereGeometry(0.035, 6, 4);
-  const particles: Particle[] = [];
-  for (let i = 0; i < 40; i++) {
-    const m = new THREE.Mesh(particleGeo, mat("#7bc08a"));
-    m.visible = false;
-    scene.add(m);
-    particles.push({ mesh: m, velocity: new THREE.Vector3(), life: 0, maxLife: 1, size: 1, active: false });
-  }
+  // Particules et Tigou ---------------------------------------------------------------------------
   const burst = (x: number, z: number, kind: "nouvelle" | "grandit" | "stade") => {
-    const count = reduced ? 6 : kind === "stade" ? 30 : 16;
-    const colors = kind === "grandit" ? ["#7cc6dc", "#aee0ee"] : kind === "stade" ? ["#f2c14e", "#7bc08a", "#ffffff"] : ["#7bc08a", "#4e9a62", "#f2c14e"];
-    let made = 0;
-    for (const p of particles) {
-      if (made >= count) break;
-      if (p.active) continue;
-      made++;
-      const color = colors[made % colors.length] ?? "#7bc08a";
-      p.mesh.geometry = kind === "grandit" ? dropGeo : particleGeo;
-      p.mesh.material = mat(color);
-      const a = Math.random() * Math.PI * 2;
-      const spread = 0.6 + Math.random() * 0.9;
-      p.velocity.set(Math.cos(a) * spread, 2.4 + Math.random() * 1.6, Math.sin(a) * spread);
-      p.mesh.position.set(x * TILE, GROUND + 0.35, z * TILE);
-      p.life = p.maxLife = 0.8 + Math.random() * 0.5;
-      p.size = 0.8 + Math.random() * 0.8;
-      p.active = true;
-      p.mesh.visible = true;
+    const { sx, sy } = project(x, z);
+    const g = el("g", { transform: `translate(${sx} ${sy})` }, fx);
+    const ring = el("ellipse", { cx: 0, cy: 0, rx: 12, ry: 6, fill: "none", stroke: kind === "stade" ? "#f2c14e" : "#ffffff", "stroke-width": 3 }, g);
+    ring.animate([{ transform: "scale(0.6)", opacity: 1 }, { transform: "scale(3.6)", opacity: 0 }], { duration: 700, easing: "ease-out", fill: "forwards" });
+    const count = reduced ? 0 : kind === "stade" ? 22 : 13;
+    const colors = kind === "grandit" ? ["#4fa8c8", "#8fd3ea", "#ffffff"] : kind === "stade" ? ["#f2c14e", "#ffffff", "#e98aa0", "#f2c14e"] : ["#f2c14e", "#ffffff", "#2e7a4c", "#e98aa0"];
+    for (let i = 0; i < count; i++) {
+      const color = colors[i % colors.length] ?? "#7bc08a";
+      const shape =
+        kind === "grandit"
+          ? el("path", { d: "M0 -5 C3 -1 3 2 0 3 C-3 2 -3 -1 0 -5 Z", fill: color }, g)
+          : kind === "stade" && i % 3 === 0
+            ? el("path", { d: "M0 -5 L1.4 -1.4 L5 0 L1.4 1.4 L0 5 L-1.4 1.4 L-5 0 L-1.4 -1.4 Z", fill: color }, g)
+            : el("path", { d: "M0 0 C-4 -3 -4 -8 0 -10 C4 -8 4 -3 0 0 Z", fill: color }, g);
+      const a = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+      const dist = 28 + Math.random() * 38;
+      const dx = Math.cos(a) * dist;
+      const up = 40 + Math.random() * 40;
+      const spin = (Math.random() - 0.5) * 540;
+      shape.animate(
+        [
+          { transform: "translate(0px, -16px) rotate(0deg) scale(0.4)", opacity: 1 },
+          { transform: `translate(${dx * 0.6}px, ${-16 - up}px) rotate(${spin / 2}deg) scale(1.6)`, opacity: 1, offset: 0.45 },
+          { transform: `translate(${dx}px, ${Math.sin(a) * 14}px) rotate(${spin}deg) scale(0.6)`, opacity: 0 },
+        ],
+        { duration: 900 + Math.random() * 400, easing: "cubic-bezier(.25,.6,.4,1)", fill: "forwards" },
+      );
     }
+    window.setTimeout(() => g.remove(), 1500);
   };
 
-  // Toucher : distingue un toucher d'une rotation de caméra ------------------------------------------
-  const raycaster = new THREE.Raycaster();
-  const ndc = new THREE.Vector2();
-  const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -GROUND);
-  const hit = new THREE.Vector3();
-  let down: { x: number; y: number; t: number } | null = null;
-
-  const onPointerDown = (e: PointerEvent) => {
-    down = { x: e.clientX, y: e.clientY, t: performance.now() };
-  };
-  const onPointerUp = (e: PointerEvent) => {
-    if (!down) return;
-    const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
-    const quick = performance.now() - down.t < 500;
-    down = null;
-    if (moved > 8 || !quick) return;
-    const rect = canvas.getBoundingClientRect();
-    ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
-    raycaster.setFromCamera(ndc, camera);
-    const hits = raycaster.intersectObject(plantsGroup, true);
-    for (const h of hits) {
-      let o: THREE.Object3D | null = h.object;
-      while (o && !o.userData.tile) o = o.parent;
-      const tile = o?.userData.tile as { x: number; z: number } | undefined;
-      if (tile) {
-        events.onTileTap(tile.x, tile.z);
-        return;
+  let hopping: Animation | null = null;
+  const hopTo = (sx: number, sy: number, jumps: number) => {
+    if (reduced) {
+      tigouPos = { sx, sy };
+      tigou.style.transform = `translate(${sx}px, ${sy}px)`;
+      tigou.dataset.depth = String(sy);
+      sortWorld();
+      return;
+    }
+    hopping?.cancel();
+    const from = tigouPos;
+    tigouFace.style.transform = sx < from.sx ? "scaleX(-1)" : "";
+    const frames: Keyframe[] = [];
+    const steps = 3;
+    for (let i = 0; i <= steps; i++) {
+      const k = i / steps;
+      const x = from.sx + (sx - from.sx) * k;
+      const y = from.sy + (sy - from.sy) * k;
+      frames.push({ transform: `translate(${x}px, ${y}px)`, offset: k * 0.7 });
+      if (i < steps) {
+        const km = (i + 0.5) / steps;
+        frames.push({ transform: `translate(${from.sx + (sx - from.sx) * km}px, ${from.sy + (sy - from.sy) * km - 22}px)`, offset: km * 0.7 });
       }
     }
-    if (raycaster.ray.intersectPlane(groundPlane, hit)) {
-      const tx = Math.round(hit.x / TILE);
-      const tz = Math.round(hit.z / TILE);
-      const inside = Math.abs(hit.x - tx * TILE) < 0.5 && Math.abs(hit.z - tz * TILE) < 0.5;
-      if (inside && ISLAND_TILES.some((t) => t.x === tx && t.z === tz)) {
-        events.onTileTap(tx, tz);
+    for (let j = 0; j < jumps; j++) {
+      const base = 0.7 + (j / jumps) * 0.3;
+      const mid = base + 0.15 / jumps;
+      frames.push({ transform: `translate(${sx}px, ${sy - 26}px) scale(1.05, 0.95)`, offset: mid });
+      frames.push({ transform: `translate(${sx}px, ${sy}px) scale(1.1, 0.9)`, offset: Math.min(1, base + 0.3 / jumps) });
+    }
+    if (frames[frames.length - 1]?.offset !== 1) frames.push({ transform: `translate(${sx}px, ${sy}px)`, offset: 1 });
+    tigouPos = { sx, sy };
+    tigou.dataset.depth = String(sy + 0.5);
+    sortWorld();
+    tigou.style.transform = `translate(${sx}px, ${sy}px)`;
+    hopping = tigou.animate(frames, { duration: 900 + jumps * 350, easing: "ease-in-out" });
+  };
+
+  // Ciel selon l'heure ------------------------------------------------------------------------------
+  let phase: Phase | null = null;
+  const applyPhase = () => {
+    const next = phaseAt(parisHour());
+    if (next === phase) return;
+    phase = next;
+    const p = SKY[next];
+    defs.querySelector("#pi-sky-top")?.setAttribute("stop-color", p.top);
+    defs.querySelector("#pi-sky-bottom")?.setAttribute("stop-color", p.bottom);
+    defs.querySelector("#pi-sea-top")?.setAttribute("stop-color", p.seaTop);
+    defs.querySelector("#pi-sea-bottom")?.setAttribute("stop-color", p.seaBottom);
+    sun.setAttribute("fill", p.sun);
+    const nightTime = next === "nuit";
+    sun.setAttribute("cy", next === "aube" ? String(HORIZON - 40) : "-300");
+    sunGlow.setAttribute("cy", sun.getAttribute("cy") ?? "-300");
+    sunGlow.setAttribute("opacity", nightTime ? "0.25" : "1");
+    stars.style.display = nightTime ? "" : "none";
+    night.setAttribute("opacity", String(p.night));
+    for (const c of Array.from(clouds.querySelectorAll(".pi-cloud-shape"))) c.setAttribute("fill", nightTime ? "#5b6f8f" : next === "aube" ? "#ffe6d6" : "#ffffff");
+    for (const m of Array.from(motes.children)) {
+      m.setAttribute("fill", nightTime ? "url(#pi-firefly)" : "#fffbe8");
+      m.setAttribute("r", nightTime ? "5" : "1.6");
+    }
+  };
+  applyPhase();
+  const phaseTimer = window.setInterval(applyPhase, 60_000);
+
+  // Cadre : l'île tient en largeur, un peu au-dessus du centre (le bac à graines est en bas).
+  const resize = () => {
+    const w = host.clientWidth || 1;
+    const h = host.clientHeight || 1;
+    const vw = Math.max(412, (640 * w) / h);
+    const vh = (vw * h) / w;
+    svg.setAttribute("viewBox", `${-vw / 2} ${-vh * 0.47} ${vw} ${vh}`);
+  };
+  resize();
+  const observer = new ResizeObserver(resize);
+  observer.observe(host);
+
+  // Toucher ---------------------------------------------------------------------------------------------
+  const onClick = (e: MouseEvent) => {
+    const hit = (e.target as Element | null)?.closest?.("[data-tile]");
+    const key = hit?.getAttribute("data-tile");
+    if (key) {
+      const [x, z] = key.split(",").map(Number);
+      events.onTileTap(x ?? 0, z ?? 0);
+      return;
+    }
+    const ctm = svg.getScreenCTM();
+    if (ctm) {
+      const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+      const { fx: ux, fz: uz } = unproject(pt.x, pt.y);
+      const x = Math.round(ux);
+      const z = Math.round(uz);
+      if (Math.abs(ux - x) + Math.abs(uz - z) <= 0.62 && ISLAND_TILES.some((t) => t.x === x && t.z === z)) {
+        events.onTileTap(x, z);
         return;
       }
     }
     events.onEmptyTap();
   };
-  canvas.addEventListener("pointerdown", onPointerDown);
-  canvas.addEventListener("pointerup", onPointerUp);
-
-  // Taille --------------------------------------------------------------------------------------------
-  // Recul de la caméra pour que l'île tienne en largeur, même sur un téléphone en hauteur.
-  let fitted = false;
-  const resize = () => {
-    const w = canvas.clientWidth || 1;
-    const h = canvas.clientHeight || 1;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    const halfH = THREE.MathUtils.degToRad(camera.fov / 2);
-    const halfW = Math.atan(Math.tan(halfH) * camera.aspect);
-    const fit = THREE.MathUtils.clamp(3.9 / Math.tan(Math.min(halfW, halfH)), 9, 24);
-    controls.maxDistance = Math.max(fit * 1.15, 12);
-    if (!fitted || lastInteraction === 0) {
-      const dir = camera.position.clone().sub(controls.target).normalize();
-      camera.position.copy(controls.target).addScaledVector(dir, fit);
-      controls.update();
-      fitted = true;
-    }
-  };
-  resize();
-  const observer = new ResizeObserver(resize);
-  observer.observe(canvas);
-
-  // Boucle --------------------------------------------------------------------------------------------
-  const clock = new THREE.Clock();
-  const waterPos = waterGeo.getAttribute("position") as THREE.BufferAttribute;
-  const sway = reduced ? 0.012 : 0.035;
-  let frame = 0;
-
-  let paused = false;
-  const loop = () => {
-    const dt = Math.min(clock.getDelta(), 1 / 30);
-    const t = clock.elapsedTime;
-    frame++;
-
-    if (!controls.autoRotate && !reduced && performance.now() - lastInteraction > 10_000) controls.autoRotate = true;
-    controls.update();
-
-    // Houle (une image sur deux suffit).
-    if (!reduced && frame % 2 === 0) {
-      for (let i = 0; i < waterPos.count; i++) {
-        const x = waterBase[i * 3] ?? 0;
-        const z = waterBase[i * 3 + 2] ?? 0;
-        waterPos.setY(i, Math.sin(x * 0.55 + t * 1.1) * 0.07 + Math.cos(z * 0.7 + t * 0.85) * 0.05 - 0.04);
-      }
-      waterPos.needsUpdate = true;
-      waterGeo.computeVertexNormals();
-    }
-
-    // Plantes : ressort de taille et vent.
-    for (const n of nodes.values()) {
-      const accel = (n.target - n.scale) * 95 - n.velocity * 9;
-      n.velocity += accel * dt;
-      n.scale += n.velocity * dt;
-      const s = Math.max(0.001, n.scale);
-      n.group.scale.set(s, s * (1 + Math.max(0, n.velocity) * 0.03), s);
-      n.group.rotation.x = Math.sin(t * 1.4 + n.phase) * sway;
-      n.group.rotation.z = Math.cos(t * 1.1 + n.phase) * sway;
-      for (const child of n.group.children) {
-        const k = child.userData.sparkle as number | undefined;
-        if (k === undefined) continue;
-        const a = t * 1.2 + k * 2.1;
-        child.position.set(Math.cos(a) * 0.45, 0.4 + Math.sin(t * 2 + k) * 0.25, Math.sin(a) * 0.45);
-        child.rotation.y = t * 3;
-      }
-    }
-
-    // Sélection : anneau qui respire, flèche qui rebondit.
-    if (selection.visible) {
-      const pulse = 1 + Math.sin(t * 5) * 0.08;
-      ring.scale.set(pulse, pulse, 1);
-      arrow.position.y = GROUND + 1.5 + Math.abs(Math.sin(t * 4)) * 0.25;
-      arrow.rotation.y = t * 2;
-    }
-
-    // Tigou : respiration, clignement, sauts.
-    const body = tigou.body;
-    body.scale.set(1 - Math.sin(t * 3) * 0.02, 1 + Math.sin(t * 3) * 0.035, 1 - Math.sin(t * 3) * 0.02);
-    tigou.leaves.rotation.z = Math.sin(t * 2.2) * 0.12;
-    blinkAt -= dt;
-    const blinking = blinkAt < 0.12;
-    for (const eye of tigou.eyes) eye.scale.y = blinking ? 0.15 : 1;
-    if (blinkAt < 0) blinkAt = 2.5 + Math.random() * 3;
-    if (hop) {
-      hop.t += dt / 0.65;
-      const k = Math.min(1, hop.t);
-      tigou.root.position.lerpVectors(hop.from, hop.to, k);
-      tigou.root.position.y = GROUND + Math.sin(k * Math.PI) * 0.55;
-      tigou.root.lookAt(hop.to.x, tigou.root.position.y, hop.to.z);
-      if (k >= 1) {
-        if (hop.jumps > 0) {
-          hop = { from: hop.to.clone(), to: hop.to.clone(), t: 0, jumps: hop.jumps - 1 };
-        } else {
-          hop = null;
-        }
-      }
-    } else {
-      const look = Math.atan2(camera.position.x - tigou.root.position.x, camera.position.z - tigou.root.position.z);
-      const turn = ((((look - tigou.root.rotation.y + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) - Math.PI;
-      tigou.root.rotation.y += turn * Math.min(1, dt * 2);
-    }
-
-    // Nuages, pollen.
-    clouds.rotation.y = t * 0.015;
-    if (!reduced) {
-      const pp = pollenGeo.getAttribute("position") as THREE.BufferAttribute;
-      for (let i = 0; i < POLLEN; i++) {
-        pp.setXYZ(
-          i,
-          (pollenBase[i * 3] ?? 0) + Math.sin(t * 0.4 + i) * 0.3,
-          (pollenBase[i * 3 + 1] ?? 0) + Math.sin(t * 0.7 + i * 1.7) * 0.25,
-          (pollenBase[i * 3 + 2] ?? 0) + Math.cos(t * 0.35 + i) * 0.3,
-        );
-      }
-      pp.needsUpdate = true;
-    }
-
-    for (const p of particles) {
-      if (!p.active) continue;
-      p.life -= dt;
-      if (p.life <= 0) {
-        p.active = false;
-        p.mesh.visible = false;
-        continue;
-      }
-      p.velocity.y -= 6.5 * dt;
-      p.mesh.position.addScaledVector(p.velocity, dt);
-      if (p.mesh.position.y < GROUND) p.mesh.position.y = GROUND;
-      p.mesh.rotation.x += dt * 6;
-      p.mesh.rotation.y += dt * 4;
-      p.mesh.scale.setScalar(p.size * (p.life / p.maxLife));
-    }
-
-    renderer.render(scene, camera);
-  };
-  renderer.setAnimationLoop(loop);
+  svg.addEventListener("click", onClick);
 
   return {
     setPlants,
@@ -581,48 +507,33 @@ export function createIslandScene(canvas: HTMLCanvasElement, events: IslandScene
       refreshTiles();
     },
     setSelected(tile) {
-      selection.visible = tile !== null;
-      if (tile) selection.position.set(tile.x * TILE, 0, tile.z * TILE);
-    },
-    setPaused(next) {
-      if (next === paused) return;
-      paused = next;
-      controls.enabled = !next;
-      if (next) {
-        renderer.setAnimationLoop(null);
-      } else {
-        clock.getDelta();
-        renderer.setAnimationLoop(loop);
+      if (!tile) {
+        selection.style.display = "none";
+        arrowG.style.display = "none";
+        return;
       }
+      const { sx, sy } = project(tile.x, tile.z);
+      selection.setAttribute("transform", `translate(${sx} ${sy})`);
+      arrowG.setAttribute("transform", `translate(${sx} ${sy})`);
+      selection.style.display = "";
+      arrowG.style.display = "";
     },
     celebrate(x, z, kind) {
       burst(x, z, kind);
-      // Tigou accourt à côté de la plante, côté caméra, et saute de joie.
-      const toCamera = new THREE.Vector3(camera.position.x, 0, camera.position.z).normalize();
-      const to = new THREE.Vector3(x * TILE + toCamera.x * 0.62, GROUND, z * TILE + toCamera.z * 0.62);
-      hop = { from: tigou.root.position.clone().setY(GROUND), to, t: 0, jumps: kind === "stade" ? 2 : 1 };
+      const { sx, sy } = project(x, z);
+      // Tigou accourt devant la plante (côté écran), pour rester visible.
+      const side = sx > tigouPos.sx ? -1 : 1;
+      hopTo(sx + side * 24, sy + 22, kind === "stade" ? 2 : 1);
+    },
+    setPaused(paused) {
+      svg.classList.toggle("pi-paused", paused);
     },
     dispose() {
-      renderer.setAnimationLoop(null);
       window.clearInterval(phaseTimer);
       observer.disconnect();
-      canvas.removeEventListener("pointerdown", onPointerDown);
-      canvas.removeEventListener("pointerup", onPointerUp);
-      controls.removeEventListener("start", onControlStart);
-      controls.dispose();
-      scene.traverse((o) => {
-        if (o instanceof THREE.Mesh || o instanceof THREE.Points) {
-          o.geometry.dispose();
-          const m = o.material;
-          if (Array.isArray(m)) m.forEach((x) => x.dispose());
-          else m.dispose();
-        }
-      });
-      tileGeo.dispose();
-      freeMat.dispose();
-      growMat.dispose();
-      disposeMaterials();
-      renderer.dispose();
+      svg.removeEventListener("click", onClick);
+      hopping?.cancel();
+      svg.remove();
     },
   };
 }
