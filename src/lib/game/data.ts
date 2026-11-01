@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { IslandData } from "./island.ts";
 import type { GardenData } from "./garden.ts";
 
 export type { Quiz } from "./quiz.ts";
@@ -51,4 +52,10 @@ export function duelOutcome(d: Duel): "gagne" | "partage" | "perdu" | "nul" | nu
 export async function getGarden(supabase: SupabaseClient, userId: string): Promise<GardenData | null> {
   const { data, error } = await supabase.rpc("garden", { p_user: userId });
   return error || !data ? null : (data as GardenData);
+}
+
+/** L'île de quelqu'un de mon entreprise : son jardin et ses plantes posées (fonction island(), 0047_ile.sql). */
+export async function getIsland(supabase: SupabaseClient, userId: string): Promise<IslandData | null> {
+  const { data, error } = await supabase.rpc("island", { p_user: userId });
+  return error || !data ? null : (data as IslandData);
 }

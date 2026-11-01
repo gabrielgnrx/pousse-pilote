@@ -16,6 +16,11 @@ export function GardenView({ data, mine }: { data: GardenData; mine: boolean }) 
         <div className="mt-2 h-2 rounded-full bg-trait" role="progressbar" aria-label="Collection" aria-valuemin={0} aria-valuemax={g.total} aria-valuenow={g.grown}>
           <div className="h-2 rounded-full bg-sapin" style={{ width: `${Math.max(3, (g.grown / g.total) * 100)}%` }} />
         </div>
+        {mine ? (
+          <Link href="/ile" className="btn-dark mt-3 w-full text-sm">
+            Planter mes graines sur mon île
+          </Link>
+        ) : null}
       </div>
 
       <section aria-labelledby="especes" className="flex flex-col gap-2">
