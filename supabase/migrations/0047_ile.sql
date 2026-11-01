@@ -30,7 +30,7 @@ create policy "île : celles de mon entreprise" on public.island_plants
 -- L'île est un disque d'emplacements : x² + z² ≤ 10, soit 37 emplacements (même règle que lib/game/island.ts).
 create or replace function public.island_tile_ok(p_x integer, p_z integer)
 returns boolean
-language sql immutable
+language sql immutable set search_path = public
 as $$
   select p_x between -3 and 3 and p_z between -3 and 3 and p_x * p_x + p_z * p_z <= 10;
 $$;
@@ -38,7 +38,7 @@ $$;
 -- Les plantes rares et l'exploit qui les débloque (null : graine mystère, voir garden_rares).
 create or replace function public.island_rare_exploit(p_species text)
 returns text
-language sql immutable
+language sql immutable set search_path = public
 as $$
   select case p_species
     when 'chene' then 'serie30'
@@ -65,6 +65,7 @@ begin
 end;
 $$;
 revoke all on function public.island(uuid) from public;
+revoke execute on function public.island(uuid) from anon;
 grant execute on function public.island(uuid) to authenticated;
 
 -- Planter une graine en (x, z) : nouvelle plante sur un emplacement libre, ou une graine de plus pour la
@@ -124,4 +125,5 @@ begin
 end;
 $$;
 revoke all on function public.island_plant(text, integer, integer) from public;
+revoke execute on function public.island_plant(text, integer, integer) from anon;
 grant execute on function public.island_plant(text, integer, integer) to authenticated;
