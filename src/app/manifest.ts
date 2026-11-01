@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Pousse",
     description: "Relève des défis bas carbone avec tes collègues et fais pousser ta plante.",
     lang: "fr",
-    start_url: "/fil?source=appli",
+    start_url: "/ile?source=appli",
     scope: "/",
     display: "standalone",
     orientation: "portrait",

@@ -6,8 +6,9 @@ type Tab = { href: string; label: string; also?: string[]; icon: React.ReactNode
 
 const LEFT: Tab[] = [
   {
-    href: "/fil",
+    href: "/ile",
     label: "Accueil",
+    also: ["/fil", "/jardin"],
     icon: (
       <>
         <path d="M3 11l9-8 9 8" />
@@ -78,7 +79,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigation principale"
-      className="fixed inset-x-0 bottom-0 z-20 bg-papier pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_0_var(--color-trait)]"
+      className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md rounded-t-[26px] bg-papier/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-6px_24px_rgba(20,38,27,0.16)] backdrop-blur"
     >
       <ul className="mx-auto flex h-[68px] max-w-md items-center px-2">
         {LEFT.map((t) => (

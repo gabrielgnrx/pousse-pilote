@@ -27,3 +27,10 @@ export async function plantSeed(input: { species: string; x: number; z: number }
   }
   return { ok: true, data: data as IslandData };
 }
+
+/** Mon île à jour (de nouvelles actions ont pu donner des graines). */
+export async function myIsland(): Promise<IslandData | null> {
+  const { supabase, user } = await requireProfile();
+  const { data, error } = await supabase.rpc("island", { p_user: user.id });
+  return error || !data ? null : (data as IslandData);
+}

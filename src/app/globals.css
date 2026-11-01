@@ -107,6 +107,11 @@ select.input {
   from { transform: scaleY(0.6); opacity: 0.4; }
   to { transform: scaleY(1); opacity: 1; }
 }
+/* Une rubrique qui s'ouvre par-dessus l'île, comme un menu de jeu (sans « forwards » : aucun transform ne reste). */
+@keyframes panel-up {
+  from { opacity: 0.4; transform: translateY(48px); }
+  to { opacity: 1; transform: none; }
+}
 @keyframes leaf-fall {
   0% { opacity: 0; transform: translate(0, -20px) rotate(0deg); }
   15% { opacity: 1; }

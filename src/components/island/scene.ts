@@ -23,6 +23,8 @@ export interface IslandScene {
   setPlanting(seed: Pick<Seed, "key" | "rare"> | null): void;
   setSelected(tile: { x: number; z: number } | null): void;
   celebrate(x: number, z: number, kind: "nouvelle" | "grandit" | "stade"): void;
+  /** En pause, l'île garde sa dernière image et ne consomme plus rien (une rubrique est ouverte). */
+  setPaused(paused: boolean): void;
   dispose(): void;
 }
 
@@ -95,7 +97,7 @@ export function createIslandScene(canvas: HTMLCanvasElement, events: IslandScene
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 120);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 140);
   camera.position.set(7.4, 7.2, 8.6);
 
   const controls = new OrbitControls(camera, canvas);
@@ -104,7 +106,7 @@ export function createIslandScene(canvas: HTMLCanvasElement, events: IslandScene
   controls.dampingFactor = 0.08;
   controls.enablePan = false;
   controls.minDistance = 6.5;
-  controls.maxDistance = 17;
+  controls.maxDistance = 26;
   controls.minPolarAngle = 0.45;
   controls.maxPolarAngle = 1.22;
   controls.rotateSpeed = 0.7;
@@ -435,12 +437,24 @@ export function createIslandScene(canvas: HTMLCanvasElement, events: IslandScene
   canvas.addEventListener("pointerup", onPointerUp);
 
   // Taille --------------------------------------------------------------------------------------------
+  // Recul de la caméra pour que l'île tienne en largeur, même sur un téléphone en hauteur.
+  let fitted = false;
   const resize = () => {
     const w = canvas.clientWidth || 1;
     const h = canvas.clientHeight || 1;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    const halfH = THREE.MathUtils.degToRad(camera.fov / 2);
+    const halfW = Math.atan(Math.tan(halfH) * camera.aspect);
+    const fit = THREE.MathUtils.clamp(3.9 / Math.tan(Math.min(halfW, halfH)), 9, 24);
+    controls.maxDistance = Math.max(fit * 1.15, 12);
+    if (!fitted || lastInteraction === 0) {
+      const dir = camera.position.clone().sub(controls.target).normalize();
+      camera.position.copy(controls.target).addScaledVector(dir, fit);
+      controls.update();
+      fitted = true;
+    }
   };
   resize();
   const observer = new ResizeObserver(resize);
@@ -452,7 +466,8 @@ export function createIslandScene(canvas: HTMLCanvasElement, events: IslandScene
   const sway = reduced ? 0.012 : 0.035;
   let frame = 0;
 
-  renderer.setAnimationLoop(() => {
+  let paused = false;
+  const loop = () => {
     const dt = Math.min(clock.getDelta(), 1 / 30);
     const t = clock.elapsedTime;
     frame++;
@@ -556,7 +571,8 @@ export function createIslandScene(canvas: HTMLCanvasElement, events: IslandScene
     }
 
     renderer.render(scene, camera);
-  });
+  };
+  renderer.setAnimationLoop(loop);
 
   return {
     setPlants,
@@ -567,6 +583,17 @@ export function createIslandScene(canvas: HTMLCanvasElement, events: IslandScene
     setSelected(tile) {
       selection.visible = tile !== null;
       if (tile) selection.position.set(tile.x * TILE, 0, tile.z * TILE);
+    },
+    setPaused(next) {
+      if (next === paused) return;
+      paused = next;
+      controls.enabled = !next;
+      if (next) {
+        renderer.setAnimationLoop(null);
+      } else {
+        clock.getDelta();
+        renderer.setAnimationLoop(loop);
+      }
     },
     celebrate(x, z, kind) {
       burst(x, z, kind);

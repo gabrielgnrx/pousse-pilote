@@ -32,9 +32,10 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
     onClose();
     router.refresh();
   };
+  // Retour sur l'île : la graine gagnée par l'action attend d'être plantée.
   const finish = () => {
     onClose();
-    router.push("/fil");
+    router.push("/ile");
   };
 
   // La semaine en cours, du lundi au dimanche, pour les défis sur plusieurs jours.
