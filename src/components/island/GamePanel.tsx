@@ -20,7 +20,8 @@ export function GamePanel({ children }: { children: React.ReactNode }) {
   if (isIslandPath(path)) return <>{children}</>;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 z-10 mx-auto flex max-w-md flex-col" style={{ top: "calc(env(safe-area-inset-top, 0px) + 116px)" }}>
+    // Pas de z-index ici : il enfermerait les fenêtres des pages (z-40) sous la barre du bas.
+    <div className="absolute inset-x-0 bottom-0 mx-auto flex max-w-md flex-col" style={{ top: "calc(env(safe-area-inset-top, 0px) + 116px)" }}>
       <div
         key={section}
         className="flex min-h-0 flex-1 flex-col rounded-t-[28px] bg-creme shadow-[0_-10px_30px_rgba(20,38,27,0.22)] motion-safe:animate-[panel-up_0.32s_cubic-bezier(0.2,0.9,0.3,1.15)]"
