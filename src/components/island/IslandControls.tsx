@@ -26,14 +26,7 @@ export function IslandControls() {
     <div className="pointer-events-none absolute inset-0 z-10">
       <div className="absolute inset-x-0 top-3 mx-auto flex max-w-md flex-col items-start gap-2 px-4">
         <div className="flex w-full items-center justify-between gap-2">
-          {mine ? (
-            <Link href="/fil" className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-papier/90 px-4 text-sm font-bold shadow-sm backdrop-blur">
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                <path d="M4 6h16M4 12h16M4 18h10" />
-              </svg>
-              Le fil de l&apos;entreprise
-            </Link>
-          ) : (
+          {mine ? null : (
             <>
               <p className="rounded-full bg-papier/90 px-4 py-2 font-display text-lg shadow-sm backdrop-blur">L&apos;île de {name}</p>
               <Link href="/ile" className="pointer-events-auto flex min-h-11 items-center rounded-full bg-chloro px-4 text-sm font-bold text-white shadow-sm">

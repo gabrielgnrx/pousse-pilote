@@ -137,7 +137,10 @@ interface PlantNode {
   body: SVGGElement;
 }
 
-export function createIslandScene(host: HTMLElement, events: IslandSceneEvents): IslandScene {
+/** « hero » : l'île cadrée serré en haut de l'accueil ; « full » : toute l'île et le ciel, pour jouer. */
+export type Framing = "hero" | "full";
+
+export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, framing: Framing = "full"): IslandScene {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const svg = el("svg", { class: "pi", width: "100%", height: "100%", preserveAspectRatio: "xMidYMid meet" });
   svg.style.display = "block";
@@ -251,7 +254,7 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents):
   const tigou = el("g", {}, world);
   const tigouFace = el("g", {}, tigou);
   tigouFace.innerHTML = TIGOU_SVG;
-  let tigouPos = project(2.6, 1.9);
+  let tigouPos = project(0.9, 2.7);
   tigouPos = { sx: tigouPos.sx + 6, sy: tigouPos.sy + 8 };
   tigou.style.transform = `translate(${tigouPos.sx}px, ${tigouPos.sy}px)`;
   tigou.dataset.depth = String(tigouPos.sy);
@@ -468,6 +471,14 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents):
   const resize = () => {
     const w = host.clientWidth || 1;
     const h = host.clientHeight || 1;
+    if (framing === "hero") {
+      // L'île entière en largeur, sa plage posée vers 84 % de la hauteur (la feuille du fil couvre le bas),
+      // et un peu de ciel derrière l'en-tête.
+      const hw = Math.max(440, (420 * w) / h);
+      const hh = (hw * h) / w;
+      svg.setAttribute("viewBox", `${-hw / 2} ${120 - hh * 0.84} ${hw} ${hh}`);
+      return;
+    }
     const vw = Math.max(412, (640 * w) / h);
     const vh = (vw * h) / w;
     svg.setAttribute("viewBox", `${-vw / 2} ${-vh * 0.47} ${vw} ${vh}`);

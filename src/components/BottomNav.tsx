@@ -6,9 +6,9 @@ type Tab = { href: string; label: string; also?: string[]; icon: React.ReactNode
 
 const LEFT: Tab[] = [
   {
-    href: "/ile",
+    href: "/fil",
     label: "Accueil",
-    also: ["/fil", "/jardin"],
+    also: ["/ile", "/jardin"],
     icon: (
       <>
         <path d="M3 11l9-8 9 8" />

@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ]);
 
   return (
-    <div className="mx-auto min-h-dvh max-w-md pb-28">
+    <div className="relative mx-auto min-h-dvh max-w-md pb-28">
       <ProgressHud
         initial={profile.display_name.charAt(0).toUpperCase()}
         total={me.points.total}

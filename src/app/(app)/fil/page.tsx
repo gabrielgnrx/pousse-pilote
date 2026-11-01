@@ -6,7 +6,8 @@ import { dayLabel, formatDay, parisDay, relativeTime, todayParis } from "@/lib/d
 import { INTRO_COOKIE, PROOF_BUCKET } from "@/lib/constants";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { IntroCard } from "@/components/IntroCard";
-import { getDuels } from "@/lib/game/data.ts";
+import { getDuels, getIsland } from "@/lib/game/data.ts";
+import { IslandHero } from "@/components/island/IslandHero";
 import { CompanyHero, type CompanyPulse } from "@/components/CompanyHero";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
@@ -34,7 +35,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
   const { supabase, user, profile } = await requireHabits();
   // Tout ce qui crédite des pousses passe avant le total affiché : bonus du jour, duels terminés
   // (getDuels solde les duels finis). Les défis et les duels eux-mêmes s'affichent dans Mon plan.
-  const [daily] = await Promise.all([claimDailyRewards(supabase), getDuels(supabase)]);
+  const [daily, , island] = await Promise.all([claimDailyRewards(supabase), getDuels(supabase), getIsland(supabase, user.id)]);
 
   const teamOnly = vue === "equipe" && !!profile.team_id;
   let postsQuery = supabase
@@ -119,6 +120,10 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
   return (
     <>
       <h1 className="sr-only">Accueil</h1>
+      {island ? <IslandHero data={island} /> : null}
+      {/* Le fil remonte sur l'île, comme une feuille posée dessus. */}
+      <div className={`flex flex-col gap-4 ${island ? "relative -mx-4 -mt-14 rounded-t-[28px] bg-creme px-4 pt-2 shadow-[0_-8px_24px_rgba(20,38,27,0.14)]" : ""}`}>
+      {island ? <span aria-hidden="true" className="mx-auto h-1.5 w-11 rounded-full bg-trait" /> : null}
       {showIntro ? <IntroCard /> : null}
       {pulse ? <CompanyHero pulse={pulse as CompanyPulse} /> : null}
       <InstallPrompt />
@@ -223,6 +228,7 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
           );
         })}
       </FeedStem>
+      </div>
     </>
   );
 }

@@ -54,7 +54,7 @@ const TITLES: { prefix: string; title: string }[] = [
   { prefix: "/regles", title: "Le barème" },
   { prefix: "/avis", title: "Ton avis" },
 ];
-const BACK = ["/profil", "/bilan", "/jardin", "/notifications", "/regles", "/avis"];
+const BACK = ["/ile", "/profil", "/bilan", "/jardin", "/notifications", "/regles", "/avis"];
 
 /**
  * La barre du haut, identique sur toutes les pages : l'avatar (ton niveau en anneau) qui ouvre ton profil,
@@ -77,6 +77,8 @@ export function ProgressHud({
 }) {
   const path = usePathname();
   const router = useRouter();
+  // Sur l'accueil, l'en-tête flotte sur l'île.
+  const onHome = path === "/fil";
   const withBack = BACK.some((p) => path === p || path.startsWith(`${p}/`));
   const level = levelFor(total);
   const pousses = Math.round(useCountUp(total, "pousse.hud.total"));
@@ -84,7 +86,7 @@ export function ProgressHud({
   const title = path === "/equipes" ? (teamName ? `QG ${teamName}` : "QG de l'équipe") : found;
 
   return (
-    <header className="flex items-center gap-2.5 px-5 pt-4 pb-2">
+    <header className={`flex items-center gap-2.5 px-5 pt-4 pb-2 ${onHome ? "absolute inset-x-0 top-0 z-20" : ""}`}>
       {withBack ? (
         <button
           type="button"
@@ -119,6 +121,7 @@ export function ProgressHud({
             className="transition-[stroke-dashoffset] duration-1000"
           />
         </svg>
+        <span className="absolute inset-[3px] -z-10 rounded-full bg-papier" aria-hidden="true" />
         <span className="absolute inset-[6px] flex items-center justify-center rounded-full bg-pollen-pale font-display text-[16px] text-encre">
           {initial}
         </span>
@@ -127,7 +130,8 @@ export function ProgressHud({
         </span>
       </Link>
 
-      <p className={`min-w-0 flex-1 truncate font-display ${withBack ? "text-xl" : "text-[26px]"}`}>{title}</p>
+      <p className={`min-w-0 flex-1 truncate font-display ${withBack ? "text-xl" : "text-[26px]"} ${onHome ? "sr-only" : ""}`}>{title}</p>
+      {onHome ? <span aria-hidden="true" className="flex-1" /> : null}
 
       <Link
         href="/profil#pousses"

@@ -18,7 +18,7 @@ export default async function Home() {
       redirect(admin ? "/admin" : "/bienvenue");
     }
     const { data: habits } = await supabase.from("habits").select("user_id").eq("user_id", user.id).maybeSingle();
-    redirect(habits ? "/ile" : "/questionnaire");
+    redirect(habits ? "/fil" : "/questionnaire");
   }
 
   return (
