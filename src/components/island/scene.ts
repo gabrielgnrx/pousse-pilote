@@ -472,11 +472,11 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
     const w = host.clientWidth || 1;
     const h = host.clientHeight || 1;
     if (framing === "hero") {
-      // L'île entière en largeur, sa plage posée vers 84 % de la hauteur (la feuille du fil couvre le bas),
-      // et un peu de ciel derrière l'en-tête.
+      // L'île entière en largeur, sa plage posée vers 70 % de la hauteur : dessous, le bac à graines puis
+      // la feuille du fil ; au-dessus, un peu de ciel derrière l'en-tête.
       const hw = Math.max(440, (420 * w) / h);
       const hh = (hw * h) / w;
-      svg.setAttribute("viewBox", `${-hw / 2} ${120 - hh * 0.84} ${hw} ${hh}`);
+      svg.setAttribute("viewBox", `${-hw / 2} ${120 - hh * 0.7} ${hw} ${hh}`);
       return;
     }
     const vw = Math.max(412, (640 * w) / h);

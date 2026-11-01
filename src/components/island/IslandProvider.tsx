@@ -38,7 +38,18 @@ export function useIsland(): IslandContextValue {
  * L'île de l'accueil : elle occupe tout l'espace entre l'en-tête et la barre du bas, et les commandes
  * du jeu (enfants) se posent dessus. `mine` : faux pour la visite de l'île d'un collègue.
  */
-export function IslandProvider({ initial, mine = true, children }: { initial: IslandData; mine?: boolean; children: React.ReactNode }) {
+export function IslandProvider({
+  initial,
+  mine = true,
+  framing = "full",
+  children,
+}: {
+  initial: IslandData;
+  mine?: boolean;
+  /** « hero » : en haut de l'accueil, sous l'en-tête et au-dessus du fil ; « full » : la page de l'île. */
+  framing?: "hero" | "full";
+  children: React.ReactNode;
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<IslandScene | null>(null);
   const [status, setStatus] = useState<"chargement" | "pret" | "erreur">("chargement");
@@ -141,7 +152,7 @@ export function IslandProvider({ initial, mine = true, children }: { initial: Is
         scene = createIslandScene(hostRef.current, {
           onTileTap: (x, z) => handlers.current.onTileTap(x, z),
           onEmptyTap: () => handlers.current.onEmptyTap(),
-        });
+        }, framing);
         sceneRef.current = scene;
         scene.setPlants(live.current.data.plants);
         setStatus("pret");
@@ -200,8 +211,8 @@ export function IslandProvider({ initial, mine = true, children }: { initial: Is
   return (
     <IslandContext.Provider value={value}>
       <div
-        className="relative -mx-4 -mt-2 overflow-hidden bg-[#8ecbe0]"
-        style={{ height: "calc(100dvh - 186px)", minHeight: 460 }}
+        className={`relative -mx-4 overflow-hidden bg-[#8ecbe0] ${framing === "full" ? "-mt-2" : ""}`}
+        style={framing === "hero" ? { height: 480 } : { height: "calc(100dvh - 186px)", minHeight: 460 }}
       >
         <div
           ref={hostRef}

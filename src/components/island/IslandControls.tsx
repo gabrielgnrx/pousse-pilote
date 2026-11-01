@@ -15,7 +15,8 @@ function SeedDot({ seed }: { seed: Pick<Seed, "color" | "accent" | "rare"> }) {
 }
 
 /** Les commandes du jeu, posées sur l'île de l'accueil : graines, plantation, fiche d'une plante. */
-export function IslandControls() {
+/** `top` et `bottom` : marges (px) laissées libres en haut (en-tête) et en bas (feuille du fil). */
+export function IslandControls({ top = 12, bottom = 12, compact = false }: { top?: number; bottom?: number; compact?: boolean } = {}) {
   const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant } = useIsland();
   const inspected = inspect ? data.plants.find((p) => p.x === inspect.x && p.z === inspect.z) ?? null : null;
   const look = inspected ? lookOf(inspected) : null;
@@ -24,7 +25,7 @@ export function IslandControls() {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
-      <div className="absolute inset-x-0 top-3 mx-auto flex max-w-md flex-col items-start gap-2 px-4">
+      <div className="absolute inset-x-0 mx-auto flex max-w-md flex-col items-start gap-2 px-4" style={{ top }}>
         <div className="flex w-full items-center justify-between gap-2">
           {mine ? null : (
             <>
@@ -60,7 +61,7 @@ export function IslandControls() {
         </div>
       ) : null}
 
-      <div className="absolute inset-x-0 bottom-3 mx-auto flex max-w-md flex-col gap-2 px-3">
+      <div className="absolute inset-x-0 mx-auto flex max-w-md flex-col gap-2 px-3" style={{ bottom }}>
         {tile && seed ? (
           <div className="pointer-events-auto flex items-center gap-2 rounded-[22px] bg-papier p-2 pl-4 shadow-lg">
             <SeedDot seed={seed} />
@@ -111,8 +112,8 @@ export function IslandControls() {
             ) : null}
           </div>
         ) : mine ? (
-          <section aria-labelledby="graines" className="pointer-events-auto flex flex-col gap-2 rounded-[24px] bg-papier/90 p-3 shadow-lg backdrop-blur">
-            <div className="flex items-center justify-between gap-2 px-1">
+          <section aria-labelledby="graines" className={`pointer-events-auto flex flex-col gap-2 rounded-[24px] bg-papier/90 shadow-lg backdrop-blur ${compact ? "p-2" : "p-3"}`}>
+            <div className={`items-center justify-between gap-2 px-1 ${compact && !seed ? "sr-only" : "flex"}`}>
               <h2 id="graines" className="label">
                 {seedCount ? `Tes graines · ${seedCount}` : "Tes graines"}
               </h2>
