@@ -1,8 +1,9 @@
 "use server";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { JOIN_COOKIE } from "@/lib/constants";
+import { siteUrl } from "@/lib/site-url";
 
 export interface JoinState {
   error?: string;
@@ -12,14 +13,6 @@ export interface JoinState {
 }
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
-/** L'adresse du site : celle configurée, sinon celle de la requête (localhost, ou l'URL Vercel). */
-async function siteUrl() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`;
-}
 
 /**
  * Envoie l'e-mail de connexion : il contient un code à 6 chiffres (à taper dans l'app, fiable sur
