@@ -124,7 +124,27 @@ export const ISLAND_ERRORS: Record<string, string> = {
   tile_taken: "Cet emplacement est pris. Choisis une case libre, ou une plante de la même espèce.",
   off_island: "Cet emplacement est hors de l'île.",
   already_planted: "Cette plante rare est déjà sur ton île.",
+  no_plant: "Cette plante n'est plus là : l'île a été mise à jour.",
 };
+
+/** Les cases où cette graine peut aller (libres, ou une plante de la même espèce à faire grandir). */
+export function playableTiles(plants: IslandPlant[], seed: Pick<Seed, "key" | "rare">): number {
+  return ISLAND_TILES.filter((t) => {
+    const c = checkTile(plants, seed, t.x, t.z);
+    return c === "nouvelle" || c === "grandit";
+  }).length;
+}
+
+/** Déplace une plante vers une case libre (affichage immédiat). */
+export function moveLocally(data: IslandData, from: { x: number; z: number }, to: { x: number; z: number }): IslandData {
+  if (!tileOk(to.x, to.z) || data.plants.some((p) => p.x === to.x && p.z === to.z)) return data;
+  return { ...data, plants: data.plants.map((p) => (p.x === from.x && p.z === from.z ? { ...p, x: to.x, z: to.z } : p)) };
+}
+
+/** Arrache une plante : ses graines reviennent dans le bac (seedsOf les recompte). */
+export function uprootLocally(data: IslandData, at: { x: number; z: number }): IslandData {
+  return { ...data, plants: data.plants.filter((p) => p.x !== at.x || p.z !== at.z) };
+}
 
 /**
  * « Planter pour moi » : faire grandir la plus petite plante de la même espèce qui n'est pas encore

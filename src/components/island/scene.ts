@@ -487,6 +487,21 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
   const observer = new ResizeObserver(resize);
   observer.observe(host);
 
+  // Pause des animations quand l'île est hors de l'écran (on fait défiler le fil), quand l'onglet est
+  // caché, ou quand l'appli le demande : sur un petit téléphone, un SVG animé coûte cher.
+  let pausedByApp = false;
+  let offscreen = false;
+  const applyPause = () => svg.classList.toggle("pi-paused", pausedByApp || offscreen || document.hidden);
+  const visibility = new IntersectionObserver(
+    (entries) => {
+      offscreen = !(entries[0]?.isIntersecting ?? true);
+      applyPause();
+    },
+    { threshold: 0.05 },
+  );
+  visibility.observe(host);
+  document.addEventListener("visibilitychange", applyPause);
+
   // Toucher ---------------------------------------------------------------------------------------------
   const onClick = (e: MouseEvent) => {
     const hit = (e.target as Element | null)?.closest?.("[data-tile]");
@@ -537,11 +552,14 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
       hopTo(sx + side * 24, sy + 22, kind === "stade" ? 2 : 1);
     },
     setPaused(paused) {
-      svg.classList.toggle("pi-paused", paused);
+      pausedByApp = paused;
+      applyPause();
     },
     dispose() {
       window.clearInterval(phaseTimer);
       observer.disconnect();
+      visibility.disconnect();
+      document.removeEventListener("visibilitychange", applyPause);
       svg.removeEventListener("click", onClick);
       hopping?.cancel();
       svg.remove();

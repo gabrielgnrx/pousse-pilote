@@ -1,8 +1,8 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { STAGE_NAMES } from "@/lib/game/garden.ts";
-import { checkTile, lookOf, plantLocally, seedsOf, type IslandData, type Seed } from "@/lib/game/island.ts";
-import { plantSeed } from "@/app/(app)/ile/actions";
+import { checkTile, lookOf, moveLocally, plantLocally, seedsOf, uprootLocally, type IslandData, type Seed } from "@/lib/game/island.ts";
+import { movePlant, plantSeed, uprootPlant, type PlantResult } from "@/app/(app)/ile/actions";
 import type { IslandScene } from "./scene.ts";
 
 export type Tile = { x: number; z: number };
@@ -24,6 +24,10 @@ interface IslandContextValue {
   setInspect(tile: Tile | null): void;
   say(text: string, tone?: "ok" | "erreur"): void;
   plant(seed: Seed, at: Tile): Promise<void>;
+  /** La plante en cours de déplacement (on touche ensuite une case libre). */
+  moving: Tile | null;
+  startMove(at: Tile | null): void;
+  uproot(at: Tile): Promise<void>;
 }
 
 const IslandContext = createContext<IslandContextValue | null>(null);
@@ -59,6 +63,7 @@ export function IslandProvider({
   const [inspect, setInspect] = useState<Tile | null>(null);
   const [toast, setToast] = useState<Toast>(null);
   const [pending, setPending] = useState(false);
+  const [moving, setMoving] = useState<Tile | null>(null);
 
   const data = own;
   const seeds = useMemo(() => seedsOf(own), [own]);
@@ -72,8 +77,60 @@ export function IslandProvider({
   }, [toast]);
 
   // Les rappels de la scène lisent l'état du moment.
-  const live = useRef({ own, data, seed, tile, pending, mine });
-  live.current = { own, data, seed, tile, pending, mine };
+  const live = useRef({ own, data, seed, tile, pending, mine, moving });
+  live.current = { own, data, seed, tile, pending, mine, moving };
+
+  /** Applique la réponse du serveur, ou revient en arrière avec le message d'erreur. */
+  const settle = useCallback(
+    async (before: IslandData, request: Promise<PlantResult>) => {
+      setPending(true);
+      const res = await request;
+      setPending(false);
+      if (res.ok) setOwn(res.data);
+      else {
+        setOwn(before);
+        setToast({ text: res.error, tone: "erreur" });
+      }
+    },
+    [],
+  );
+
+  const move = useCallback(
+    async (from: Tile, to: Tile) => {
+      const { own: before, pending: busy } = live.current;
+      if (busy) return;
+      const next = moveLocally(before, from, to);
+      if (next === before) return;
+      setOwn(next);
+      setMoving(null);
+      setInspect(null);
+      sceneRef.current?.celebrate(to.x, to.z, "nouvelle");
+      setToast({ text: "Plante déplacée", tone: "ok" });
+      await settle(before, movePlant({ from, to }));
+    },
+    [settle],
+  );
+
+  const uproot = useCallback(
+    async (at: Tile) => {
+      const { own: before, pending: busy } = live.current;
+      if (busy) return;
+      const plant = before.plants.find((p) => p.x === at.x && p.z === at.z);
+      if (!plant) return;
+      const look = lookOf(plant);
+      setOwn(uprootLocally(before, at));
+      setInspect(null);
+      sceneRef.current?.celebrate(at.x, at.z, "grandit");
+      setToast({
+        text: plant.rare
+          ? `Plante arrachée : ${look?.name ?? "elle"} t'attend dans le bac`
+          : `Plante arrachée : ${plant.fed} graine${plant.fed > 1 ? "s" : ""} de retour dans le bac`,
+        tone: "ok",
+      });
+      await settle(before, uprootPlant(at));
+    },
+    [settle],
+  );
 
   const plant = useCallback(
     async (s: Seed, at: Tile) => {
@@ -103,21 +160,20 @@ export function IslandProvider({
             : `${look.name} : ${now.fed} graines${look.next ? `, stade suivant à ${look.next}` : ""}`,
       );
 
-      setPending(true);
-      const res = await plantSeed({ species: s.key, x: at.x, z: at.z });
-      setPending(false);
-      if (res.ok) setOwn(res.data);
-      else {
-        setOwn(before);
-        say(res.error, "erreur");
-      }
+      await settle(before, plantSeed({ species: s.key, x: at.x, z: at.z }));
     },
-    [say],
+    [say, settle],
   );
 
   const onTileTap = useCallback(
     (x: number, z: number) => {
-      const { data: d, seed: s, tile: selected, mine: isMine } = live.current;
+      const { data: d, seed: s, tile: selected, mine: isMine, moving: from } = live.current;
+      if (isMine && from) {
+        if (from.x === x && from.z === z) setMoving(null);
+        else if (d.plants.some((p) => p.x === x && p.z === z)) say("Cette case est prise : choisis une case libre.", "erreur");
+        else void move(from, { x, z });
+        return;
+      }
       if (!isMine || !s) {
         setInspect(d.plants.some((p) => p.x === x && p.z === z) ? { x, z } : null);
         return;
@@ -132,12 +188,13 @@ export function IslandProvider({
       if (selected && selected.x === x && selected.z === z) void plant(s, { x, z });
       else setTile({ x, z });
     },
-    [plant, say],
+    [plant, say, move],
   );
 
   const onEmptyTap = useCallback(() => {
     setTile(null);
     setInspect(null);
+    setMoving(null);
   }, []);
 
   const handlers = useRef({ onTileTap, onEmptyTap });
@@ -171,11 +228,12 @@ export function IslandProvider({
     sceneRef.current?.setPlants(data.plants);
   }, [data, status]);
   useEffect(() => {
-    sceneRef.current?.setPlanting(seed ? { key: seed.key, rare: seed.rare } : null);
-  }, [seed, data, status]);
+    // En déplacement, seules les cases libres s'allument (comme pour une plante rare).
+    sceneRef.current?.setPlanting(moving ? { key: "deplacement", rare: true } : seed ? { key: seed.key, rare: seed.rare } : null);
+  }, [seed, moving, data, status]);
   useEffect(() => {
-    sceneRef.current?.setSelected(tile);
-  }, [tile, status]);
+    sceneRef.current?.setSelected(moving ?? tile);
+  }, [tile, moving, status]);
   // Plus de graine de l'espèce choisie : on sort du mode plantation.
   useEffect(() => {
     if (seedKey && !seeds.some((s) => s.key === seedKey)) {
@@ -186,6 +244,14 @@ export function IslandProvider({
 
   const chooseSeed = useCallback((key: string | null) => {
     setSeedKey(key);
+    setTile(null);
+    setInspect(null);
+    setMoving(null);
+  }, []);
+
+  const startMove = useCallback((at: Tile | null) => {
+    setMoving(at);
+    setSeedKey(null);
     setTile(null);
     setInspect(null);
   }, []);
@@ -205,6 +271,9 @@ export function IslandProvider({
     setInspect,
     say,
     plant,
+    moving,
+    startMove,
+    uproot,
   };
 
   const name = data.name.split(" ")[0] ?? data.name;

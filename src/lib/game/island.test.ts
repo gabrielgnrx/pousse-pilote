@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ISLAND_TILES, bestTile, checkTile, lookOf, plantLocally, seedsOf, tileOk, type IslandData } from "./island.ts";
+import { ISLAND_TILES, bestTile, checkTile, lookOf, moveLocally, plantLocally, playableTiles, seedsOf, tileOk, uprootLocally, type IslandData } from "./island.ts";
 
 const base: IslandData = {
   name: "Inès",
@@ -46,4 +46,23 @@ test("île : « planter pour moi » fait grandir la plus petite plante, sinon pa
   assert.deepEqual(bestTile([p("transport", 0, 0, 6), p("transport", 1, 0, 2)], { key: "transport", rare: false }), { x: 1, z: 0 });
   assert.deepEqual(bestTile([p("transport", 0, 0, 40)], { key: "transport", rare: false }), { x: -1, z: 0 });
   assert.deepEqual(bestTile([p("transport", 0, 0, 2)], { key: "lotus", rare: true }), { x: -1, z: 0 });
+});
+
+test("île : déplacer vers une case libre, arracher rend les graines", () => {
+  const one = plantLocally({ ...base, counts: { transport: 3 } }, { key: "transport", rare: false }, 0, 0);
+  const grown = plantLocally(one, { key: "transport", rare: false }, 0, 0);
+  assert.equal(seedsOf(grown).find((s) => s.key === "transport")?.available, 1);
+  const moved = moveLocally(grown, { x: 0, z: 0 }, { x: 2, z: 1 });
+  assert.deepEqual([moved.plants[0]!.x, moved.plants[0]!.z, moved.plants[0]!.fed], [2, 1, 2]);
+  assert.equal(moveLocally(moved, { x: 2, z: 1 }, { x: 3, z: 3 }), moved, "hors de l'île : rien ne bouge");
+  const gone = uprootLocally(moved, { x: 2, z: 1 });
+  assert.equal(gone.plants.length, 0);
+  assert.equal(seedsOf(gone).find((s) => s.key === "transport")?.available, 3);
+});
+
+test("île : cases jouables, et île pleine", () => {
+  assert.equal(playableTiles([], { key: "transport", rare: false }), 37);
+  const full = ISLAND_TILES.map((t, i) => ({ id: String(i), species: "alimentation", rare: false, x: t.x, z: t.z, fed: 1, planted_at: "", grown_at: "" }));
+  assert.equal(playableTiles(full, { key: "transport", rare: false }), 0);
+  assert.equal(playableTiles(full, { key: "alimentation", rare: false }), 37);
 });

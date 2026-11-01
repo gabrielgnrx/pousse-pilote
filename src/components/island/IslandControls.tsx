@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { STAGE_NAMES } from "@/lib/game/garden.ts";
-import { bestTile, checkTile, lookOf, type Seed } from "@/lib/game/island.ts";
+import { bestTile, checkTile, lookOf, playableTiles, type Seed } from "@/lib/game/island.ts";
 import { useIsland } from "./IslandProvider";
 
 function SeedDot({ seed }: { seed: Pick<Seed, "color" | "accent" | "rare"> }) {
@@ -17,7 +18,12 @@ function SeedDot({ seed }: { seed: Pick<Seed, "color" | "accent" | "rare"> }) {
 /** Les commandes du jeu, posées sur l'île de l'accueil : graines, plantation, fiche d'une plante. */
 /** `top` et `bottom` : marges (px) laissées libres en haut (en-tête) et en bas (feuille du fil). */
 export function IslandControls({ top = 12, bottom = 12, compact = false }: { top?: number; bottom?: number; compact?: boolean } = {}) {
-  const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant } = useIsland();
+  const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant, moving, startMove, uproot } = useIsland();
+  // La plante dont on demande confirmation avant de l'arracher.
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const full = seed ? playableTiles(data.plants, seed) === 0 : false;
+  const movingPlant = moving ? data.plants.find((p) => p.x === moving.x && p.z === moving.z) ?? null : null;
+  const movingLook = movingPlant ? lookOf(movingPlant) : null;
   const inspected = inspect ? data.plants.find((p) => p.x === inspect.x && p.z === inspect.z) ?? null : null;
   const look = inspected ? lookOf(inspected) : null;
   const seedCount = seeds.reduce((n, s) => n + s.available, 0);
@@ -41,6 +47,10 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
             <p className={`rounded-full px-4 py-2 text-center text-sm font-bold shadow-md ${toast.tone === "erreur" ? "bg-papier text-alerte" : "bg-nuit text-white"}`}>
               {toast.text}
             </p>
+          ) : full && seed && status === "pret" ? (
+            <p className="rounded-[18px] bg-papier px-3 py-1.5 text-center text-xs font-semibold text-alerte shadow-sm">
+              Plus de case libre pour : {seed.name}. Touche une plante pour la déplacer ou l&apos;arracher.
+            </p>
           ) : seed && status === "pret" ? (
             <p className="rounded-full bg-papier/90 px-3 py-1.5 text-center text-xs font-semibold backdrop-blur">
               Touche une case libre{seed.rare ? "" : ", ou une case jaune pour faire grandir ta plante"}
@@ -62,7 +72,15 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
       ) : null}
 
       <div className="absolute inset-x-0 mx-auto flex max-w-md flex-col gap-2 px-3" style={{ bottom }}>
-        {tile && seed ? (
+        {moving && movingLook ? (
+          <div className="pointer-events-auto flex items-center gap-2 rounded-[22px] bg-papier p-2 pl-4 shadow-lg">
+            <SeedDot seed={movingLook} />
+            <p className="min-w-0 flex-1 text-sm font-bold">Touche une case libre pour déplacer : {movingLook.name}</p>
+            <button type="button" className="btn-ghost min-h-11 px-4 text-sm" onClick={() => startMove(null)}>
+              Annuler
+            </button>
+          </div>
+        ) : tile && seed ? (
           <div className="pointer-events-auto flex items-center gap-2 rounded-[22px] bg-papier p-2 pl-4 shadow-lg">
             <SeedDot seed={seed} />
             <p className="min-w-0 flex-1 text-sm font-bold">
@@ -97,6 +115,40 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
                 <div className="h-2 rounded-full bg-chloro" style={{ width: `${Math.min(100, (inspected.fed / look.next) * 100)}%` }} />
               </div>
             ) : null}
+            {mine && confirming === inspected.id ? (
+              <div className="flex flex-col gap-2 rounded-[16px] bg-sable p-3">
+                <p className="text-sm">
+                  {inspected.rare
+                    ? "Arracher cette plante rare ? Tu pourras la reposer ailleurs."
+                    : `Arracher cette plante ? Ses ${inspected.fed} graine${inspected.fed > 1 ? "s" : ""} reviendront dans ton bac.`}
+                </p>
+                <div className="flex gap-2">
+                  <button type="button" className="btn-ghost min-h-11 flex-1 text-sm" onClick={() => setConfirming(null)}>
+                    Garder
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-11 flex-1 rounded-full bg-alerte text-sm font-bold text-white disabled:opacity-50"
+                    disabled={pending}
+                    onClick={() => {
+                      setConfirming(null);
+                      void uproot({ x: inspected.x, z: inspected.z });
+                    }}
+                  >
+                    Arracher
+                  </button>
+                </div>
+              </div>
+            ) : mine ? (
+              <div className="flex gap-2">
+                <button type="button" className="btn-ghost min-h-11 flex-1 text-sm" disabled={pending} onClick={() => startMove({ x: inspected.x, z: inspected.z })}>
+                  Déplacer
+                </button>
+                <button type="button" className="btn-ghost min-h-11 flex-1 text-sm text-alerte" disabled={pending} onClick={() => setConfirming(inspected.id)}>
+                  Arracher
+                </button>
+              </div>
+            ) : null}
             {mine && !inspected.rare && seeds.some((s) => s.key === inspected.species) ? (
               <button
                 type="button"
@@ -120,12 +172,12 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
               {seed ? (
                 <button
                   type="button"
-                  className="min-h-9 rounded-full px-3 text-xs font-bold text-chloro underline"
+                  className="min-h-11 rounded-full px-3 text-xs font-bold text-chloro underline"
                   disabled={pending}
                   onClick={() => {
                     const at = bestTile(data.plants, seed);
                     if (at) void plant(seed, at);
-                    else say("Ton île est pleine : fais grandir une plante de la même espèce.", "erreur");
+                    else say("Ton île est pleine : déplace ou arrache une plante pour faire de la place.", "erreur");
                   }}
                 >
                   Planter pour moi
