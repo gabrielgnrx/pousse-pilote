@@ -1,7 +1,8 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { STAGE_NAMES } from "@/lib/game/garden.ts";
-import { checkTile, lookOf, moveLocally, plantLocally, seedsOf, uprootLocally, type IslandData, type Seed } from "@/lib/game/island.ts";
+import { ZONE_BY_KEY, checkTile, lookOf, moveLocally, plantLocally, seedsOf, tileFits, uprootLocally, zoneOfSpecies, type IslandData, type Seed } from "@/lib/game/island.ts";
+import { newcomers, type Animal } from "@/lib/game/ecosystem.ts";
 import { movePlant, plantSeed, uprootPlant, type PlantResult } from "@/app/(app)/ile/actions";
 import type { IslandScene } from "./scene.ts";
 
@@ -28,6 +29,9 @@ interface IslandContextValue {
   moving: Tile | null;
   startMove(at: Tile | null): void;
   uproot(at: Tile): Promise<void>;
+  /** Un animal qui vient de revenir sur l'île (carte « Nouvel habitant »). */
+  newcomer: Animal | null;
+  dismissNewcomer(): void;
 }
 
 const IslandContext = createContext<IslandContextValue | null>(null);
@@ -64,6 +68,12 @@ export function IslandProvider({
   const [toast, setToast] = useState<Toast>(null);
   const [pending, setPending] = useState(false);
   const [moving, setMoving] = useState<Tile | null>(null);
+  const [newcomer, setNewcomer] = useState<Animal | null>(null);
+  // Un nouvel habitant s'annonce après la fête de plantation.
+  const welcome = useCallback((before: IslandData, after: IslandData) => {
+    const arrived = newcomers(before.plants, after.plants)[0];
+    if (arrived) window.setTimeout(() => setNewcomer(arrived), 900);
+  }, []);
 
   const data = own;
   const seeds = useMemo(() => seedsOf(own), [own]);
@@ -106,9 +116,10 @@ export function IslandProvider({
       setInspect(null);
       sceneRef.current?.celebrate(to.x, to.z, "nouvelle");
       setToast({ text: "Plante déplacée", tone: "ok" });
+      welcome(before, next);
       await settle(before, movePlant({ from, to }));
     },
-    [settle],
+    [settle, welcome],
   );
 
   const uproot = useCallback(
@@ -145,6 +156,7 @@ export function IslandProvider({
 
       const kind = !old ? "nouvelle" : look.stage > oldStage ? "stade" : "grandit";
       setOwn(next);
+      welcome(before, next);
       setTile(null);
       sceneRef.current?.celebrate(at.x, at.z, kind);
       try {
@@ -162,15 +174,18 @@ export function IslandProvider({
 
       await settle(before, plantSeed({ species: s.key, x: at.x, z: at.z }));
     },
-    [say, settle],
+    [say, settle, welcome],
   );
 
   const onTileTap = useCallback(
     (x: number, z: number) => {
       const { data: d, seed: s, tile: selected, mine: isMine, moving: from } = live.current;
       if (isMine && from) {
+        const species = d.plants.find((p) => p.x === from.x && p.z === from.z)?.species ?? "";
+        const zone = zoneOfSpecies(species);
         if (from.x === x && from.z === z) setMoving(null);
         else if (d.plants.some((p) => p.x === x && p.z === z)) say("Cette case est prise : choisis une case libre.", "erreur");
+        else if (!tileFits(species, x, z) && zone) say(`Cette plante reste dans la zone ${ZONE_BY_KEY[zone].name} : choisis une case en surbrillance.`, "erreur");
         else void move(from, { x, z });
         return;
       }
@@ -185,6 +200,11 @@ export function IslandProvider({
         return;
       }
       if (check === "hors_ile") return;
+      if (check === "hors_zone") {
+        const zone = zoneOfSpecies(s.key);
+        say(`${s.name} pousse dans la zone ${zone ? ZONE_BY_KEY[zone].name : ""} : touche une case en surbrillance.`, "erreur");
+        return;
+      }
       if (selected && selected.x === x && selected.z === z) void plant(s, { x, z });
       else setTile({ x, z });
     },
@@ -228,8 +248,9 @@ export function IslandProvider({
     sceneRef.current?.setPlants(data.plants);
   }, [data, status]);
   useEffect(() => {
-    // En déplacement, seules les cases libres s'allument (comme pour une plante rare).
-    sceneRef.current?.setPlanting(moving ? { key: "deplacement", rare: true } : seed ? { key: seed.key, rare: seed.rare } : null);
+    // En déplacement, seules les cases libres de sa zone s'allument (rare : pas de case « grandit »).
+    const movingSpecies = moving ? data.plants.find((p) => p.x === moving.x && p.z === moving.z)?.species ?? "" : null;
+    sceneRef.current?.setPlanting(movingSpecies !== null ? { key: movingSpecies, rare: true } : seed ? { key: seed.key, rare: seed.rare } : null);
   }, [seed, moving, data, status]);
   useEffect(() => {
     sceneRef.current?.setSelected(moving ?? tile);
@@ -274,6 +295,8 @@ export function IslandProvider({
     moving,
     startMove,
     uproot,
+    newcomer,
+    dismissNewcomer: () => setNewcomer(null),
   };
 
   const name = data.name.split(" ")[0] ?? data.name;

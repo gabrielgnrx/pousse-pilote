@@ -5,6 +5,7 @@
  */
 import { ISLAND_TILES, checkTile, lookOf, type IslandPlant, type Seed } from "@/lib/game/island.ts";
 import { TIGOU_SVG, plantSvg, rand, shade, stageScale } from "./sprites.ts";
+import { ECOSYSTEM_CSS, createEcosystemLayer } from "./ecosystem-layer.ts";
 
 export interface IslandSceneEvents {
   /** Une case touchée (vide ou avec une plante). */
@@ -146,7 +147,7 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
   svg.style.display = "block";
   host.appendChild(svg);
   const style = el("style", {}, svg);
-  style.textContent = CSS;
+  style.textContent = CSS + ECOSYSTEM_CSS;
 
   const defs = el("defs", {}, svg);
   defs.innerHTML = `
@@ -200,6 +201,8 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
   el("path", { d: blobPath(184, 102, 11, 0.06), transform: "translate(0 18)", fill: "url(#pi-cliff)" }, islandG);
   el("path", { d: blobPath(184, 102, 11, 0.06), transform: "translate(0 2)", fill: "url(#pi-grass)" }, islandG);
   el("path", { d: blobPath(150, 80, 17, 0.12), transform: "translate(-18 -10)", fill: "#b5dc8b", opacity: 0.45 }, islandG);
+  // Le sol des zones (terre sèche qui laisse place à l'herbe), le ruisseau, les souches et les déchets.
+  const ecoGround = el("g", { "pointer-events": "none" }, islandG);
   // Petits détails du bord : rochers, galets, touffes d'herbe et fleurettes.
   const edge = el("g", {}, islandG);
   for (let i = 0; i < 9; i++) {
@@ -232,6 +235,10 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
 
   // Plantes et Tigou : un seul calque trié par profondeur. Puis la nuit, les lucioles, la flèche et les fêtes.
   const world = el("g", {}, svg);
+  const ecoAnimals = el("g", { "pointer-events": "none" }, svg);
+  const haze = el("rect", { x: -1500, y: -1500, width: 3000, height: 3000, fill: "#9a9488", "pointer-events": "none", opacity: 0 }, svg);
+  const ecoLabels = el("g", { "pointer-events": "none" }, svg);
+  const eco = createEcosystemLayer({ ground: ecoGround, animals: ecoAnimals, labels: ecoLabels, haze, clipPath: blobPath(184, 102, 11, 0.06) });
   const night = el("rect", { x: -1500, y: -1500, width: 3000, height: 3000, fill: "#0b1630", "pointer-events": "none", opacity: 0 }, svg);
   const motes = el("g", { "pointer-events": "none" }, svg);
   const arrowG = el("g", { "pointer-events": "none" }, svg);
@@ -311,6 +318,7 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
 
   const refreshTiles = () => {
     tilesG.replaceChildren();
+    eco.showLabels(planting !== null);
     if (!planting) return;
     ISLAND_TILES.forEach((t) => {
       const check = checkTile(current, planting!, t.x, t.z);
@@ -366,6 +374,7 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
     }
     sortWorld();
     refreshTiles();
+    eco.update(plants);
     initialized = true;
   };
 

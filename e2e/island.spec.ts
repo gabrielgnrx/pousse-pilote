@@ -49,13 +49,17 @@ test("une action donne une graine, qu'on plante, déplace et arrache sur l'île"
   const after = await occupied(page);
   const planted = after.find((t) => !before.includes(t)) ?? after[0]!;
   const [px, pz] = planted.split(",").map(Number) as [number, number];
+  // Les cases de la zone du potager (le potager ne pousse que là, ou au centre).
   const free = [
-    [-1, 0],
-    [0, -1],
-    [1, 0],
+    [-1, 1],
     [0, 1],
-    [-1, -1],
-    [1, 1],
+    [-2, 1],
+    [-1, 2],
+    [0, 2],
+    [-2, 2],
+    [-3, 1],
+    [-1, 3],
+    [0, 3],
   ].find(([x, z]) => !after.includes(`${x},${z}`))!;
 
   await tapTile(page, px, pz);

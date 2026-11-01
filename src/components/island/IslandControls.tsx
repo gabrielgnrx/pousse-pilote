@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { STAGE_NAMES } from "@/lib/game/garden.ts";
-import { bestTile, checkTile, lookOf, playableTiles, type Seed } from "@/lib/game/island.ts";
+import { ZONE_BY_KEY, bestTile, checkTile, lookOf, playableTiles, zoneOfSpecies, type Seed } from "@/lib/game/island.ts";
+import { ANIMALS, animalsOn } from "@/lib/game/ecosystem.ts";
 import { useIsland } from "./IslandProvider";
 
 function SeedDot({ seed }: { seed: Pick<Seed, "color" | "accent" | "rare"> }) {
@@ -18,7 +19,10 @@ function SeedDot({ seed }: { seed: Pick<Seed, "color" | "accent" | "rare"> }) {
 /** Les commandes du jeu, posées sur l'île de l'accueil : graines, plantation, fiche d'une plante. */
 /** `top` et `bottom` : marges (px) laissées libres en haut (en-tête) et en bas (feuille du fil). */
 export function IslandControls({ top = 12, bottom = 12, compact = false }: { top?: number; bottom?: number; compact?: boolean } = {}) {
-  const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant, moving, startMove, uproot } = useIsland();
+  const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant, moving, startMove, uproot, newcomer, dismissNewcomer } =
+    useIsland();
+  const living = animalsOn(data.plants).length;
+  const seedZone = seed ? zoneOfSpecies(seed.key) : null;
   // La plante dont on demande confirmation avant de l'arracher.
   const [confirming, setConfirming] = useState<string | null>(null);
   const full = seed ? playableTiles(data.plants, seed) === 0 : false;
@@ -33,7 +37,21 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
     <div className="pointer-events-none absolute inset-0 z-10">
       <div className="absolute inset-x-0 mx-auto flex max-w-md flex-col items-start gap-2 px-4" style={{ top }}>
         <div className="flex w-full items-center justify-between gap-2">
-          {mine ? null : (
+          {mine ? (
+            <Link
+              href="/ile/carnet"
+              className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-papier/90 px-3 text-sm font-bold shadow-sm backdrop-blur"
+              aria-label={`Carnet de biodiversité : ${living} animaux revenus sur ${ANIMALS.length}`}
+            >
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2e7a4c" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M4 18c3-6 7-9 16-12" />
+                <circle cx="7" cy="8" r="3" />
+              </svg>
+              <span className="tabular-nums">
+                Biodiversité {living}/{ANIMALS.length}
+              </span>
+            </Link>
+          ) : (
             <>
               <p className="rounded-full bg-papier/90 px-4 py-2 font-display text-lg shadow-sm backdrop-blur">L&apos;île de {name}</p>
               <Link href="/ile" className="pointer-events-auto flex min-h-11 items-center rounded-full bg-chloro px-4 text-sm font-bold text-white shadow-sm">
@@ -53,7 +71,8 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
             </p>
           ) : seed && status === "pret" ? (
             <p className="rounded-full bg-papier/90 px-3 py-1.5 text-center text-xs font-semibold backdrop-blur">
-              Touche une case libre{seed.rare ? "" : ", ou une case jaune pour faire grandir ta plante"}
+              {seedZone ? `Zone ${ZONE_BY_KEY[seedZone].name} : touche une case en surbrillance` : "Touche une case libre"}
+              {seed.rare ? "" : ", ou une case jaune pour faire grandir ta plante"}
             </p>
           ) : null}
         </div>
@@ -72,7 +91,30 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
       ) : null}
 
       <div className="absolute inset-x-0 mx-auto flex max-w-md flex-col gap-2 px-3" style={{ bottom }}>
-        {moving && movingLook ? (
+        {newcomer ? (
+          <section
+            aria-labelledby="nouvel-habitant"
+            className="pointer-events-auto flex flex-col gap-3 rounded-[24px] bg-nuit p-4 text-white shadow-lg motion-safe:animate-[panel-up_0.4s_cubic-bezier(0.2,0.9,0.3,1.2)]"
+          >
+            <div>
+              <p className="text-xs font-bold tracking-wider text-pollen uppercase">Nouvel habitant</p>
+              <h2 id="nouvel-habitant" className="font-display text-2xl">
+                {newcomer.title}
+              </h2>
+            </div>
+            <p className="text-sm text-nuit-pale">
+              <strong className="text-white">{newcomer.how}.</strong> {newcomer.why}
+            </p>
+            <div className="flex gap-2">
+              <Link href="/ile/carnet" className="btn-ghost min-h-11 flex-1 text-sm">
+                Voir le carnet
+              </Link>
+              <button type="button" className="btn-primary min-h-11 flex-1 text-sm" onClick={dismissNewcomer}>
+                Super !
+              </button>
+            </div>
+          </section>
+        ) : moving && movingLook ? (
           <div className="pointer-events-auto flex items-center gap-2 rounded-[22px] bg-papier p-2 pl-4 shadow-lg">
             <SeedDot seed={movingLook} />
             <p className="min-w-0 flex-1 text-sm font-bold">Touche une case libre pour déplacer : {movingLook.name}</p>

@@ -34,6 +34,53 @@ export const ISLAND_TILES: ReadonlyArray<{ x: number; z: number }> = (() => {
   return tiles;
 })();
 
+/**
+ * Les zones de l'île, une par famille d'actions. Une case appartient à la zone vers laquelle elle pointe
+ * depuis le centre, vue de trois quarts (même calcul que island_tile_zone(), 0049_ile_zones.sql).
+ * La case centrale accueille toutes les espèces.
+ */
+export type Zone = "foret" | "potager" | "plage" | "ruisseau";
+export const ZONES: ReadonlyArray<{ key: Zone; name: string; grownBy: string; species: string; target: number }> = [
+  { key: "foret", name: "Forêt", grownBy: "tes trajets", species: "transport", target: 20 },
+  { key: "potager", name: "Potager", grownBy: "tes repas", species: "alimentation", target: 20 },
+  { key: "plage", name: "Plage", grownBy: "tes achats évités", species: "consommation", target: 10 },
+  { key: "ruisseau", name: "Ruisseau", grownBy: "ta maison", species: "logement", target: 8 },
+];
+export const ZONE_BY_KEY = Object.fromEntries(ZONES.map((z) => [z.key, z])) as Record<Zone, (typeof ZONES)[number]>;
+
+/** Angle (degrés) d'une case vue de trois quarts : 0° à droite, −90° au fond, 90° devant. */
+export function tileAngle(x: number, z: number): number {
+  return (Math.atan2(((x + z) * 19) / 0.56, (x - z) * 34) * 180) / Math.PI;
+}
+
+/** Frontières des zones (degrés) : 9 cases chacune, toutes à plus de 8° d'une frontière. */
+export const ZONE_BOUNDS = [-145, -54, 35, 125] as const;
+
+export function zoneOfTile(x: number, z: number): Zone | null {
+  if (x === 0 && z === 0) return null;
+  const a = tileAngle(x, z);
+  if (a >= ZONE_BOUNDS[0] && a < ZONE_BOUNDS[1]) return "foret";
+  if (a >= ZONE_BOUNDS[1] && a < ZONE_BOUNDS[2]) return "ruisseau";
+  if (a >= ZONE_BOUNDS[2] && a < ZONE_BOUNDS[3]) return "plage";
+  return "potager";
+}
+
+/** La zone d'une espèce (trajets → forêt…) ; null : elle pousse partout (fleurs, plantes rares). */
+export function zoneOfSpecies(species: string): Zone | null {
+  if (species === "transport" || species === "nature") return "foret";
+  if (species === "alimentation") return "potager";
+  if (species === "consommation") return "plage";
+  if (species === "logement") return "ruisseau";
+  return null;
+}
+
+/** La case peut-elle accueillir cette espèce ? La case centrale accueille tout. */
+export function tileFits(species: string, x: number, z: number): boolean {
+  const want = zoneOfSpecies(species);
+  const zone = zoneOfTile(x, z);
+  return want === null || zone === null || zone === want;
+}
+
 /** Ce qu'il faut pour dessiner une plante : forme, couleurs, stade (0 à 4). */
 export interface PlantLook {
   key: string;
@@ -95,13 +142,13 @@ export function seedsOf(data: IslandData): Seed[] {
   return [...common.filter((s) => s.available > 0), ...rares];
 }
 
-export type PlantCheck = "nouvelle" | "grandit" | "occupe" | "hors_ile";
+export type PlantCheck = "nouvelle" | "grandit" | "occupe" | "hors_ile" | "hors_zone";
 
 /** Ce que donnerait une graine posée en (x, z). */
 export function checkTile(plants: IslandPlant[], seed: Pick<Seed, "key" | "rare">, x: number, z: number): PlantCheck {
   if (!tileOk(x, z)) return "hors_ile";
   const here = plants.find((p) => p.x === x && p.z === z);
-  if (!here) return "nouvelle";
+  if (!here) return tileFits(seed.key, x, z) ? "nouvelle" : "hors_zone";
   return !seed.rare && !here.rare && here.species === seed.key ? "grandit" : "occupe";
 }
 
@@ -125,6 +172,7 @@ export const ISLAND_ERRORS: Record<string, string> = {
   off_island: "Cet emplacement est hors de l'île.",
   already_planted: "Cette plante rare est déjà sur ton île.",
   no_plant: "Cette plante n'est plus là : l'île a été mise à jour.",
+  wrong_zone: "Cette plante pousse dans sa zone : choisis une case en surbrillance.",
 };
 
 /** Les cases où cette graine peut aller (libres, ou une plante de la même espèce à faire grandir). */
@@ -137,7 +185,8 @@ export function playableTiles(plants: IslandPlant[], seed: Pick<Seed, "key" | "r
 
 /** Déplace une plante vers une case libre (affichage immédiat). */
 export function moveLocally(data: IslandData, from: { x: number; z: number }, to: { x: number; z: number }): IslandData {
-  if (!tileOk(to.x, to.z) || data.plants.some((p) => p.x === to.x && p.z === to.z)) return data;
+  const plant = data.plants.find((p) => p.x === from.x && p.z === from.z);
+  if (!plant || !tileOk(to.x, to.z) || !tileFits(plant.species, to.x, to.z) || data.plants.some((p) => p.x === to.x && p.z === to.z)) return data;
   return { ...data, plants: data.plants.map((p) => (p.x === from.x && p.z === from.z ? { ...p, x: to.x, z: to.z } : p)) };
 }
 
@@ -157,8 +206,10 @@ export function bestTile(plants: IslandPlant[], seed: Pick<Seed, "key" | "rare">
       .sort((a, b) => a.fed - b.fed)[0];
     if (growing) return { x: growing.x, z: growing.z };
   }
+  // Dans sa zone d'abord (la case centrale en dernier), au plus près du centre.
+  const centreLast = (t: { x: number; z: number }) => (zoneOfSpecies(seed.key) && zoneOfTile(t.x, t.z) === null ? 1 : 0);
   const free = ISLAND_TILES.filter((t) => checkTile(plants, seed, t.x, t.z) === "nouvelle").sort(
-    (a, b) => a.x * a.x + a.z * a.z - (b.x * b.x + b.z * b.z) || a.x - b.x || a.z - b.z,
+    (a, b) => centreLast(a) - centreLast(b) || a.x * a.x + a.z * a.z - (b.x * b.x + b.z * b.z) || a.x - b.x || a.z - b.z,
   )[0];
   return free ? { x: free.x, z: free.z } : null;
 }
