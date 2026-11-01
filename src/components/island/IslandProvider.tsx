@@ -1,9 +1,8 @@
 "use client";
-import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { STAGE_NAMES } from "@/lib/game/garden.ts";
 import { checkTile, lookOf, plantLocally, seedsOf, type IslandData, type Seed } from "@/lib/game/island.ts";
-import { myIsland, plantSeed } from "@/app/(app)/ile/actions";
+import { plantSeed } from "@/app/(app)/ile/actions";
 import type { IslandScene } from "./scene.ts";
 
 export type Tile = { x: number; z: number };
@@ -25,8 +24,6 @@ interface IslandContextValue {
   setInspect(tile: Tile | null): void;
   say(text: string, tone?: "ok" | "erreur"): void;
   plant(seed: Seed, at: Tile): Promise<void>;
-  /** Montre l'île d'un collègue (null : revenir à la mienne). */
-  visit(data: IslandData | null): void;
 }
 
 const IslandContext = createContext<IslandContextValue | null>(null);
@@ -37,31 +34,22 @@ export function useIsland(): IslandContextValue {
   return ctx;
 }
 
-/** Les pages où l'on joue : l'île est au premier plan, sans panneau par-dessus. */
-export function isIslandPath(path: string): boolean {
-  return path === "/ile" || path.startsWith("/ile/");
-}
-
 /**
- * Le monde du jeu, monté une fois pour toute l'appli : l'île illustrée en plein écran, derrière tout le
- * reste. Elle se met en pause quand une rubrique est ouverte par-dessus.
+ * L'île de l'accueil : elle occupe tout l'espace entre l'en-tête et la barre du bas, et les commandes
+ * du jeu (enfants) se posent dessus. `mine` : faux pour la visite de l'île d'un collègue.
  */
-export function IslandProvider({ initial, children }: { initial: IslandData; children: React.ReactNode }) {
-  const path = usePathname();
-  const playing = isIslandPath(path);
+export function IslandProvider({ initial, mine = true, children }: { initial: IslandData; mine?: boolean; children: React.ReactNode }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<IslandScene | null>(null);
   const [status, setStatus] = useState<"chargement" | "pret" | "erreur">("chargement");
   const [own, setOwn] = useState(initial);
-  const [visiting, setVisiting] = useState<IslandData | null>(null);
   const [seedKey, setSeedKey] = useState<string | null>(null);
   const [tile, setTile] = useState<Tile | null>(null);
   const [inspect, setInspect] = useState<Tile | null>(null);
   const [toast, setToast] = useState<Toast>(null);
   const [pending, setPending] = useState(false);
 
-  const mine = visiting === null;
-  const data = visiting ?? own;
+  const data = own;
   const seeds = useMemo(() => seedsOf(own), [own]);
   const seed = mine ? seeds.find((s) => s.key === seedKey) ?? null : null;
 
@@ -73,8 +61,8 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
   }, [toast]);
 
   // Les rappels de la scène lisent l'état du moment.
-  const live = useRef({ own, data, seed, tile, pending, mine, playing });
-  live.current = { own, data, seed, tile, pending, mine, playing };
+  const live = useRef({ own, data, seed, tile, pending, mine });
+  live.current = { own, data, seed, tile, pending, mine };
 
   const plant = useCallback(
     async (s: Seed, at: Tile) => {
@@ -118,8 +106,7 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
 
   const onTileTap = useCallback(
     (x: number, z: number) => {
-      const { data: d, seed: s, tile: selected, mine: isMine, playing: onIsland } = live.current;
-      if (!onIsland) return;
+      const { data: d, seed: s, tile: selected, mine: isMine } = live.current;
       if (!isMine || !s) {
         setInspect(d.plants.some((p) => p.x === x && p.z === z) ? { x, z } : null);
         return;
@@ -157,7 +144,6 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
         });
         sceneRef.current = scene;
         scene.setPlants(live.current.data.plants);
-        scene.setPaused(!live.current.playing);
         setStatus("pret");
       })
       .catch(() => {
@@ -179,25 +165,6 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
   useEffect(() => {
     sceneRef.current?.setSelected(tile);
   }, [tile, status]);
-  useEffect(() => {
-    sceneRef.current?.setPaused(!playing);
-    if (!playing) {
-      setTile(null);
-      setInspect(null);
-    }
-  }, [playing, status]);
-
-  // Retour sur l'île : les actions enregistrées entre-temps ont pu donner des graines.
-  const wasPlaying = useRef(playing);
-  useEffect(() => {
-    if (playing && !wasPlaying.current) {
-      void myIsland().then((fresh) => {
-        if (fresh) setOwn(fresh);
-      });
-    }
-    wasPlaying.current = playing;
-  }, [playing]);
-
   // Plus de graine de l'espèce choisie : on sort du mode plantation.
   useEffect(() => {
     if (seedKey && !seeds.some((s) => s.key === seedKey)) {
@@ -208,13 +175,6 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
 
   const chooseSeed = useCallback((key: string | null) => {
     setSeedKey(key);
-    setTile(null);
-    setInspect(null);
-  }, []);
-
-  const visit = useCallback((next: IslandData | null) => {
-    setVisiting(next);
-    setSeedKey(null);
     setTile(null);
     setInspect(null);
   }, []);
@@ -234,13 +194,15 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
     setInspect,
     say,
     plant,
-    visit,
   };
 
   const name = data.name.split(" ")[0] ?? data.name;
   return (
     <IslandContext.Provider value={value}>
-      <div className="fixed inset-0 overflow-hidden bg-[#8ecbe0]">
+      <div
+        className="relative -mx-4 -mt-2 overflow-hidden bg-[#8ecbe0]"
+        style={{ height: "calc(100dvh - 186px)", minHeight: 460 }}
+      >
         <div
           ref={hostRef}
           className="absolute inset-0 select-none"
@@ -264,12 +226,3 @@ export function IslandProvider({ initial, children }: { initial: IslandData; chi
   );
 }
 
-/** À poser dans la page d'un collègue : son île remplace la mienne le temps de la visite. */
-export function IslandVisit({ data }: { data: IslandData }) {
-  const { visit } = useIsland();
-  useEffect(() => {
-    visit(data);
-    return () => visit(null);
-  }, [data, visit]);
-  return null;
-}

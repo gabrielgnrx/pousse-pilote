@@ -14,10 +14,7 @@ function SeedDot({ seed }: { seed: Pick<Seed, "color" | "accent" | "rare"> }) {
   );
 }
 
-const TOP = { top: "calc(env(safe-area-inset-top, 0px) + 68px)" };
-const BOTTOM = { bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" };
-
-/** Les commandes du jeu, posées sur l'île en plein écran : graines, plantation, fiche d'une plante. */
+/** Les commandes du jeu, posées sur l'île de l'accueil : graines, plantation, fiche d'une plante. */
 export function IslandControls() {
   const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant } = useIsland();
   const inspected = inspect ? data.plants.find((p) => p.x === inspect.x && p.z === inspect.z) ?? null : null;
@@ -27,7 +24,7 @@ export function IslandControls() {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
-      <div className="absolute inset-x-0 mx-auto flex max-w-md flex-col items-start gap-2 px-4" style={TOP}>
+      <div className="absolute inset-x-0 top-3 mx-auto flex max-w-md flex-col items-start gap-2 px-4">
         <div className="flex w-full items-center justify-between gap-2">
           {mine ? (
             <Link href="/fil" className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-papier/90 px-4 text-sm font-bold shadow-sm backdrop-blur">
@@ -70,7 +67,7 @@ export function IslandControls() {
         </div>
       ) : null}
 
-      <div className="absolute inset-x-0 mx-auto flex max-w-md flex-col gap-2 px-3" style={BOTTOM}>
+      <div className="absolute inset-x-0 bottom-3 mx-auto flex max-w-md flex-col gap-2 px-3">
         {tile && seed ? (
           <div className="pointer-events-auto flex items-center gap-2 rounded-[22px] bg-papier p-2 pl-4 shadow-lg">
             <SeedDot seed={seed} />

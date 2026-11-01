@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { requireProfile } from "@/lib/session";
 import { getIsland } from "@/lib/game/data.ts";
+import { IslandProvider } from "@/components/island/IslandProvider";
 import { IslandControls } from "@/components/island/IslandControls";
-import { IslandVisit } from "@/components/island/IslandProvider";
 
 export const metadata = { title: "Île · Pousse" };
 
@@ -15,9 +15,8 @@ export default async function ColleagueIslandPage({ params }: { params: Promise<
   const data = await getIsland(supabase, id);
   if (!data) notFound();
   return (
-    <>
-      <IslandVisit data={data} />
+    <IslandProvider initial={data} mine={false}>
       <IslandControls />
-    </>
+    </IslandProvider>
   );
 }

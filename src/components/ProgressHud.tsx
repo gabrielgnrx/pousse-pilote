@@ -77,7 +77,6 @@ export function ProgressHud({
 }) {
   const path = usePathname();
   const router = useRouter();
-  const onIsland = path === "/ile" || path.startsWith("/ile/");
   const withBack = BACK.some((p) => path === p || path.startsWith(`${p}/`));
   const level = levelFor(total);
   const pousses = Math.round(useCountUp(total, "pousse.hud.total"));
@@ -85,10 +84,7 @@ export function ProgressHud({
   const title = path === "/equipes" ? (teamName ? `QG ${teamName}` : "QG de l'équipe") : found;
 
   return (
-    <header
-      className="absolute inset-x-0 top-0 z-20 mx-auto flex max-w-md items-center gap-2.5 px-4 pb-2"
-      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
-    >
+    <header className="flex items-center gap-2.5 px-5 pt-4 pb-2">
       {withBack ? (
         <button
           type="button"
@@ -131,13 +127,7 @@ export function ProgressHud({
         </span>
       </Link>
 
-      <div className="min-w-0 flex-1">
-        {onIsland ? (
-          <h1 className="sr-only">{title}</h1>
-        ) : (
-          <p className="inline-block max-w-full truncate rounded-full bg-papier/90 px-3 py-1 font-display text-xl shadow-sm backdrop-blur">{title}</p>
-        )}
-      </div>
+      <p className={`min-w-0 flex-1 truncate font-display ${withBack ? "text-xl" : "text-[26px]"}`}>{title}</p>
 
       <Link
         href="/profil#pousses"
