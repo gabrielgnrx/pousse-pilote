@@ -1,14 +1,17 @@
 -- L'île, troisième version : deux façons d'obtenir des plantes, et l'équipe.
 --
--- 1. La Graineterie : les pousses achètent des plantes communes (ouvertes à tous) et des plantes
---    signature (débloquées par les actions de la famille de la zone). Dépenser ne touche jamais au
+-- 1. La Graineterie : les pousses achètent des plantes communes (40, ouvertes à tous) et des plantes
+--    signature (150, débloquées par les actions de la famille de la zone). Prix et seuils calés sur
+--    les données de démo : environ 85 pousses gagnées par semaine, soit une plante commune tous les
+--    3 ou 4 jours et le catalogue complet en une saison. Dépenser ne touche jamais au
 --    classement : il compte les pousses gagnées (member_points), le solde à dépenser est à part.
 -- 2. Les défis offrent ce qui ne s'achète pas : le thème choisit la zone, la durée la rareté
 --    (7 jours : graine rare, 30 jours : plante spéciale, 90 jours : arbre remarquable), la difficulté
 --    la variante (au moins 4 fois par semaine, ou un défi expert). Un défi arrivé à son terme sans être
 --    réussi donne une plante commune de sa zone.
 -- 3. L'équipe : le migrateur de la semaine se pose chez chaque membre qui contribue au défi voté au
---    QG ; s'il est accueilli par assez d'îles, il arrive dans le carnet de toute l'équipe. Chacun peut
+--    QG ; s'il est accueilli par la moitié de l'équipe (au moins 3 îles), il arrive dans le carnet
+--    de toute l'équipe. Chacun peut
 --    offrir un myosotis par jour à un collègue de son entreprise.
 --
 -- Les plantes obtenues ainsi se posent une fois, adultes (rare = true dans island_plants), autant
@@ -30,17 +33,17 @@ create policy "catalogue : lisible" on public.island_catalog for select to authe
 
 insert into public.island_catalog (key, zone, kind, tier, price, unlock) values
   ('noisetier', 'foret', 'boutique', 'commune', 40, null),
-  ('houx', 'foret', 'boutique', 'commune', 30, null),
-  ('erable', 'foret', 'signature', 'signature', 100, 10),
-  ('groseillier', 'potager', 'boutique', 'commune', 30, null),
+  ('houx', 'foret', 'boutique', 'commune', 40, null),
+  ('erable', 'foret', 'signature', 'signature', 150, 8),
+  ('groseillier', 'potager', 'boutique', 'commune', 40, null),
   ('courge', 'potager', 'boutique', 'commune', 40, null),
-  ('pommier', 'potager', 'signature', 'signature', 100, 10),
-  ('oyat', 'plage', 'boutique', 'commune', 30, null),
+  ('pommier', 'potager', 'signature', 'signature', 150, 15),
+  ('oyat', 'plage', 'boutique', 'commune', 40, null),
   ('chardon', 'plage', 'boutique', 'commune', 40, null),
-  ('pin_parasol', 'plage', 'signature', 'signature', 100, 5),
-  ('roseau', 'ruisseau', 'boutique', 'commune', 30, null),
+  ('pin_parasol', 'plage', 'signature', 'signature', 150, 3),
+  ('roseau', 'ruisseau', 'boutique', 'commune', 40, null),
   ('iris', 'ruisseau', 'boutique', 'commune', 40, null),
-  ('aulne', 'ruisseau', 'signature', 'signature', 100, 4),
+  ('aulne', 'ruisseau', 'signature', 'signature', 150, 3),
   ('muguet', 'foret', 'defi', 'rare', null, null),
   ('merisier', 'foret', 'defi', 'speciale', null, null),
   ('merisier_fleurs', 'foret', 'defi', 'fleurie', null, null),
@@ -64,6 +67,16 @@ insert into public.island_catalog (key, zone, kind, tier, price, unlock) values
   ('oies', null, 'visiteur', 'visiteur', null, null)
 on conflict (key) do update set zone = excluded.zone, kind = excluded.kind, tier = excluded.tier,
   price = excluded.price, unlock = excluded.unlock;
+
+-- La date de lancement : seuls les défis réussis (ou terminés) depuis comptent pour l'île. Les défis
+-- d'avant ont déjà rapporté leurs pousses ; les récompenser tous d'un coup noierait l'île au premier
+-- passage.
+create table if not exists public.island_launch (
+  singleton boolean primary key default true check (singleton),
+  launched_at timestamptz not null default now()
+);
+alter table public.island_launch enable row level security;
+insert into public.island_launch default values on conflict do nothing;
 
 -- Ce que chacun possède : achats, récompenses de défis et d'équipe, cadeaux reçus.
 create table if not exists public.island_inventory (
@@ -201,7 +214,8 @@ declare
 begin
   select * into w from public.team_weeks where team_id = p_team and week_start = p_week;
   select count(*) into members from public.profiles where team_id = p_team;
-  needed := case when members <= 2 then members else greatest(2, ceil(members * 0.6)::integer) end;
+  -- La moitié de l'équipe, au moins 3 îles (toute l'équipe si elle compte 3 membres ou moins).
+  needed := case when members <= 3 then members else greatest(3, ceil(members * 0.5)::integer) end;
   if w.chosen is null then
     hosts := '[]'::jsonb;
   else
@@ -370,7 +384,8 @@ revoke execute on function public.island_buy(text) from anon;
 grant execute on function public.island_buy(text) to authenticated;
 
 -- Récupérer ce qui m'est dû : récompenses des défis réussis, consolation des défis terminés sans
--- succès (depuis 30 jours), migrateurs de mon équipe (cette semaine et la précédente).
+-- succès (depuis 30 jours), migrateurs de mon équipe (cette semaine et la précédente). Seulement
+-- depuis le lancement (island_launch).
 -- Appelée à l'ouverture de l'île : rejouée, elle ne donne rien deux fois. Rend le nombre de nouveautés.
 create or replace function public.island_claim()
 returns integer
@@ -384,6 +399,7 @@ declare
   wk date;
   added integer := 0;
   n integer;
+  launched timestamptz := (select launched_at from public.island_launch);
 begin
   select * into me from public.profiles where id = auth.uid();
   if not found then
@@ -394,7 +410,8 @@ begin
     select u.id, u.status, u.target, (u.ends_on - u.starts_on + 1) as days, t.category, t.level
     from public.user_challenges u join public.challenge_templates t on t.id = u.template_id
     where u.user_id = me.id
-      and (u.status = 'done' or (u.status = 'active' and u.ends_on < current_date and u.ends_on >= current_date - 30))
+      and ((u.status = 'done' and u.done_at >= launched)
+           or (u.status = 'active' and u.ends_on < current_date and u.ends_on >= greatest(current_date - 30, launched::date)))
   loop
     if c.status = 'done' then
       insert into public.island_inventory (user_id, item, source, ref)
@@ -413,7 +430,7 @@ begin
   if me.team_id is not null then
     foreach wk in array array[date_trunc('week', current_date)::date, date_trunc('week', current_date)::date - 7] loop
       m := public.island_migration(me.team_id, wk);
-      if (m->>'done')::boolean then
+      if (m->>'done')::boolean and wk + 7 > launched::date then
         insert into public.island_inventory (user_id, item, source, ref)
         select p.id, m->>'bird', 'equipe', me.team_id::text || ':' || wk
         from public.profiles p where p.team_id = me.team_id

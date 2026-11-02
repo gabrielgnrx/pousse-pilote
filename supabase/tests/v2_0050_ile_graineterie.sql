@@ -78,10 +78,15 @@ select pg_temp.check((select (island_uproot(-1, -1)->'inventory'->>'noisetier'):
 select pg_temp.as_admin();
 select pg_temp.check(member_points('00000000-0000-0000-0000-000000000501', null) >= 40, 'les pousses gagnées ne baissent pas');
 
--- Défis : réussi, terminé sans succès, abandonné.
-insert into user_challenges (id, user_id, company_id, template_id, target, starts_on, ends_on, status)
+-- Défis : réussi, terminé sans succès, abandonné, et un défi réussi avant le lancement de l'île.
+update island_launch set launched_at = now() - interval '10 days';
+insert into user_challenges (id, user_id, company_id, template_id, target, starts_on, ends_on, status, done_at)
 select '00000000-0000-0000-0000-0000000005a1', '00000000-0000-0000-0000-000000000501', company_id, 'velo', 20,
-       current_date - 29, current_date, 'done'
+       current_date - 29, current_date, 'done', now()
+from profiles where id = '00000000-0000-0000-0000-000000000501';
+insert into user_challenges (id, user_id, company_id, template_id, target, starts_on, ends_on, status, done_at)
+select '00000000-0000-0000-0000-0000000005a4', '00000000-0000-0000-0000-000000000501', company_id, 'train', 3,
+       current_date - 50, current_date - 21, 'done', now() - interval '20 days'
 from profiles where id = '00000000-0000-0000-0000-000000000501';
 insert into user_challenges (id, user_id, company_id, template_id, target, starts_on, ends_on, status)
 select '00000000-0000-0000-0000-0000000005a2', '00000000-0000-0000-0000-000000000501', company_id, 'vege', 3,
@@ -93,7 +98,7 @@ select '00000000-0000-0000-0000-0000000005a3', '00000000-0000-0000-0000-00000000
 from profiles where id = '00000000-0000-0000-0000-000000000501';
 
 select pg_temp.as_user('00000000-0000-0000-0000-000000000501');
-select pg_temp.check(island_claim() = 2, 'deux récompenses : le défi réussi et la consolation');
+select pg_temp.check(island_claim() = 2, 'deux récompenses : le défi réussi et la consolation (rien pour avant le lancement)');
 select pg_temp.check(island_claim() = 0, 'rejouée, elle ne donne rien deux fois');
 select pg_temp.check((select (island('00000000-0000-0000-0000-000000000501')->'inventory'->>'merisier_fleurs')::int = 1),
                      '30 jours de vélo, 5 par semaine : merisier en fleurs');

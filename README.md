@@ -51,7 +51,7 @@ rappels (`pousse-rappels`) et la purge des photos (`pousse-purge`, Edge Function
 | 0044 | Rappels et purge des photos planifiés par la base (Supabase seulement) |
 | 0045 – 0046 | Actions universelles du + : repas végé pondéré, appareils, catalogue mis à jour |
 | 0047 – 0049 | L'île : graines plantées, déplacées ou arrachées, zones à restaurer |
-| 0050 | Île : Graineterie (achats en pousses), plantes gagnées en défi, migrateur d'équipe, myosotis offerts |
+| 0050 | Île : Graineterie (achats en pousses, prix calés sur la démo), plantes gagnées en défi, migrateur d'équipe, myosotis offerts |
 
 ### Données de démo
 

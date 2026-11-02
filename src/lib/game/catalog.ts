@@ -18,7 +18,10 @@ export interface Item {
   zone: Zone | null;
   kind: ItemKind;
   tier: Tier;
-  /** Prix en pousses (Graineterie). */
+  /**
+   * Prix en pousses (Graineterie) : 40 pour une commune, 150 pour une signature. Calé sur la démo
+   * (environ 85 pousses gagnées par semaine) : une commune tous les 3 ou 4 jours, le tout en une saison.
+   */
   price?: number;
   /** Plante signature : graines de la famille de la zone à avoir gagnées. */
   unlock?: number;
@@ -34,18 +37,18 @@ export interface Item {
 export const ITEMS: readonly Item[] = [
   // Graineterie : plantes communes.
   { key: "noisetier", name: "Noisetier", zone: "foret", kind: "boutique", tier: "commune", price: 40, shape: "arbre", color: "#7fb069", accent: "#8a5a2b", dots: "#a8743a" },
-  { key: "houx", name: "Houx", zone: "foret", kind: "boutique", tier: "commune", price: 30, shape: "touffe", color: "#2f6b3a", accent: "#c8322a" },
-  { key: "groseillier", name: "Groseillier", zone: "potager", kind: "boutique", tier: "commune", price: 30, shape: "touffe", color: "#5f9a4a", accent: "#c8322a" },
+  { key: "houx", name: "Houx", zone: "foret", kind: "boutique", tier: "commune", price: 40, shape: "touffe", color: "#2f6b3a", accent: "#c8322a" },
+  { key: "groseillier", name: "Groseillier", zone: "potager", kind: "boutique", tier: "commune", price: 40, shape: "touffe", color: "#5f9a4a", accent: "#c8322a" },
   { key: "courge", name: "Courge", zone: "potager", kind: "boutique", tier: "commune", price: 40, shape: "potager", color: "#6f9a3e", accent: "#e8a33a" },
-  { key: "oyat", name: "Oyat", zone: "plage", kind: "boutique", tier: "commune", price: 30, shape: "touffe", color: "#b8c27a", accent: "#b8c27a" },
+  { key: "oyat", name: "Oyat", zone: "plage", kind: "boutique", tier: "commune", price: 40, shape: "touffe", color: "#b8c27a", accent: "#b8c27a" },
   { key: "chardon", name: "Chardon bleu", zone: "plage", kind: "boutique", tier: "commune", price: 40, shape: "fleur", color: "#7f96c8", accent: "#4a5e8a" },
-  { key: "roseau", name: "Roseau", zone: "ruisseau", kind: "boutique", tier: "commune", price: 30, shape: "touffe", color: "#7a9a4a", accent: "#8a6a3a" },
+  { key: "roseau", name: "Roseau", zone: "ruisseau", kind: "boutique", tier: "commune", price: 40, shape: "touffe", color: "#7a9a4a", accent: "#8a6a3a" },
   { key: "iris", name: "Iris d'eau", zone: "ruisseau", kind: "boutique", tier: "commune", price: 40, shape: "fleur", color: "#f2c94c", accent: "#5f8f4e" },
   // Graineterie : plantes signature, débloquées par les actions de la famille de la zone.
-  { key: "erable", name: "Érable", zone: "foret", kind: "signature", tier: "signature", price: 100, unlock: 10, shape: "arbre", color: "#c8642f", accent: "#6b4a2b" },
-  { key: "pommier", name: "Pommier", zone: "potager", kind: "signature", tier: "signature", price: 100, unlock: 10, shape: "arbre", color: "#6f9a4a", accent: "#7a5236", dots: "#d9432f" },
-  { key: "pin_parasol", name: "Pin parasol", zone: "plage", kind: "signature", tier: "signature", price: 100, unlock: 5, shape: "arbre", color: "#4f7a45", accent: "#8a5a3a" },
-  { key: "aulne", name: "Aulne", zone: "ruisseau", kind: "signature", tier: "signature", price: 100, unlock: 4, shape: "arbre", color: "#5f8a4a", accent: "#5a4a3a" },
+  { key: "erable", name: "Érable", zone: "foret", kind: "signature", tier: "signature", price: 150, unlock: 8, shape: "arbre", color: "#c8642f", accent: "#6b4a2b" },
+  { key: "pommier", name: "Pommier", zone: "potager", kind: "signature", tier: "signature", price: 150, unlock: 15, shape: "arbre", color: "#6f9a4a", accent: "#7a5236", dots: "#d9432f" },
+  { key: "pin_parasol", name: "Pin parasol", zone: "plage", kind: "signature", tier: "signature", price: 150, unlock: 3, shape: "arbre", color: "#4f7a45", accent: "#8a5a3a" },
+  { key: "aulne", name: "Aulne", zone: "ruisseau", kind: "signature", tier: "signature", price: 150, unlock: 3, shape: "arbre", color: "#5f8a4a", accent: "#5a4a3a" },
   // Défis : jamais en vente.
   { key: "muguet", name: "Muguet", zone: "foret", kind: "defi", tier: "rare", shape: "fleur", color: "#f4f1e8", accent: "#5f8f4e" },
   { key: "merisier", name: "Merisier", zone: "foret", kind: "defi", tier: "speciale", shape: "arbre", color: "#6f9a4a", accent: "#7a4a3a" },
