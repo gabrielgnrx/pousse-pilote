@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { STAGE_NAMES } from "@/lib/game/garden.ts";
-import { ZONE_BY_KEY, checkTile, lookOf, moveLocally, plantLocally, seedsOf, tileFits, uprootLocally, zoneOfSpecies, type IslandData, type Seed } from "@/lib/game/island.ts";
+import { ZONE_BY_KEY, checkTile, guestsOf, lookOf, moveLocally, plantLocally, seedsOf, tileFits, uprootLocally, zoneOfSpecies, type IslandData, type Seed } from "@/lib/game/island.ts";
 import { newcomers, type Animal } from "@/lib/game/ecosystem.ts";
 import { movePlant, plantSeed, uprootPlant, type PlantResult } from "@/app/(app)/ile/actions";
 import type { IslandScene } from "./scene.ts";
@@ -231,7 +231,7 @@ export function IslandProvider({
           onEmptyTap: () => handlers.current.onEmptyTap(),
         }, framing);
         sceneRef.current = scene;
-        scene.setPlants(live.current.data.plants);
+        scene.setPlants(live.current.data.plants, guestsOf(live.current.data));
         setStatus("pret");
       })
       .catch(() => {
@@ -245,7 +245,7 @@ export function IslandProvider({
   }, []);
 
   useEffect(() => {
-    sceneRef.current?.setPlants(data.plants);
+    sceneRef.current?.setPlants(data.plants, guestsOf(data));
   }, [data, status]);
   useEffect(() => {
     // En déplacement, seules les cases libres de sa zone s'allument (rare : pas de case « grandit »).

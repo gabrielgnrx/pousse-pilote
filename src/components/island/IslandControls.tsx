@@ -1,14 +1,16 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { STAGE_NAMES } from "@/lib/game/garden.ts";
-import { ZONE_BY_KEY, bestTile, checkTile, lookOf, playableTiles, zoneOfSpecies, type Seed } from "@/lib/game/island.ts";
-import { ANIMALS, animalsOn } from "@/lib/game/ecosystem.ts";
+import { ZONE_BY_KEY, bestTile, checkTile, guestsOf, lookOf, playableTiles, zoneOfSpecies, type Reward, type Seed } from "@/lib/game/island.ts";
+import { ITEM_BY_KEY, TIER_LABEL, rewardLabel } from "@/lib/game/catalog.ts";
+import { ANIMALS, ANIMAL_BY_KEY, animalsOn, type AnimalKey } from "@/lib/game/ecosystem.ts";
 import { useIsland } from "./IslandProvider";
+import { ANIMAL_ART } from "./ecosystem-layer.ts";
 
-function SeedDot({ seed }: { seed: Pick<Seed, "color" | "accent" | "rare"> }) {
+function SeedDot({ seed, size = 22 }: { seed: Pick<Seed, "color" | "accent" | "rare">; size?: number }) {
   return (
-    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" className="shrink-0">
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 22 22" className="shrink-0">
       <circle cx="11" cy="11" r="10" fill={seed.color} />
       <circle cx="11" cy="11" r="4" fill={seed.accent} />
       {seed.rare ? <circle cx="11" cy="11" r="10" fill="none" stroke="#f2c14e" strokeWidth="2.5" /> : null}
@@ -16,12 +18,47 @@ function SeedDot({ seed }: { seed: Pick<Seed, "color" | "accent" | "rare"> }) {
   );
 }
 
+/** Les récompenses déjà fêtées sur cet appareil (ids), pour ne les annoncer qu'une fois. */
+const SEEN_KEY = "pousse:recompenses-vues";
+
+function readSeen(): string[] {
+  try {
+    const raw = window.localStorage.getItem(SEEN_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function rewardTitle(r: Reward): string {
+  const item = ITEM_BY_KEY[r.item];
+  if (r.source === "cadeau") return r.from ? `Cadeau de ${r.from}` : "Un cadeau";
+  if (r.source === "equipe") return "Accueilli par ton équipe";
+  return item?.tier === "commune" ? "Défi terminé : une plante pour la suite" : "Défi réussi";
+}
+
 /** Les commandes du jeu, posées sur l'île de l'accueil : graines, plantation, fiche d'une plante. */
 /** `top` et `bottom` : marges (px) laissées libres en haut (en-tête) et en bas (feuille du fil). */
 export function IslandControls({ top = 12, bottom = 12, compact = false }: { top?: number; bottom?: number; compact?: boolean } = {}) {
   const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant, moving, startMove, uproot, newcomer, dismissNewcomer } =
     useIsland();
-  const living = animalsOn(data.plants).length;
+  const living = animalsOn(data.plants, guestsOf(data)).length;
+  // La première récompense pas encore fêtée sur cet appareil (lue après le premier rendu).
+  const [seen, setSeen] = useState<string[] | null>(null);
+  useEffect(() => setSeen(readSeen()), []);
+  const unseen = mine && seen ? (data.recent ?? []).filter((r) => !seen.includes(r.id) && ITEM_BY_KEY[r.item]) : [];
+  // Plus de deux d'un coup (premier passage après la mise à jour) : une seule carte qui les résume.
+  const reward = unseen.length > 0 && unseen.length <= 2 ? unseen[0] : null;
+  const rewardItem = reward ? ITEM_BY_KEY[reward.item] : null;
+  const markSeen = (...ids: string[]) => {
+    const next = [...(seen ?? []), ...ids].slice(-60);
+    setSeen(next);
+    try {
+      window.localStorage.setItem(SEEN_KEY, JSON.stringify(next));
+    } catch {
+      // Navigation privée : la carte reviendra à la prochaine visite.
+    }
+  };
   const seedZone = seed ? zoneOfSpecies(seed.key) : null;
   // La plante dont on demande confirmation avant de l'arracher.
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -50,6 +87,21 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
               <span className="tabular-nums">
                 Biodiversité {living}/{ANIMALS.length}
               </span>
+            </Link>
+          ) : null}
+          {mine ? (
+            <Link
+              href="/ile/graineterie"
+              className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-pollen px-3 text-sm font-bold text-encre shadow-sm"
+              aria-label={`Graineterie : ${data.pousses ?? 0} pousses à dépenser`}
+            >
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M12 21V11" />
+                <path d="M12 13C12 8 8 5 4 5c0 4 3 8 8 8z" />
+                <path d="M12 11c0-4 3-7 8-7 0 4-3 7-8 7z" />
+              </svg>
+              <span className="tabular-nums">{(data.pousses ?? 0).toLocaleString("fr-FR")}</span>
+              <span className="sr-only sm:not-sr-only">Graineterie</span>
             </Link>
           ) : (
             <>
@@ -112,6 +164,69 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
               <button type="button" className="btn-primary min-h-11 flex-1 text-sm" onClick={dismissNewcomer}>
                 Super !
               </button>
+            </div>
+          </section>
+        ) : unseen.length > 2 ? (
+          <section aria-labelledby="recompenses" className="pointer-events-auto flex flex-col gap-3 rounded-[24px] bg-nuit p-4 text-white shadow-lg">
+            <div>
+              <p className="text-xs font-bold tracking-wider text-pollen uppercase">{unseen.length} récompenses</p>
+              <h2 id="recompenses" className="font-display text-2xl leading-tight">
+                Tes défis et ton équipe t&apos;ont gâté
+              </h2>
+            </div>
+            <p className="text-sm text-nuit-pale">{rewardLabel(unseen.map((r) => r.item))}. Elles t&apos;attendent dans tes graines.</p>
+            <button type="button" className="btn-primary min-h-11 text-sm" onClick={() => markSeen(...unseen.map((r) => r.id))}>
+              Super !
+            </button>
+          </section>
+        ) : reward && rewardItem ? (
+          <section
+            aria-labelledby="recompense"
+            className="pointer-events-auto flex flex-col gap-3 rounded-[24px] bg-nuit p-4 text-white shadow-lg motion-safe:animate-[panel-up_0.4s_cubic-bezier(0.2,0.9,0.3,1.2)]"
+          >
+            <div className="flex items-center gap-3">
+              {rewardItem.kind === "visiteur" ? (
+                <svg
+                  aria-hidden="true"
+                  width="52"
+                  height="44"
+                  viewBox="-28 -40 56 48"
+                  className="shrink-0 rounded-[14px] bg-nuit-pale/20"
+                  dangerouslySetInnerHTML={{ __html: `<g transform="translate(0 ${reward.item === "grue" || reward.item === "hirondelles" ? 100 : 0})">${ANIMAL_ART[reward.item as AnimalKey] ?? ""}</g>` }}
+                />
+              ) : (
+                <SeedDot seed={{ color: rewardItem.color, accent: rewardItem.accent, rare: true }} size={44} />
+              )}
+              <div className="min-w-0">
+                <p className="text-xs font-bold tracking-wider text-pollen uppercase">{rewardTitle(reward)}</p>
+                <h2 id="recompense" className="font-display text-2xl leading-tight">
+                  {rewardItem.name}
+                </h2>
+              </div>
+            </div>
+            <p className="text-sm text-nuit-pale">
+              {rewardItem.kind === "visiteur"
+                ? ANIMAL_BY_KEY[reward.item as AnimalKey]?.why ?? "Il rejoint ton carnet de biodiversité."
+                : `${TIER_LABEL[rewardItem.tier]}${rewardItem.kind === "defi" && rewardItem.tier !== "commune" ? " · introuvable à la Graineterie" : ""}. ${
+                    rewardItem.zone ? `Elle pousse dans la zone ${ZONE_BY_KEY[rewardItem.zone].name}.` : "Elle pousse partout."
+                  }`}
+            </p>
+            <div className="flex gap-2">
+              <button type="button" className="btn-ghost min-h-11 flex-1 text-sm" onClick={() => markSeen(reward.id)}>
+                {rewardItem.kind === "visiteur" ? "Super !" : "Plus tard"}
+              </button>
+              {rewardItem.kind !== "visiteur" && seeds.some((s) => s.key === reward.item) ? (
+                <button
+                  type="button"
+                  className="btn-primary min-h-11 flex-1 text-sm"
+                  onClick={() => {
+                    markSeen(reward.id);
+                    chooseSeed(reward.item);
+                  }}
+                >
+                  Planter
+                </button>
+              ) : null}
             </div>
           </section>
         ) : moving && movingLook ? (

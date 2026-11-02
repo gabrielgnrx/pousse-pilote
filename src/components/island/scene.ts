@@ -15,7 +15,8 @@ export interface IslandSceneEvents {
 }
 
 export interface IslandScene {
-  setPlants(plants: IslandPlant[]): void;
+  /** `guests` : les migrateurs accueillis en équipe (guestsOf). */
+  setPlants(plants: IslandPlant[], guests?: readonly string[]): void;
   setPlanting(seed: Pick<Seed, "key" | "rare"> | null): void;
   setSelected(tile: { x: number; z: number } | null): void;
   celebrate(x: number, z: number, kind: "nouvelle" | "grandit" | "stade"): void;
@@ -343,7 +344,7 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
     });
   };
 
-  const setPlants = (plants: IslandPlant[]) => {
+  const setPlants = (plants: IslandPlant[], guests: readonly string[] = []) => {
     current = plants;
     const seen = new Set<string>();
     for (const p of plants) {
@@ -374,7 +375,7 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
     }
     sortWorld();
     refreshTiles();
-    eco.update(plants);
+    eco.update(plants, guests);
     initialized = true;
   };
 

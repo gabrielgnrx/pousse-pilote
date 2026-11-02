@@ -6,7 +6,7 @@ import { dayLabel, formatDay, parisDay, relativeTime, todayParis } from "@/lib/d
 import { INTRO_COOKIE, PROOF_BUCKET } from "@/lib/constants";
 import { claimDailyRewards } from "@/lib/engagement-data";
 import { IntroCard } from "@/components/IntroCard";
-import { getDuels, getIsland } from "@/lib/game/data.ts";
+import { getDuels, getMyIsland } from "@/lib/game/data.ts";
 import { IslandHero } from "@/components/island/IslandHero";
 import { CompanyHero, type CompanyPulse } from "@/components/CompanyHero";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -35,7 +35,9 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
   const { supabase, user, profile } = await requireHabits();
   // Tout ce qui crédite des pousses passe avant le total affiché : bonus du jour, duels terminés
   // (getDuels solde les duels finis). Les défis et les duels eux-mêmes s'affichent dans Mon plan.
-  const [daily, , island] = await Promise.all([claimDailyRewards(supabase), getDuels(supabase), getIsland(supabase, user.id)]);
+  const [daily] = await Promise.all([claimDailyRewards(supabase), getDuels(supabase)]);
+  // L'île ensuite : son solde de pousses compte les bonus qu'on vient de créditer.
+  const island = await getMyIsland(supabase, user.id);
 
   const teamOnly = vue === "equipe" && !!profile.team_id;
   let postsQuery = supabase

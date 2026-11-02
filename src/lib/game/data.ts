@@ -59,3 +59,36 @@ export async function getIsland(supabase: SupabaseClient, userId: string): Promi
   const { data, error } = await supabase.rpc("island", { p_user: userId });
   return error || !data ? null : (data as IslandData);
 }
+
+/**
+ * Mon île, après avoir récupéré ce qui m'est dû (island_claim, 0050_ile_graineterie.sql) :
+ * récompenses des défis, consolations, migrateurs de l'équipe. Rejouer ne donne rien deux fois.
+ */
+export async function getMyIsland(supabase: SupabaseClient, userId: string): Promise<IslandData | null> {
+  await supabase.rpc("island_claim");
+  return getIsland(supabase, userId);
+}
+
+export interface Migration {
+  bird: string;
+  week: string;
+  /** Le défi de la semaine voté au QG (null : vote pas encore clos). */
+  kind: string | null;
+  members: number;
+  needed: number;
+  hosts: { id: string; name: string }[];
+  done: boolean;
+}
+
+export interface TeamGarden {
+  migration: Migration | null;
+  /** Défis de la semaine réussis par l'équipe : un arbre chacun dans le bosquet. */
+  grove: number;
+  gifted_today: boolean;
+  colleagues: { id: string; name: string; team: boolean }[];
+}
+
+export async function getTeamGarden(supabase: SupabaseClient): Promise<TeamGarden | null> {
+  const { data, error } = await supabase.rpc("team_garden");
+  return error || !data ? null : (data as TeamGarden);
+}

@@ -5,6 +5,8 @@ import { weekStart } from "@/lib/co2/engagement.ts";
 import { parisOffset, todayParis } from "@/lib/dates";
 import type { TeamWeek } from "@/lib/team";
 import { TeamChat, type ChatMessage } from "./TeamChat";
+import { TeamGarden } from "./TeamGarden";
+import { getTeamGarden } from "@/lib/game/data.ts";
 
 export const metadata = { title: "QG de l'équipe · Pousse" };
 
@@ -23,7 +25,7 @@ export default async function QGPage({ searchParams }: { searchParams: Promise<{
   const { propose } = await searchParams;
   const { supabase, user, profile } = await requireProfile();
 
-  const [{ data: team }, ranking, { data: week }, messagesRes, { data: myReports }, { count: members }] = await Promise.all([
+  const [{ data: team }, ranking, { data: week }, messagesRes, { data: myReports }, { count: members }, garden] = await Promise.all([
     profile.team_id ? supabase.from("teams").select("name").eq("id", profile.team_id).single() : Promise.resolve({ data: null }),
     getTeamRanking(supabase, weekStart(todayParis())),
     supabase.rpc("my_team_week"),
@@ -39,6 +41,7 @@ export default async function QGPage({ searchParams }: { searchParams: Promise<{
     profile.team_id
       ? supabase.from("profiles").select("id", { count: "exact", head: true }).eq("team_id", profile.team_id)
       : Promise.resolve({ count: 0 }),
+    getTeamGarden(supabase),
   ]);
 
   // Le podium : les 3 premières équipes de la semaine ; la tienne à la 3e place si elle est plus loin.
@@ -119,6 +122,8 @@ export default async function QGPage({ searchParams }: { searchParams: Promise<{
           <p className="text-sm text-nuit-pale">Le classement apparaît dès qu&apos;une équipe compte 5 participants.</p>
         )}
       </section>
+
+      {profile.team_id && garden ? <TeamGarden garden={garden} me={user.id} /> : null}
 
       {profile.team_id && w ? (
         <TeamChat
