@@ -1,22 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireProfile } from "@/lib/session";
-import { getIsland } from "@/lib/game/data.ts";
+import { getMyIsland } from "@/lib/game/data.ts";
 import { ANIMALS, animalsOn, zoneStates } from "@/lib/game/ecosystem.ts";
+import { guestsOf } from "@/lib/game/island.ts";
 import { ANIMAL_ART } from "@/components/island/ecosystem-layer.ts";
 
 export const metadata = { title: "Carnet de biodiversité · Pousse" };
 
 /** Les animaux qui volent ou se perchent sont dessinés haut sur l'île : on les ramène dans la vignette. */
-const ICON_SHIFT: Partial<Record<string, number>> = { oiseaux: 100, chouette: 50, papillons: 38, ecureuil: 8 };
+const ICON_SHIFT: Partial<Record<string, number>> = { oiseaux: 100, chouette: 50, papillons: 38, ecureuil: 8, grue: 108, hirondelles: 84, geai: 52, mesanges: 46, pic_vert: 34, loir: 30, libellules: 24, chardonneret: 26, heron: 14, cigogne: 14 };
 
 /** Le carnet : l'état des quatre zones de ton île et les animaux revenus (ou l'indice pour les attirer). */
 export default async function CarnetPage() {
   const { supabase, user } = await requireProfile();
-  const data = await getIsland(supabase, user.id);
+  const data = await getMyIsland(supabase, user.id);
   if (!data) notFound();
   const zones = zoneStates(data.plants);
-  const present = new Set(animalsOn(data.plants).map((a) => a.animal.key));
+  const present = new Set(animalsOn(data.plants, guestsOf(data)).map((a) => a.animal.key));
 
   return (
     <>

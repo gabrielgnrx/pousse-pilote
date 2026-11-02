@@ -58,6 +58,20 @@ export const ANIMAL_ART: Record<AnimalKey, string> = {
   lezard: `<g transform="translate(16 6)" class="pi-wander"><path d="M-16 2 C-10 -2 -4 3 2 0 C6 -2 10 -2 13 0 C10 2 6 2 2 1.5 C-4 4 -10 0 -16 2 Z" fill="#7aa64a"/><circle cx="11" cy="-0.5" r="0.8" fill="#14261b"/></g>`,
   chouette: `<g transform="translate(0 -52)"><ellipse rx="8" ry="10" fill="#9a7a5a"/><ellipse cy="3" rx="5" ry="6" fill="#d8c4a4"/><circle cx="-3.2" cy="-4" r="3.2" fill="#f4efe4"/><circle cx="3.2" cy="-4" r="3.2" fill="#f4efe4"/><g class="pi-blink"><circle cx="-3.2" cy="-4" r="1.6" fill="#14261b"/><circle cx="3.2" cy="-4" r="1.6" fill="#14261b"/></g><path d="M-1 -1 L0 1 L1 -1 Z" fill="#e8a33a"/><path d="M-7 -9 l-1 -4 l4 2 M7 -9 l1 -4 l-4 2" fill="#9a7a5a"/></g>`,
   ver_de_terre: `<path class="pi-wiggle" d="M-8 0 q2 -4 4 0 q2 4 4 0 q2 -4 4 0" stroke="#e8939a" stroke-width="3" fill="none" stroke-linecap="round"/>`,
+  geai: `<g transform="translate(-6 -58)" class="pi-hop" style="--delay:-0.6s"><ellipse rx="8" ry="5.5" fill="#c9a48a"/><circle cx="6" cy="-4" r="4.2" fill="#d8b49a"/><path d="M-3 -3 h7 v3 h-7 Z" fill="#3f7fc8"/><path d="M-3 -1.5 h1.5 M0 -1.5 h1.5" stroke="#14261b" stroke-width="0.8"/><path d="M-8 1 l-7 -2 l1 4 Z" fill="#14261b"/><path d="M10 -4 l4 1 l-4 1 Z" fill="#14261b"/><circle cx="7" cy="-5" r="0.9" fill="#14261b"/></g>`,
+  mesanges: `<g transform="translate(-10 -52)" class="pi-hop" style="--delay:-0.3s"><ellipse rx="5.5" ry="4.5" fill="#f2d04a"/><circle cx="4" cy="-3" r="3.4" fill="#14261b"/><circle cx="4.6" cy="-3.2" r="1.6" fill="#ffffff"/><path d="M-4 -2 q3 -3 6 0" fill="#6f9ab8"/><path d="M7 -3 l2.5 0.6 l-2.5 0.6 Z" fill="#14261b"/></g><g transform="translate(12 -40) scale(0.85)" class="pi-hop" style="--delay:-1.7s"><ellipse rx="5.5" ry="4.5" fill="#f2d04a"/><circle cx="4" cy="-3" r="3.4" fill="#14261b"/><circle cx="4.6" cy="-3.2" r="1.6" fill="#ffffff"/></g>`,
+  gravelot: `<g transform="translate(14 8)" class="pi-wander"><ellipse rx="7" ry="4.5" fill="#d8c4a4"/><ellipse cy="2" rx="5" ry="2.4" fill="#f7f3ea"/><circle cx="5.5" cy="-3.5" r="3.2" fill="#d8c4a4"/><path d="M3 -2 h5" stroke="#14261b" stroke-width="1.2"/><path d="M8.5 -3.5 l2.5 0.5 l-2.5 0.6 Z" fill="#14261b"/><path d="M-1 4 v4 M2 4 v4" stroke="#e8a33a" stroke-width="1"/></g>`,
+  libellules: `<g transform="translate(-8 -30)"><g class="pi-buzz" style="--d:2.6s"><rect x="-1" y="-1" width="13" height="2.2" rx="1.1" fill="#2f8fc0"/><g class="pi-flutter"><ellipse cx="2" cy="-4" rx="2.4" ry="5" fill="#cfe8f4" opacity="0.85"/><ellipse cx="5" cy="-4" rx="2.4" ry="5" fill="#cfe8f4" opacity="0.85"/></g></g></g><g transform="translate(14 -22) scale(0.8)"><g class="pi-buzz" style="--d:2.2s;--delay:-0.9s"><rect x="-1" y="-1" width="13" height="2.2" rx="1.1" fill="#d9432f"/><g class="pi-flutter"><ellipse cx="3" cy="-4" rx="2.4" ry="5" fill="#f4e0dc" opacity="0.85"/></g></g></g>`,
+  pic_vert: `<g transform="translate(-4 -40)"><g class="pi-hop" style="--delay:-1.1s"><ellipse rx="5" ry="9" fill="#6f9a3e"/><ellipse cx="0" cy="3" rx="3.5" ry="5" fill="#c8d48a"/><circle cx="1" cy="-9" r="4" fill="#6f9a3e"/><path d="M-2 -13 q3 -3 6 0" fill="#d9432f"/><path d="M4 -9 l7 0.5 l-7 1.5 Z" fill="#4a4a3a"/><circle cx="2" cy="-10" r="0.9" fill="#ffffff"/></g></g>`,
+  loir: `<g transform="translate(16 -36)" class="pi-hop" style="--delay:-2s"><path d="M-6 0 C-16 -2 -18 8 -10 10" stroke="#9aa0a0" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse rx="7" ry="5.5" fill="#a8acac"/><circle cx="6" cy="-3" r="4" fill="#a8acac"/><circle cx="7.5" cy="-3.5" r="1.4" fill="#14261b"/><circle cx="4" cy="-7" r="1.8" fill="#c8cccc"/><ellipse cx="2" cy="2" rx="4" ry="2.2" fill="#e8e6df"/></g>`,
+  huppe: `<g transform="translate(14 6)" class="pi-wander"><ellipse rx="7" ry="5" fill="#e0a070"/><path d="M-6 -1 l-6 3 l6 2 Z M-3 -4 h8" stroke="#14261b" stroke-width="1.2" fill="#ffffff"/><circle cx="6" cy="-4" r="3.6" fill="#e0a070"/><path d="M3 -6 l-1 -7 l3 4 l1 -6 l2 6 l2 -4 l0 6" fill="#e8a060" stroke="#14261b" stroke-width="0.6"/><path d="M9 -4 q5 1 7 4" stroke="#14261b" stroke-width="1.2" fill="none"/><circle cx="7" cy="-5" r="0.8" fill="#14261b"/></g>`,
+  heron: `<g transform="translate(10 4)"><g class="pi-hop" style="--delay:-2.5s"><path d="M-2 0 v-10 M2 0 v-10" stroke="#6a6a5a" stroke-width="1.2"/><ellipse cy="-14" rx="7" ry="5" fill="#a8b0b8"/><path d="M4 -16 q2 -10 6 -12" stroke="#c8ccd0" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="10" cy="-28" r="2.6" fill="#e8eaec"/><path d="M8 -29 h3" stroke="#14261b" stroke-width="1"/><path d="M12 -28 l7 1 l-7 1 Z" fill="#e8a33a"/></g></g>`,
+  rouge_gorge: `<g transform="translate(8 2)" class="pi-hop" style="--delay:-0.4s"><ellipse rx="6" ry="5" fill="#8a6a4a"/><ellipse cx="3" cy="0" rx="3.5" ry="3.5" fill="#e8743a"/><circle cx="4" cy="-4" r="3.4" fill="#8a6a4a"/><circle cx="4" cy="-3" r="2" fill="#e8743a"/><circle cx="5" cy="-5" r="0.8" fill="#14261b"/><path d="M7 -4 l2.2 0.5 l-2.2 0.6 Z" fill="#14261b"/></g>`,
+  chardonneret: `<g transform="translate(-6 -30)" class="pi-hop" style="--delay:-1.3s"><ellipse rx="6" ry="4.5" fill="#d8b48a"/><path d="M-4 -1 h7" stroke="#f2c230" stroke-width="2"/><circle cx="5" cy="-3" r="3.4" fill="#f4efe4"/><path d="M5 -6.4 a3.4 3.4 0 0 1 3 2 l-2 1 Z" fill="#d9432f"/><circle cx="5.5" cy="-3.5" r="0.8" fill="#14261b"/><path d="M8 -3 l2.5 0.6 l-2.5 0.6 Z" fill="#e8d2b4"/></g>`,
+  cigogne: `<g transform="translate(-10 0)"><g class="pi-hop" style="--delay:-1.8s"><path d="M-2 0 v-12 M2 0 v-12" stroke="#d9432f" stroke-width="1.4"/><ellipse cy="-17" rx="8" ry="6" fill="#f4f1e8"/><path d="M-8 -16 q6 6 12 2" fill="#14261b"/><path d="M5 -20 q1 -8 3 -10" stroke="#f4f1e8" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="8" cy="-30" r="3" fill="#f4f1e8"/><path d="M10 -30 l9 2 l-9 1 Z" fill="#d9432f"/><circle cx="8.5" cy="-31" r="0.8" fill="#14261b"/></g></g>`,
+  grue: `<g class="pi-glide"><g transform="translate(0 -120)">${BIRD("#8a9298")}</g><g transform="translate(-22 -108) scale(0.85)">${BIRD("#8a9298")}</g><g transform="translate(22 -108) scale(0.85)">${BIRD("#8a9298")}</g><g transform="translate(-42 -96) scale(0.7)">${BIRD("#9aa2a8")}</g><g transform="translate(42 -96) scale(0.7)">${BIRD("#9aa2a8")}</g></g>`,
+  hirondelles: `<g class="pi-glide"><g transform="translate(-12 -90) scale(0.8)"><path d="M-12 0 L0 -3 L12 0 L4 1 L8 7 L0 2 L-8 7 L-4 1 Z" fill="#1f2f4e" class="pi-flap"/></g><g transform="translate(16 -80) scale(0.7)"><path d="M-12 0 L0 -3 L12 0 L4 1 L8 7 L0 2 L-8 7 L-4 1 Z" fill="#1f2f4e" class="pi-flap"/></g></g>`,
+  oies: `<g transform="translate(6 6)" class="pi-wander"><ellipse rx="9" ry="6" fill="#9a9a8a"/><path d="M5 -3 q2 -8 5 -9" stroke="#8a8a7a" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="10" cy="-12" r="3" fill="#8a8a7a"/><path d="M12 -12 l5 1 l-5 1.2 Z" fill="#e8a33a"/><circle cx="10.5" cy="-12.6" r="0.8" fill="#14261b"/></g><g transform="translate(-14 10) scale(0.85)" class="pi-wander"><ellipse rx="9" ry="6" fill="#a8a898"/><circle cx="10" cy="-10" r="3" fill="#8a8a7a"/><path d="M5 -3 q2 -6 5 -7" stroke="#8a8a7a" stroke-width="3" fill="none"/></g>`,
 };
 
 /** Un point (en coordonnées d'écran) dans une zone, à r unités du centre et à la fraction t de son arc. */
@@ -84,7 +98,7 @@ const STREAM = "M95 -62 C120 -40 120 -15 150 -5 S185 20 205 35";
 const DRY = "#c7b285";
 
 export interface EcosystemLayer {
-  update(plants: IslandPlant[]): void;
+  update(plants: IslandPlant[], guests?: readonly string[]): void;
   showLabels(visible: boolean): void;
 }
 
@@ -147,7 +161,7 @@ export function createEcosystemLayer(parts: { ground: SVGGElement; animals: SVGG
   let first = true;
 
   return {
-    update(plants) {
+    update(plants, guests = []) {
       const states = zoneStates(plants);
       let total = 0;
       for (const s of states) {
@@ -182,7 +196,7 @@ export function createEcosystemLayer(parts: { ground: SVGGElement; animals: SVGG
       }
       haze.setAttribute("opacity", String(((4 - total) / 4) * 0.2));
 
-      const present = animalsOn(plants);
+      const present = animalsOn(plants, guests);
       const next = new Set(present.map((a) => a.animal.key));
       animals.replaceChildren();
       for (const { animal, at } of present) {

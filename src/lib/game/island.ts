@@ -5,6 +5,7 @@
  * ce module sert l'affichage et doit suivre les mêmes règles.
  */
 import { RARES, RARE_BY_KEY, SPECIES, stageFor, type GardenData, type Rare, type Shape, type Species } from "./garden.ts";
+import { ITEM_BY_KEY, TIER_LABEL, type Tier } from "./catalog.ts";
 
 export interface IslandPlant {
   id: string;
@@ -17,8 +18,24 @@ export interface IslandPlant {
   grown_at: string;
 }
 
+/** Une récompense reçue (défi, équipe, cadeau), pour la fêter à l'ouverture de l'île. */
+export interface Reward {
+  id: string;
+  item: string;
+  source: "defi" | "equipe" | "cadeau";
+  at: string;
+  /** Qui l'a offerte (cadeau). */
+  from: string | null;
+}
+
 export interface IslandData extends GardenData {
   plants: IslandPlant[];
+  /** Plantes du catalogue possédées et pas encore posées (0050_ile_graineterie.sql). */
+  inventory?: Record<string, number>;
+  /** Pousses à dépenser à la Graineterie (seulement pour moi). */
+  pousses?: number | null;
+  /** Récompenses des 30 derniers jours (seulement pour moi). */
+  recent?: Reward[] | null;
 }
 
 /** L'île est un disque d'emplacements : x² + z² ≤ 10 (37 emplacements). */
@@ -65,13 +82,16 @@ export function zoneOfTile(x: number, z: number): Zone | null {
   return "potager";
 }
 
-/** La zone d'une espèce (trajets → forêt…) ; null : elle pousse partout (fleurs, plantes rares). */
+/**
+ * La zone d'une espèce (trajets → forêt…) ou d'une plante du catalogue (noisetier → forêt…) ;
+ * null : elle pousse partout (fleurs, plantes rares, myosotis).
+ */
 export function zoneOfSpecies(species: string): Zone | null {
   if (species === "transport" || species === "nature") return "foret";
   if (species === "alimentation") return "potager";
   if (species === "consommation") return "plage";
   if (species === "logement") return "ruisseau";
-  return null;
+  return ITEM_BY_KEY[species]?.zone ?? null;
 }
 
 /** La case peut-elle accueillir cette espèce ? La case centrale accueille tout. */
@@ -92,12 +112,19 @@ export interface PlantLook {
   /** Graines nécessaires pour le stade suivant (null : adulte). */
   next: number | null;
   rare: boolean;
+  /** Fleurs ou fruits semés sur le feuillage, taille du feuillage (plantes du catalogue). */
+  dots?: string;
+  big?: number;
 }
 
 const SPECIES_BY_KEY: Record<string, Species> = Object.fromEntries(SPECIES.map((s) => [s.key, s]));
 
 export function lookOf(p: Pick<IslandPlant, "species" | "rare" | "fed">): PlantLook | null {
   if (p.rare) {
+    const item = ITEM_BY_KEY[p.species];
+    if (item && item.kind !== "visiteur") {
+      return { key: item.key, name: item.name, shape: item.shape, color: item.color, accent: item.accent, stage: 4, next: null, rare: true, dots: item.dots, big: item.big };
+    }
     const r: Rare | undefined = RARE_BY_KEY[p.species];
     if (!r) return null;
     return { key: r.key, name: r.name, shape: r.shape, color: r.color, accent: r.accent, stage: 4, next: null, rare: true };
@@ -118,6 +145,8 @@ export interface Seed {
   accent: string;
   rare: boolean;
   available: number;
+  /** Plante du catalogue : sa rareté (achat, défi, cadeau). */
+  tier?: Tier;
 }
 
 /** Les graines à planter : par espèce, celles gagnées moins celles déjà plantées ; puis les rares à poser. */
@@ -139,7 +168,19 @@ export function seedsOf(data: IslandData): Seed[] {
   const rares = RARES.filter((r) => (r.exploit ? Boolean(data.exploits[r.exploit]) : data.rares.includes(r.key)))
     .filter((r) => !placedRares.has(r.key))
     .map((r) => ({ key: r.key, name: r.name, how: r.how, shape: r.shape, color: r.color, accent: r.accent, rare: true, available: 1 }));
-  return [...common.filter((s) => s.available > 0), ...rares];
+  const items = Object.entries(data.inventory ?? {}).flatMap(([key, n]) => {
+    const item = ITEM_BY_KEY[key];
+    if (!item || item.kind === "visiteur" || Number(n) <= 0) return [];
+    return [{ key, name: item.name, how: TIER_LABEL[item.tier], shape: item.shape, color: item.color, accent: item.accent, rare: true, available: Number(n), tier: item.tier }];
+  });
+  return [...common.filter((s) => s.available > 0), ...rares, ...items];
+}
+
+/** Les migrateurs arrivés sur l'île grâce à l'équipe (ils ne se plantent pas). */
+export function guestsOf(data: Pick<IslandData, "inventory">): string[] {
+  return Object.entries(data.inventory ?? {})
+    .filter(([key, n]) => ITEM_BY_KEY[key]?.kind === "visiteur" && Number(n) > 0)
+    .map(([key]) => key);
 }
 
 export type PlantCheck = "nouvelle" | "grandit" | "occupe" | "hors_ile" | "hors_zone";
@@ -162,8 +203,15 @@ export function plantLocally(data: IslandData, seed: Pick<Seed, "key" | "rare">,
   const now = new Date().toISOString();
   return {
     ...data,
+    inventory: withItem(data.inventory, seed.key, -1),
     plants: [...data.plants, { id: `local-${x}-${z}`, species: seed.key, rare: seed.rare, x, z, fed: 1, planted_at: now, grown_at: now }],
   };
+}
+
+/** L'inventaire après avoir posé (−1) ou arraché (+1) une plante du catalogue. */
+function withItem(inventory: IslandData["inventory"], key: string, delta: number): IslandData["inventory"] {
+  if (!ITEM_BY_KEY[key]) return inventory;
+  return { ...inventory, [key]: Math.max(0, Number(inventory?.[key] ?? 0) + delta) };
 }
 
 export const ISLAND_ERRORS: Record<string, string> = {
@@ -173,6 +221,11 @@ export const ISLAND_ERRORS: Record<string, string> = {
   already_planted: "Cette plante rare est déjà sur ton île.",
   no_plant: "Cette plante n'est plus là : l'île a été mise à jour.",
   wrong_zone: "Cette plante pousse dans sa zone : choisis une case en surbrillance.",
+  not_enough: "Pas assez de pousses : enregistre des actions pour en gagner.",
+  locked: "Cette plante signature se débloque avec plus d'actions de sa famille.",
+  not_for_sale: "Cette plante ne se vend pas : elle se gagne en relevant un défi.",
+  already_gifted: "Tu as déjà offert un myosotis aujourd'hui. Reviens demain !",
+  not_colleague: "Choisis un collègue de ton entreprise.",
 };
 
 /** Les cases où cette graine peut aller (libres, ou une plante de la même espèce à faire grandir). */
@@ -192,7 +245,12 @@ export function moveLocally(data: IslandData, from: { x: number; z: number }, to
 
 /** Arrache une plante : ses graines reviennent dans le bac (seedsOf les recompte). */
 export function uprootLocally(data: IslandData, at: { x: number; z: number }): IslandData {
-  return { ...data, plants: data.plants.filter((p) => p.x !== at.x || p.z !== at.z) };
+  const plant = data.plants.find((p) => p.x === at.x && p.z === at.z);
+  return {
+    ...data,
+    inventory: plant?.rare ? withItem(data.inventory, plant.species, 1) : data.inventory,
+    plants: data.plants.filter((p) => p.x !== at.x || p.z !== at.z),
+  };
 }
 
 /**

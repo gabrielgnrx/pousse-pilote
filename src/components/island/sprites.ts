@@ -102,7 +102,7 @@ function tree(look: PlantLook, seed: number): string {
   }
   const weeping = look.key === "nature" || look.key === "saule";
   const olive = look.key === "logement";
-  const big = look.key === "chene" ? 1.18 : 1;
+  const big = look.big ?? (look.key === "chene" ? 1.18 : 1);
   let out = `<path d="M-4.5 0 C-4 -14 -3.5 -24 -3 -36 L3 -36 C3.5 -24 4 -14 4.5 0 Z" fill="${t}"/>
     <path d="M1 -26 C6 -30 9 -32 12 -38" stroke="${t}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
   if (look.key === "transport") {
@@ -126,6 +126,12 @@ function tree(look: PlantLook, seed: number): string {
   if (olive) {
     for (let i = 0; i < 6; i++) {
       out += `<circle cx="${-18 + rand(seed + i) * 36}" cy="${-38 - rand(seed + i * 7) * 16}" r="2.2" fill="#4a4f2a"/>`;
+    }
+  }
+  // Fleurs ou fruits (merisier en fleurs, pommier, figuier en fruits…).
+  if (look.dots) {
+    for (let i = 0; i < 9; i++) {
+      out += `<circle cx="${((-24 + rand(seed + i * 5) * 48) * big).toFixed(1)}" cy="${(-40 - rand(seed + i * 11) * 30 * big).toFixed(1)}" r="2.6" fill="${look.dots}"/>`;
     }
   }
   return out;
