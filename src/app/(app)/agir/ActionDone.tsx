@@ -32,7 +32,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
     onClose();
     router.refresh();
   };
-  // Retour sur l'île : la graine gagnée par l'action attend d'être plantée. « replace » : le bouton
+  // Retour sur l'île : les pousses gagnées font grandir ses plantes. « replace » : le bouton
   // retour de l'île ne ramène pas sur l'écran d'enregistrement.
   const finish = () => {
     onClose();

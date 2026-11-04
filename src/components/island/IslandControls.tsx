@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { STAGE_NAMES } from "@/lib/game/garden.ts";
-import { ZONE_BY_KEY, bestTile, checkTile, guestsOf, lookOf, playableTiles, zoneOfSpecies, type Reward, type Seed } from "@/lib/game/island.ts";
+import { ISLAND_STAGE_NAMES, ZONE_BY_KEY, bestTile, guestsOf, lookOf, playableTiles, zoneOfSpecies, type Reward, type Seed } from "@/lib/game/island.ts";
 import { ITEM_BY_KEY, TIER_LABEL, rewardLabel } from "@/lib/game/catalog.ts";
 import { ANIMALS, ANIMAL_BY_KEY, animalsOn, type AnimalKey } from "@/lib/game/ecosystem.ts";
 import { useIsland } from "./IslandProvider";
@@ -40,7 +39,7 @@ function rewardTitle(r: Reward): string {
 /** Les commandes du jeu, posées sur l'île de l'accueil : graines, plantation, fiche d'une plante. */
 /** `top` et `bottom` : marges (px) laissées libres en haut (en-tête) et en bas (feuille du fil). */
 export function IslandControls({ top = 12, bottom = 12, compact = false }: { top?: number; bottom?: number; compact?: boolean } = {}) {
-  const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant, moving, startMove, uproot, newcomer, dismissNewcomer } =
+  const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant, grow, moving, startMove, uproot, newcomer, dismissNewcomer } =
     useIsland();
   const living = animalsOn(data.plants, guestsOf(data)).length;
   // La première récompense pas encore fêtée sur cet appareil (lue après le premier rendu).
@@ -67,7 +66,7 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
   const movingLook = movingPlant ? lookOf(movingPlant) : null;
   const inspected = inspect ? data.plants.find((p) => p.x === inspect.x && p.z === inspect.z) ?? null : null;
   const look = inspected ? lookOf(inspected) : null;
-  const seedCount = seeds.reduce((n, s) => n + s.available, 0);
+  const pousses = data.pousses ?? 0;
   const name = data.name.split(" ")[0] ?? data.name;
 
   return (
@@ -91,17 +90,17 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
           ) : null}
           {mine ? (
             <Link
-              href="/ile/graineterie"
+              href="/ile/serre"
               className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-pollen px-3 text-sm font-bold text-encre shadow-sm"
-              aria-label={`Graineterie : ${data.pousses ?? 0} pousses à dépenser`}
+              aria-label={`La Serre : ${pousses} pousses à dépenser`}
             >
               <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M12 21V11" />
                 <path d="M12 13C12 8 8 5 4 5c0 4 3 8 8 8z" />
                 <path d="M12 11c0-4 3-7 8-7 0 4-3 7-8 7z" />
               </svg>
-              <span className="tabular-nums">{(data.pousses ?? 0).toLocaleString("fr-FR")}</span>
-              <span className="sr-only sm:not-sr-only">Graineterie</span>
+              <span className="tabular-nums">{pousses.toLocaleString("fr-FR")}</span>
+              <span className="sr-only sm:not-sr-only">Serre</span>
             </Link>
           ) : (
             <>
@@ -124,7 +123,6 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
           ) : seed && status === "pret" ? (
             <p className="rounded-full bg-papier/90 px-3 py-1.5 text-center text-xs font-semibold backdrop-blur">
               {seedZone ? `Zone ${ZONE_BY_KEY[seedZone].name} : touche une case en surbrillance` : "Touche une case libre"}
-              {seed.rare ? "" : ", ou une case jaune pour faire grandir ta plante"}
             </p>
           ) : null}
         </div>
@@ -174,7 +172,7 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
                 Tes défis et ton équipe t&apos;ont gâté
               </h2>
             </div>
-            <p className="text-sm text-nuit-pale">{rewardLabel(unseen.map((r) => r.item))}. Elles t&apos;attendent dans tes graines.</p>
+            <p className="text-sm text-nuit-pale">{rewardLabel(unseen.map((r) => r.item))}. Débloquées pour toujours, la première de chaque offerte.</p>
             <button type="button" className="btn-primary min-h-11 text-sm" onClick={() => markSeen(...unseen.map((r) => r.id))}>
               Super !
             </button>
@@ -207,9 +205,9 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
             <p className="text-sm text-nuit-pale">
               {rewardItem.kind === "visiteur"
                 ? ANIMAL_BY_KEY[reward.item as AnimalKey]?.why ?? "Il rejoint ton carnet de biodiversité."
-                : `${TIER_LABEL[rewardItem.tier]}${rewardItem.kind === "defi" && rewardItem.tier !== "commune" ? " · introuvable à la Graineterie" : ""}. ${
-                    rewardItem.zone ? `Elle pousse dans la zone ${ZONE_BY_KEY[rewardItem.zone].name}.` : "Elle pousse partout."
-                  }`}
+                : `${TIER_LABEL[rewardItem.tier]} débloquée pour toujours. La première est offerte : plante-la ${
+                    rewardItem.zone ? `dans la zone ${ZONE_BY_KEY[rewardItem.zone].name}` : "où tu veux"
+                  }, puis fais-la grandir avec tes pousses.`}
             </p>
             <div className="flex gap-2">
               <button type="button" className="btn-ghost min-h-11 flex-1 text-sm" onClick={() => markSeen(reward.id)}>
@@ -240,14 +238,12 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
         ) : tile && seed ? (
           <div className="pointer-events-auto flex items-center gap-2 rounded-[22px] bg-papier p-2 pl-4 shadow-lg">
             <SeedDot seed={seed} />
-            <p className="min-w-0 flex-1 text-sm font-bold">
-              {checkTile(data.plants, seed, tile.x, tile.z) === "grandit" ? `Faire grandir : ${seed.name}` : `Planter : ${seed.name}`}
-            </p>
+            <p className="min-w-0 flex-1 text-sm font-bold">Planter : {seed.name}</p>
             <button type="button" className="btn-ghost min-h-11 px-4 text-sm" onClick={() => setTile(null)}>
               Annuler
             </button>
-            <button type="button" className="btn-primary min-h-11 px-4 text-sm" disabled={pending} onClick={() => void plant(seed, tile)}>
-              Planter
+            <button type="button" className="btn-primary min-h-11 px-4 text-sm" disabled={pending || seed.cost > pousses} onClick={() => void plant(seed, tile)}>
+              {seed.cost ? `Planter · ${seed.cost}` : "Planter · offert"}
             </button>
           </div>
         ) : inspected && look ? (
@@ -262,22 +258,38 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
                 </svg>
               </button>
             </div>
-            <p className="text-sm text-terre">
-              {STAGE_NAMES[look.stage]}
-              {look.rare ? "" : ` · ${inspected.fed} graine${inspected.fed > 1 ? "s" : ""}`}
-              {look.next ? ` · stade suivant à ${look.next}` : ""}
-            </p>
-            {look.next ? (
-              <div className="h-2 rounded-full bg-trait">
-                <div className="h-2 rounded-full bg-chloro" style={{ width: `${Math.min(100, (inspected.fed / look.next) * 100)}%` }} />
-              </div>
+            <ol className="grid grid-cols-4 gap-1.5" aria-label={`Stade : ${ISLAND_STAGE_NAMES[look.stage]}`}>
+              {[1, 2, 3, 4].map((n) => (
+                <li key={n} className="flex flex-col items-center gap-1">
+                  <span
+                    aria-hidden="true"
+                    className={`h-2 w-full rounded-full ${n <= look.stage ? "bg-chloro" : n === look.stage + 1 && mine ? "bg-pollen" : "bg-trait"}`}
+                  />
+                  <span className={`text-[11px] font-bold ${n <= look.stage ? "text-encre" : "text-terre"}`}>{ISLAND_STAGE_NAMES[n]}</span>
+                </li>
+              ))}
+            </ol>
+            {mine && look.next ? (
+              <button
+                type="button"
+                className="flex min-h-12 flex-col items-center justify-center rounded-full bg-pollen px-4 py-1.5 text-encre disabled:opacity-60"
+                disabled={pending || look.next > pousses}
+                onClick={() => void grow({ x: inspected.x, z: inspected.z })}
+              >
+                <span className="text-sm font-extrabold">Faire grandir · {look.next} pousses</span>
+                <span className="text-xs font-semibold">
+                  {look.next > pousses ? `Il t'en manque ${look.next - pousses}` : `Il t'en restera ${pousses - look.next}`}
+                </span>
+              </button>
+            ) : !look.next ? (
+              <p className="text-sm text-terre">Adulte : elle compte pleinement pour sa zone.</p>
             ) : null}
             {mine && confirming === inspected.id ? (
               <div className="flex flex-col gap-2 rounded-[16px] bg-sable p-3">
                 <p className="text-sm">
-                  {inspected.rare
-                    ? "Arracher cette plante rare ? Tu pourras la reposer ailleurs."
-                    : `Arracher cette plante ? Ses ${inspected.fed} graine${inspected.fed > 1 ? "s" : ""} reviendront dans ton bac.`}
+                  {inspected.spent
+                    ? `Arracher cette plante ? Les ${inspected.spent} pousses dépensées pour elle te seront rendues.`
+                    : "Arracher cette plante ? Tu pourras en replanter une autre."}
                 </p>
                 <div className="flex gap-2">
                   <button type="button" className="btn-ghost min-h-11 flex-1 text-sm" onClick={() => setConfirming(null)}>
@@ -306,25 +318,12 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
                 </button>
               </div>
             ) : null}
-            {mine && !inspected.rare && seeds.some((s) => s.key === inspected.species) ? (
-              <button
-                type="button"
-                className="btn-primary min-h-11 text-sm"
-                disabled={pending}
-                onClick={() => {
-                  const s = seeds.find((x) => x.key === inspected.species);
-                  if (s) void plant(s, { x: inspected.x, z: inspected.z });
-                }}
-              >
-                Ajouter une graine
-              </button>
-            ) : null}
           </div>
         ) : mine ? (
           <section aria-labelledby="graines" className={`pointer-events-auto flex flex-col gap-2 rounded-[24px] bg-papier/90 shadow-lg backdrop-blur ${compact ? "p-2" : "p-3"}`}>
             <div className={`items-center justify-between gap-2 px-1 ${compact && !seed ? "sr-only" : "flex"}`}>
               <h2 id="graines" className="label">
-                {seedCount ? `Tes graines · ${seedCount}` : "Tes graines"}
+                Tes graines · planter : 10 pousses
               </h2>
               {seed ? (
                 <button
@@ -333,7 +332,8 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
                   disabled={pending}
                   onClick={() => {
                     const at = bestTile(data.plants, seed);
-                    if (at) void plant(seed, at);
+                    if (seed.cost > pousses) say(`Il te faut ${seed.cost} pousses pour planter : enregistre une action pour en gagner.`, "erreur");
+                    else if (at) void plant(seed, at);
                     else say("Ton île est pleine : déplace ou arrache une plante pour faire de la place.", "erreur");
                   }}
                 >
@@ -355,7 +355,9 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
                       >
                         <SeedDot seed={s} />
                         {s.name}
-                        <span className={`rounded-full px-1.5 text-xs tabular-nums ${on ? "bg-white/20" : "bg-sable"}`}>×{s.available}</span>
+                        <span className={`rounded-full px-1.5 text-xs tabular-nums ${on ? "bg-white/20" : s.cost ? "bg-sable" : "bg-pollen-pale text-pollen-texte"}`}>
+                          {s.cost ? s.cost : `offert${s.free > 1 ? ` ×${s.free}` : ""}`}
+                        </span>
                       </button>
                     </li>
                   );
@@ -363,7 +365,7 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
               </ul>
             ) : (
               <p className="px-1 pb-1 text-sm">
-                Chaque action enregistrée avec le <strong>+</strong> te donne une graine à planter ici.
+                Chaque action enregistrée avec le <strong>+</strong> te rapporte des pousses : touche une plante pour la faire grandir.
               </p>
             )}
           </section>

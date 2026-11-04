@@ -69,21 +69,22 @@ export default function ReglesPage() {
       <section className="card flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <span className="chip bg-pollen-pale text-pollen-texte">Ton île</span>
-          <h2 className="font-display text-lg">Graineterie, défis et migrateurs</h2>
+          <h2 className="font-display text-lg">Le défi débloque, les pousses font grandir</h2>
         </div>
         <ul className="flex flex-col gap-2 text-sm leading-relaxed">
-          <li><strong>Les graines de tes actions.</strong> Chaque action donne une graine de sa famille : elle fait
-            revivre sa zone (trajets : la forêt, repas : le potager, achats évités : la plage, maison : le ruisseau).</li>
-          <li><strong>La Graineterie.</strong> Tes pousses achètent des plantes communes (40 pousses) et, une fois
-            débloquées par les actions de la famille de leur zone, des plantes signature (150 pousses). Dépenser ne
-            change jamais ton classement : il compte les pousses gagnées.</li>
-          <li><strong>Les défis.</strong> Ils offrent ce qui ne s&apos;achète pas. Le thème choisit la zone, la durée
-            la rareté (1 semaine : une graine rare, 1 mois : une plante spéciale, 3 mois : un arbre remarquable qui
-            attire un animal), et viser au moins 4 fois par semaine une variante plus belle. Un défi arrivé à son
-            terme sans être réussi donne quand même une plante commune. Comptent les défis réussis depuis l&apos;arrivée
-            de la Graineterie.</li>
-          <li><strong>Les animaux.</strong> Chacun revient avec sa recette : par exemple un merisier en fleurs (défi)
-            et deux noisetiers (Graineterie) côte à côte font venir le geai des chênes.</li>
+          <li><strong>Au départ.</strong> Quatre graines sont plantées sur ton île : bouleau (forêt), potager, fougère
+            (plage) et olivier (ruisseau).</li>
+          <li><strong>Faire grandir.</strong> Chaque action te rapporte des pousses. Planter coûte 10 pousses, puis chaque
+            stade 30, 60 et 100 : une plante adulte, c&apos;est 200 pousses. Arracher une plante rend les pousses
+            dépensées. Dépenser ne change jamais ton classement : il compte les pousses gagnées.</li>
+          <li><strong>Débloquer.</strong> Les défis ouvrent les plus belles espèces : le thème choisit la zone, la durée
+            la rareté (1 semaine : une fleur rare, 1 mois : une plante spéciale, 3 mois : un arbre remarquable qui
+            attire un animal), et viser au moins 4 fois par semaine une variante en fleurs ou en fruits. Le premier
+            exemplaire est offert. Les plantes communes de chaque zone s&apos;ouvrent avec les actions de sa famille,
+            certaines fleurs en essayant une activité (un quiz réussi, un bravo, le scanner).</li>
+          <li><strong>Les zones.</strong> Une zone revit avec les plantes qui y grandissent.</li>
+          <li><strong>Les animaux.</strong> Chacun revient avec sa recette : par exemple un merisier en fleurs et deux
+            noisetiers côte à côte font venir le geai des chênes.</li>
           <li><strong>Le migrateur de la semaine.</strong> Il se pose chez chaque membre qui contribue au défi voté au
             QG. Si la moitié de l&apos;équipe l&apos;accueille (au moins 3 îles), il arrive dans le carnet de toute l&apos;équipe.</li>
           <li><strong>Le myosotis.</strong> Chaque jour, tu peux en offrir un à un collègue. Trois myosotis sur une île

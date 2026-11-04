@@ -18,7 +18,7 @@ export function GardenView({ data, mine }: { data: GardenData; mine: boolean }) 
         </div>
         {mine ? (
           <Link href="/ile" className="btn-dark mt-3 w-full text-sm">
-            Planter mes graines sur mon île
+            Faire grandir mon île
           </Link>
         ) : null}
       </div>

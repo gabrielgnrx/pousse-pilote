@@ -61,7 +61,7 @@ export async function getIsland(supabase: SupabaseClient, userId: string): Promi
 }
 
 /**
- * Mon île, après avoir récupéré ce qui m'est dû (island_claim, 0050_ile_graineterie.sql) :
+ * Mon île, après avoir récupéré ce qui m'est dû (island_claim, 0051_ile_serre.sql) : plantes de départ,
  * récompenses des défis, consolations, migrateurs de l'équipe. Rejouer ne donne rien deux fois.
  */
 export async function getMyIsland(supabase: SupabaseClient, userId: string): Promise<IslandData | null> {

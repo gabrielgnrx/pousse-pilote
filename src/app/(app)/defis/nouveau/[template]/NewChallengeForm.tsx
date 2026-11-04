@@ -243,10 +243,10 @@ export function NewChallengeForm({
           Impact {level} · soit {carKmEquivalent(total)} km en voiture thermique
         </p>
         <div className="mt-3 flex items-center gap-2 rounded-[14px] bg-white/10 px-3 py-2">
-          <span className="text-xs font-bold tracking-wider text-pollen uppercase">Sur ton île</span>
+          <span className="text-xs font-bold tracking-wider text-pollen uppercase">Débloque</span>
           <span className="min-w-0 flex-1 text-sm font-bold">
             {rewardLabel(reward)}
-            {rewardTier ? <span className="font-normal"> · {TIER_LABEL[rewardTier].toLowerCase()}, introuvable à la Graineterie</span> : null}
+            {rewardTier ? <span className="font-normal"> · {TIER_LABEL[rewardTier].toLowerCase()} débloquée, la première offerte</span> : null}
           </span>
         </div>
         {!demanding && template.level !== "expert" ? (

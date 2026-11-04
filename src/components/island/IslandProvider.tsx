@@ -1,9 +1,8 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { STAGE_NAMES } from "@/lib/game/garden.ts";
-import { ZONE_BY_KEY, checkTile, guestsOf, lookOf, moveLocally, plantLocally, seedsOf, tileFits, uprootLocally, zoneOfSpecies, type IslandData, type Seed } from "@/lib/game/island.ts";
+import { ISLAND_STAGE_NAMES, ZONE_BY_KEY, checkTile, growLocally, guestsOf, lookOf, moveLocally, plantLocally, seedsOf, stageOf, tileFits, uprootLocally, zoneOfSpecies, type IslandData, type Seed } from "@/lib/game/island.ts";
 import { newcomers, type Animal } from "@/lib/game/ecosystem.ts";
-import { movePlant, plantSeed, uprootPlant, type PlantResult } from "@/app/(app)/ile/actions";
+import { growPlant, movePlant, plantSeed, uprootPlant, type PlantResult } from "@/app/(app)/ile/actions";
 import type { IslandScene } from "./scene.ts";
 
 export type Tile = { x: number; z: number };
@@ -25,6 +24,8 @@ interface IslandContextValue {
   setInspect(tile: Tile | null): void;
   say(text: string, tone?: "ok" | "erreur"): void;
   plant(seed: Seed, at: Tile): Promise<void>;
+  /** Faire grandir une plante d'un stade, avec ses pousses. */
+  grow(at: Tile): Promise<void>;
   /** La plante en cours de déplacement (on touche ensuite une case libre). */
   moving: Tile | null;
   startMove(at: Tile | null): void;
@@ -49,10 +50,13 @@ export function useIsland(): IslandContextValue {
 export function IslandProvider({
   initial,
   mine = true,
+  initialSeed = null,
   framing = "full",
   children,
 }: {
   initial: IslandData;
+  /** L'espèce choisie à l'ouverture (« Planter » depuis la Serre). */
+  initialSeed?: string | null;
   mine?: boolean;
   /** « hero » : en haut de l'accueil, sous l'en-tête et au-dessus du fil ; « full » : la page de l'île. */
   framing?: "hero" | "full";
@@ -62,7 +66,7 @@ export function IslandProvider({
   const sceneRef = useRef<IslandScene | null>(null);
   const [status, setStatus] = useState<"chargement" | "pret" | "erreur">("chargement");
   const [own, setOwn] = useState(initial);
-  const [seedKey, setSeedKey] = useState<string | null>(null);
+  const [seedKey, setSeedKey] = useState<string | null>(initialSeed);
   const [tile, setTile] = useState<Tile | null>(null);
   const [inspect, setInspect] = useState<Tile | null>(null);
   const [toast, setToast] = useState<Toast>(null);
@@ -132,10 +136,13 @@ export function IslandProvider({
       setOwn(uprootLocally(before, at));
       setInspect(null);
       sceneRef.current?.celebrate(at.x, at.z, "grandit");
+      const back = plant.spent ?? 0;
       setToast({
-        text: plant.rare
-          ? `Plante arrachée : ${look?.name ?? "elle"} t'attend dans le bac`
-          : `Plante arrachée : ${plant.fed} graine${plant.fed > 1 ? "s" : ""} de retour dans le bac`,
+        text: back
+          ? `Plante arrachée : ${back} pousses rendues`
+          : look?.rare
+            ? `Plante arrachée : ${look.name} t'attend dans tes graines`
+            : "Plante arrachée",
         tone: "ok",
       });
       await settle(before, uprootPlant(at));
@@ -147,32 +154,58 @@ export function IslandProvider({
     async (s: Seed, at: Tile) => {
       const { own: before, pending: busy } = live.current;
       if (busy) return;
-      const old = before.plants.find((p) => p.x === at.x && p.z === at.z);
-      const oldStage = old ? lookOf(old)?.stage ?? 0 : 0;
+      if (s.cost > (before.pousses ?? 0)) {
+        say(`Il te faut ${s.cost} pousses pour planter : enregistre une action pour en gagner.`, "erreur");
+        return;
+      }
       const next = plantLocally(before, s, at.x, at.z);
       const now = next.plants.find((p) => p.x === at.x && p.z === at.z);
       const look = now ? lookOf(now) : null;
       if (!now || !look || next === before) return;
 
-      const kind = !old ? "nouvelle" : look.stage > oldStage ? "stade" : "grandit";
       setOwn(next);
       welcome(before, next);
       setTile(null);
-      sceneRef.current?.celebrate(at.x, at.z, kind);
+      sceneRef.current?.celebrate(at.x, at.z, "nouvelle");
       try {
-        navigator.vibrate?.(kind === "stade" ? [20, 40, 30] : 15);
+        navigator.vibrate?.(15);
       } catch {
         // Pas de vibration sur cet appareil.
       }
-      say(
-        kind === "nouvelle"
-          ? `Nouvelle plante : ${look.name}`
-          : kind === "stade"
-            ? `${look.name} : ${STAGE_NAMES[look.stage]} !`
-            : `${look.name} : ${now.fed} graines${look.next ? `, stade suivant à ${look.next}` : ""}`,
-      );
+      say(`Nouvelle plante : ${look.name}${s.cost ? ` · −${s.cost} pousses` : " · offerte"}`);
 
       await settle(before, plantSeed({ species: s.key, x: at.x, z: at.z }));
+    },
+    [say, settle, welcome],
+  );
+
+  const grow = useCallback(
+    async (at: Tile) => {
+      const { own: before, pending: busy } = live.current;
+      if (busy) return;
+      const old = before.plants.find((p) => p.x === at.x && p.z === at.z);
+      const look = old ? lookOf(old) : null;
+      if (!old || !look) return;
+      if (!look.next) {
+        say(`${look.name} est déjà adulte.`, "erreur");
+        return;
+      }
+      const next = growLocally(before, at);
+      if (!next) {
+        say(`Il te faut ${look.next} pousses : enregistre des actions pour en gagner.`, "erreur");
+        return;
+      }
+      const stage = stageOf(next.plants.find((p) => p.x === at.x && p.z === at.z)!);
+      setOwn(next);
+      welcome(before, next);
+      sceneRef.current?.celebrate(at.x, at.z, "stade");
+      try {
+        navigator.vibrate?.([20, 40, 30]);
+      } catch {
+        // Pas de vibration sur cet appareil.
+      }
+      say(`${look.name} : ${ISLAND_STAGE_NAMES[stage]} ! −${look.next} pousses`);
+      await settle(before, growPlant(at));
     },
     [say, settle, welcome],
   );
@@ -196,7 +229,9 @@ export function IslandProvider({
       setInspect(null);
       const check = checkTile(d.plants, s, x, z);
       if (check === "occupe") {
-        say("Une autre plante pousse ici. Choisis une case libre, ou une plante de la même espèce.", "erreur");
+        // Une plante pousse ici : on ouvre sa fiche (pour la faire grandir), sans quitter la plantation.
+        setTile(null);
+        setInspect({ x, z });
         return;
       }
       if (check === "hors_ile") return;
@@ -292,6 +327,7 @@ export function IslandProvider({
     setInspect,
     say,
     plant,
+    grow,
     moving,
     startMove,
     uproot,
@@ -315,11 +351,11 @@ export function IslandProvider({
               ? `${mine ? "Ton île" : `L'île de ${name}`}, vue d'en haut : ${data.plants
                   .map((p) => {
                     const l = lookOf(p);
-                    return l ? `${l.name} (${STAGE_NAMES[l.stage]})` : "";
+                    return l ? `${l.name} (${ISLAND_STAGE_NAMES[l.stage]})` : "";
                   })
                   .filter(Boolean)
                   .join(", ")}.`
-              : "Une île vide, prête à accueillir tes premières graines."
+              : "Une île vide, prête à accueillir tes premières plantes."
           }
         />
         {status === "erreur" ? <div aria-hidden="true" className="absolute inset-0 bg-creme" /> : null}

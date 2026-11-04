@@ -323,16 +323,16 @@ export function createIslandScene(host: HTMLElement, events: IslandSceneEvents, 
     if (!planting) return;
     ISLAND_TILES.forEach((t) => {
       const check = checkTile(current, planting!, t.x, t.z);
-      if (check !== "nouvelle" && check !== "grandit") return;
+      if (check !== "nouvelle") return;
       const { sx, sy } = project(t.x, t.z);
       const g = el("g", { transform: `translate(${sx} ${sy})` }, tilesG);
       el(
         "path",
         {
           d: diamond(0.86),
-          fill: check === "grandit" ? "#f2c14e" : "#ffffff",
-          "fill-opacity": check === "grandit" ? 0.7 : 0.38,
-          stroke: check === "grandit" ? "#d9a42c" : "#ffffff",
+          fill: "#ffffff",
+          "fill-opacity": 0.38,
+          stroke: "#ffffff",
           "stroke-opacity": 0.8,
           "stroke-width": 1.5,
           "stroke-linejoin": "round",

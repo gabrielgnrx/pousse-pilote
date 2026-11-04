@@ -1,10 +1,10 @@
 /**
- * Le catalogue de l'île (même catalogue que la table island_catalog, 0050_ile_graineterie.sql).
+ * Le catalogue de l'île (même catalogue que la table island_catalog, 0050 et 0051_ile_serre.sql).
  *
- * Deux façons d'obtenir une plante : les pousses achètent à la Graineterie les plantes communes et
- * les plantes signature (débloquées par les actions de la famille de la zone) ; les défis offrent ce
- * qui ne s'achète pas. L'équipe apporte le reste : myosotis offerts, migrateurs de la semaine.
- * Une plante du catalogue se pose une fois, adulte, autant de fois qu'on en possède.
+ * Une espèce se débloque, puis on la plante et la fait grandir avec ses pousses. Les plantes communes
+ * et signature d'une zone se débloquent avec les actions de sa famille ; celles des défis en
+ * réussissant un défi (le premier exemplaire est offert) ; le myosotis en le recevant d'un collègue.
+ * Les migrateurs arrivent en équipe et ne se plantent pas.
  */
 import type { Shape } from "./garden.ts";
 import type { Zone } from "./island.ts";
@@ -19,11 +19,9 @@ export interface Item {
   kind: ItemKind;
   tier: Tier;
   /**
-   * Prix en pousses (Graineterie) : 40 pour une commune, 150 pour une signature. Calé sur la démo
-   * (environ 85 pousses gagnées par semaine) : une commune tous les 3 ou 4 jours, le tout en une saison.
+   * Plante commune ou signature : actions de la famille de la zone qui la débloquent. Calé sur la
+   * démo (4 semaines) : les communes dans le premier mois, la signature pour les plus réguliers.
    */
-  price?: number;
-  /** Plante signature : graines de la famille de la zone à avoir gagnées. */
   unlock?: number;
   shape: Shape;
   color: string;
@@ -35,21 +33,21 @@ export interface Item {
 }
 
 export const ITEMS: readonly Item[] = [
-  // Graineterie : plantes communes.
-  { key: "noisetier", name: "Noisetier", zone: "foret", kind: "boutique", tier: "commune", price: 40, shape: "arbre", color: "#7fb069", accent: "#8a5a2b", dots: "#a8743a" },
-  { key: "houx", name: "Houx", zone: "foret", kind: "boutique", tier: "commune", price: 40, shape: "touffe", color: "#2f6b3a", accent: "#c8322a" },
-  { key: "groseillier", name: "Groseillier", zone: "potager", kind: "boutique", tier: "commune", price: 40, shape: "touffe", color: "#5f9a4a", accent: "#c8322a" },
-  { key: "courge", name: "Courge", zone: "potager", kind: "boutique", tier: "commune", price: 40, shape: "potager", color: "#6f9a3e", accent: "#e8a33a" },
-  { key: "oyat", name: "Oyat", zone: "plage", kind: "boutique", tier: "commune", price: 40, shape: "touffe", color: "#b8c27a", accent: "#b8c27a" },
-  { key: "chardon", name: "Chardon bleu", zone: "plage", kind: "boutique", tier: "commune", price: 40, shape: "fleur", color: "#7f96c8", accent: "#4a5e8a" },
-  { key: "roseau", name: "Roseau", zone: "ruisseau", kind: "boutique", tier: "commune", price: 40, shape: "touffe", color: "#7a9a4a", accent: "#8a6a3a" },
-  { key: "iris", name: "Iris d'eau", zone: "ruisseau", kind: "boutique", tier: "commune", price: 40, shape: "fleur", color: "#f2c94c", accent: "#5f8f4e" },
-  // Graineterie : plantes signature, débloquées par les actions de la famille de la zone.
-  { key: "erable", name: "Érable", zone: "foret", kind: "signature", tier: "signature", price: 150, unlock: 8, shape: "arbre", color: "#c8642f", accent: "#6b4a2b" },
-  { key: "pommier", name: "Pommier", zone: "potager", kind: "signature", tier: "signature", price: 150, unlock: 15, shape: "arbre", color: "#6f9a4a", accent: "#7a5236", dots: "#d9432f" },
-  { key: "pin_parasol", name: "Pin parasol", zone: "plage", kind: "signature", tier: "signature", price: 150, unlock: 3, shape: "arbre", color: "#4f7a45", accent: "#8a5a3a" },
-  { key: "aulne", name: "Aulne", zone: "ruisseau", kind: "signature", tier: "signature", price: 150, unlock: 3, shape: "arbre", color: "#5f8a4a", accent: "#5a4a3a" },
-  // Défis : jamais en vente.
+  // Communes : débloquées par les premières actions de la famille.
+  { key: "noisetier", name: "Noisetier", zone: "foret", kind: "boutique", tier: "commune", unlock: 2, shape: "arbre", color: "#7fb069", accent: "#8a5a2b", dots: "#a8743a" },
+  { key: "houx", name: "Houx", zone: "foret", kind: "boutique", tier: "commune", unlock: 4, shape: "touffe", color: "#2f6b3a", accent: "#c8322a" },
+  { key: "groseillier", name: "Groseillier", zone: "potager", kind: "boutique", tier: "commune", unlock: 3, shape: "touffe", color: "#5f9a4a", accent: "#c8322a" },
+  { key: "courge", name: "Courge", zone: "potager", kind: "boutique", tier: "commune", unlock: 8, shape: "potager", color: "#6f9a3e", accent: "#e8a33a" },
+  { key: "oyat", name: "Oyat", zone: "plage", kind: "boutique", tier: "commune", unlock: 1, shape: "touffe", color: "#b8c27a", accent: "#b8c27a" },
+  { key: "chardon", name: "Chardon bleu", zone: "plage", kind: "boutique", tier: "commune", unlock: 2, shape: "fleur", color: "#7f96c8", accent: "#4a5e8a" },
+  { key: "roseau", name: "Roseau", zone: "ruisseau", kind: "boutique", tier: "commune", unlock: 1, shape: "touffe", color: "#7a9a4a", accent: "#8a6a3a" },
+  { key: "iris", name: "Iris d'eau", zone: "ruisseau", kind: "boutique", tier: "commune", unlock: 2, shape: "fleur", color: "#f2c94c", accent: "#5f8f4e" },
+  // Signature : débloquées par les plus réguliers de la famille.
+  { key: "erable", name: "Érable", zone: "foret", kind: "signature", tier: "signature", unlock: 8, shape: "arbre", color: "#c8642f", accent: "#6b4a2b" },
+  { key: "pommier", name: "Pommier", zone: "potager", kind: "signature", tier: "signature", unlock: 15, shape: "arbre", color: "#6f9a4a", accent: "#7a5236", dots: "#d9432f" },
+  { key: "pin_parasol", name: "Pin parasol", zone: "plage", kind: "signature", tier: "signature", unlock: 3, shape: "arbre", color: "#4f7a45", accent: "#8a5a3a" },
+  { key: "aulne", name: "Aulne", zone: "ruisseau", kind: "signature", tier: "signature", unlock: 3, shape: "arbre", color: "#5f8a4a", accent: "#5a4a3a" },
+  // Défis : le thème choisit la zone, la durée la rareté.
   { key: "muguet", name: "Muguet", zone: "foret", kind: "defi", tier: "rare", shape: "fleur", color: "#f4f1e8", accent: "#5f8f4e" },
   { key: "merisier", name: "Merisier", zone: "foret", kind: "defi", tier: "speciale", shape: "arbre", color: "#6f9a4a", accent: "#7a4a3a" },
   { key: "merisier_fleurs", name: "Merisier en fleurs", zone: "foret", kind: "defi", tier: "fleurie", shape: "arbre", color: "#7fa85a", accent: "#7a4a3a", dots: "#f6b7c8" },
@@ -104,11 +102,11 @@ export function categoryZone(category: string): Zone {
   return "foret";
 }
 
-const BY_ZONE: Record<Zone, { rare: string; speciale: string; fleurie: string; remarquable: string; consolation: string }> = {
-  foret: { rare: "muguet", speciale: "merisier", fleurie: "merisier_fleurs", remarquable: "hetre", consolation: "houx" },
-  potager: { rare: "capucine", speciale: "figuier", fleurie: "figuier_fruits", remarquable: "chataignier", consolation: "groseillier" },
-  plage: { rare: "lys_sable", speciale: "tamaris", fleurie: "tamaris_fleurs", remarquable: "chene_liege", consolation: "oyat" },
-  ruisseau: { rare: "salicaire", speciale: "saule_marsault", fleurie: "saule_chatons", remarquable: "platane", consolation: "roseau" },
+const BY_ZONE: Record<Zone, { rare: string; speciale: string; fleurie: string; remarquable: string }> = {
+  foret: { rare: "muguet", speciale: "merisier", fleurie: "merisier_fleurs", remarquable: "hetre" },
+  potager: { rare: "capucine", speciale: "figuier", fleurie: "figuier_fruits", remarquable: "chataignier" },
+  plage: { rare: "lys_sable", speciale: "tamaris", fleurie: "tamaris_fleurs", remarquable: "chene_liege" },
+  ruisseau: { rare: "salicaire", speciale: "saule_marsault", fleurie: "saule_chatons", remarquable: "platane" },
 };
 
 /** Un défi est costaud s'il est expert ou demande au moins 4 fois par semaine. */
@@ -128,11 +126,6 @@ export function challengeReward(category: string, days: number, target: number, 
   return costaud ? [z.remarquable, z.fleurie] : [z.remarquable];
 }
 
-/** Ce que donne un défi arrivé à son terme sans être réussi : une plante commune de sa zone. */
-export function consolation(category: string): string {
-  return BY_ZONE[categoryZone(category)].consolation;
-}
-
 /** « 2 × Muguet », « Merisier en fleurs + Hêtre remarquable »… */
 export function rewardLabel(items: string[]): string {
   const counts = new Map<string, number>();
@@ -142,7 +135,7 @@ export function rewardLabel(items: string[]): string {
     .join(" + ");
 }
 
-/** Ce qu'on peut acheter dans une zone, et ce qui y est verrouillé. */
+/** Les plantes d'une zone débloquées par les actions de sa famille (communes, puis signature). */
 export function shopOf(zone: Zone): Item[] {
   return ITEMS.filter((i) => i.zone === zone && (i.kind === "boutique" || i.kind === "signature"));
 }
