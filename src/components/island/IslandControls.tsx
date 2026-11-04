@@ -92,15 +92,14 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
             <Link
               href="/ile/serre"
               className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-pollen px-3 text-sm font-bold text-encre shadow-sm"
-              aria-label={`La Serre : ${pousses} pousses à dépenser`}
+              aria-label="La Serre : tes espèces à planter et à débloquer"
             >
               <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M12 21V11" />
                 <path d="M12 13C12 8 8 5 4 5c0 4 3 8 8 8z" />
                 <path d="M12 11c0-4 3-7 8-7 0 4-3 7-8 7z" />
               </svg>
-              <span className="tabular-nums">{pousses.toLocaleString("fr-FR")}</span>
-              <span className="sr-only sm:not-sr-only">Serre</span>
+              <span>Serre</span>
             </Link>
           ) : (
             <>

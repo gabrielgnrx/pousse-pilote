@@ -6,10 +6,12 @@ import { getEngagement } from "@/lib/engagement-data";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { supabase, user, profile } = await requireProfile();
 
-  const [{ count: unseen }, me, { data: team }] = await Promise.all([
+  const [{ count: unseen }, me, { data: team }, { data: balance }] = await Promise.all([
     supabase.from("alerts").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("seen_at", null),
     getEngagement(supabase, user.id),
     profile.team_id ? supabase.from("teams").select("name").eq("id", profile.team_id).maybeSingle<{ name: string }>() : Promise.resolve({ data: null }),
+    // Les pousses qu'il me reste à dépenser sur l'île (0052_solde_pousses.sql).
+    supabase.rpc("my_pousses"),
   ]);
 
   return (
@@ -17,6 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ProgressHud
         initial={profile.display_name.charAt(0).toUpperCase()}
         total={me.points.total}
+        balance={typeof balance === "number" ? balance : me.points.total}
         streak={me.streak}
         notifications={unseen ?? 0}
         teamName={team?.name ?? null}
