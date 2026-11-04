@@ -14,6 +14,9 @@ export async function toggleCheer(form: FormData) {
   if (existing) {
     await supabase.from("cheers").delete().eq("validation_id", id).eq("user_id", user.id);
   } else {
+    // On ne se félicite pas soi-même (0053_clarte_jeu.sql refuse aussi l'insertion).
+    const { data: post } = await supabase.from("validations").select("user_id").eq("id", id).maybeSingle<{ user_id: string }>();
+    if (!post || post.user_id === user.id) return;
     await supabase.from("cheers").insert({ validation_id: id, user_id: user.id });
   }
   revalidatePath("/fil");

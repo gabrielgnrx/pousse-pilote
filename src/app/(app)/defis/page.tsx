@@ -23,6 +23,7 @@ import { DuelStrip } from "@/components/DuelStrip";
 import { actionTitle } from "@/lib/actions-catalog";
 import { BONUS, MODES, fmtMult } from "@/lib/boosts";
 import { TEAM_KINDS, type TeamWeek } from "@/lib/team";
+import { challengePlantHint } from "@/lib/game/goals.ts";
 
 interface ChallengeRow {
   id: string;
@@ -260,6 +261,7 @@ export default async function DefisPage({
                   <Link href={`/informer/geste/${t.id}`} className="text-xs font-bold underline underline-offset-2">Pourquoi et comment</Link>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     <span className="chip bg-pollen-pale text-pollen-texte">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
+                    <span className="chip bg-sable text-sapin">{challengePlantHint(t.category)}</span>
                     <span className="chip bg-sauge text-sapin">
                       −{e.minKg === e.maxKg ? formatKg(e.minKg) : `${formatKg(e.minKg)} à ${formatKg(e.maxKg)}`} CO₂ par {t.unit.one}
                     </span>
@@ -293,6 +295,7 @@ export default async function DefisPage({
                     {t.pitch ? <p className="mt-1 text-xs leading-relaxed text-brun">{t.pitch}</p> : null}
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       <span className="chip bg-pollen-pale text-pollen-texte">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
+                    <span className="chip bg-sable text-sapin">{challengePlantHint(t.category)}</span>
                       <span className="chip bg-sauge text-sapin">
                         −{e.minKg === e.maxKg ? formatKg(e.minKg) : `${formatKg(e.minKg)} à ${formatKg(e.maxKg)}`} CO₂ par {t.unit.one}
                       </span>
@@ -321,6 +324,7 @@ export default async function DefisPage({
                     <h3 className="mt-1 font-bold">{t.title}</h3>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       <span className="chip bg-pollen-pale text-pollen-texte">+{t.pointsPerUnit} pousses par {t.unit.one}</span>
+                    <span className="chip bg-sable text-sapin">{challengePlantHint(t.category)}</span>
                       <span className="chip bg-sable text-brun">0 kg en plus</span>
                     </div>
                   </div>

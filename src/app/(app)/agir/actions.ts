@@ -10,6 +10,8 @@ import { ACTION_SLUGS } from "@/lib/co2/action-types.data.ts";
 import { ACTION_BY_SLUG } from "@/lib/co2/engine.ts";
 import { candidatesFor, interpretItems, parsePhrase, type ConfirmCard } from "@/lib/actions/interpret.ts";
 import { habitsFromRow, type HabitsRow } from "@/lib/session";
+import { islandAfterAction, type IslandNudge } from "@/lib/game/goals.ts";
+import type { IslandData } from "@/lib/game/island.ts";
 
 export interface LoggedAction {
   id: string;
@@ -44,6 +46,10 @@ export interface LoggedAction {
   provisional?: boolean;
   /** Une partie n'a pas été comptée (plafond atteint en cours de route). */
   notice?: string;
+  /** Bonus gros leviers compris dans les pousses (0053_clarte_jeu.sql). */
+  bonus?: number;
+  /** Ce que l'action change sur l'île : espèce débloquée, prochaine espèce, plante à faire grandir. */
+  island?: IslandNudge | null;
 }
 
 export type LogResult = { ok: true; action: LoggedAction } | { ok: false; error: string };
@@ -183,7 +189,7 @@ export async function logSheet(form: FormData): Promise<LogResult> {
     return first.ok && failure ? { ok: true, action: { ...first.action, notice: `Le reste n'a pas été compté : ${failure}` } } : first;
   }
   // Plusieurs articles : une seule célébration, avec la somme du CO₂ et des pousses.
-  const rows = logged as { kg: number; points: number; base_points?: number; units?: number }[];
+  const rows = logged as { kg: number; points: number; base_points?: number; units?: number; bonus?: number }[];
   const sum = (f: (r: (typeof rows)[number]) => number) => rows.reduce((a, r) => a + f(r), 0);
   const labels = lines.slice(0, logged.length).map((l) => `${l.quantity} × ${(t.variants.find((v) => v.key === l.variant)?.label ?? l.variant).toLowerCase()}`);
   return {
@@ -195,6 +201,7 @@ export async function logSheet(form: FormData): Promise<LogResult> {
       points: sum((r) => Number(r.points)),
       basePoints: sum((r) => Number(r.base_points ?? r.points)),
       units: sum((r) => Number(r.units ?? 1)),
+      bonus: sum((r) => Number(r.bonus ?? 0)),
       notice: failure ? `Le reste n'a pas été compté : ${failure}` : undefined,
     },
   };
@@ -222,11 +229,13 @@ async function describe(
     units?: number;
     quantity?: number | null;
     capped?: boolean;
+    bonus?: number;
   };
 
-  const [me, { data: pulse }] = await Promise.all([
+  const [me, { data: pulse }, { data: isle }] = await Promise.all([
     getEngagement(supabase, userId),
     supabase.rpc("company_pulse"),
+    supabase.rpc("island", { p_user: userId }),
   ]);
   const t = TEMPLATE_BY_ID[r.template_id];
 
@@ -271,6 +280,8 @@ async function describe(
         : null,
       units: Number(r.units ?? 1),
       capped: !!r.capped,
+      bonus: Number(r.bonus ?? 0),
+      island: isle && t ? islandAfterAction(isle as IslandData, t.category, Number(r.units ?? 1)) : null,
     },
   };
 }

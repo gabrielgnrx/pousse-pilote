@@ -29,15 +29,16 @@ test("une action rapporte des pousses, qu'on dépense pour planter, puis on dép
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("pousses", { exact: true })).toBeVisible();
 
-  // 2. « Super ! » mène sur l'île.
-  await dialog.getByRole("button", { name: /Super !|Je continue !/ }).click();
+  // 2. « Voir mon île » mène sur l'île.
+  await dialog.getByRole("button", { name: /Voir mon île|Super !|Je continue !/ }).click();
   await page.waitForURL(/\/ile$/);
   await expect(page.locator("svg.pi")).toBeVisible();
 
   // 3. Les quatre plantes de départ sont là. Choisir le potager, laisser l'appli choisir la case.
   await expect.poll(() => occupied(page)).toHaveLength(4);
   // Une carte de récompense (migrateur de l'équipe, défi réussi…) peut s'ouvrir sur l'île : on la ferme.
-  const card = page.getByRole("button", { name: /^(Super !|Plus tard)$/ });
+  // La règle du jeu s'ouvre à la première visite, comme les cartes de récompense : on la ferme aussi.
+  const card = page.getByRole("button", { name: /^(Super !|Plus tard|C'est parti)$/ });
   for (let i = 0; i < 4; i++) {
     const shown = await card.first().waitFor({ state: "visible", timeout: 2000 }).then(() => true, () => false);
     if (!shown) break;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CATEGORY_LABEL, TEMPLATE_BY_ID, formatKg } from "@/lib/co2/challenges.ts";
 import type { PlanEntry } from "@/lib/plan/weekly.ts";
+import { challengePlantHint } from "@/lib/game/goals.ts";
 
 const SIGNAL: Record<PlanEntry["signal"], { label: string; className: string } | null> = {
   nouveau: null,
@@ -50,6 +51,7 @@ export function WeeklyPlan({
                   <p className="mt-1 text-sm leading-snug text-brun">{e.reason}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <span className="chip bg-sauge text-sapin">≈ −{formatKg(e.kg_year)} par an</span>
+                    <span className="chip bg-sable text-sapin">{challengePlantHint(t.category)}</span>
                     {badge ? <span className={`chip ${badge.className}`}>{badge.label}</span> : null}
                   </div>
                 </div>

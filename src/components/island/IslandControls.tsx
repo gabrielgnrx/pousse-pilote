@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ISLAND_STAGE_NAMES, ZONE_BY_KEY, bestTile, guestsOf, lookOf, playableTiles, zoneOfSpecies, type Reward, type Seed } from "@/lib/game/island.ts";
 import { ITEM_BY_KEY, TIER_LABEL, rewardLabel } from "@/lib/game/catalog.ts";
 import { ANIMALS, ANIMAL_BY_KEY, animalsOn, type AnimalKey } from "@/lib/game/ecosystem.ts";
+import { nextGoal, type Goal, type GoalAction } from "@/lib/game/goals.ts";
 import { useIsland } from "./IslandProvider";
 import { ANIMAL_ART } from "./ecosystem-layer.ts";
 
@@ -36,12 +37,162 @@ function rewardTitle(r: Reward): string {
   return item?.tier === "commune" ? "Défi terminé : une plante pour la suite" : "Défi réussi";
 }
 
+/** L'animal visé, en petit : il reste visible en haut de l'île et ouvre le détail de l'objectif. */
+function AnimalBadge({ animal, size = 30 }: { animal: Goal["animal"]; size?: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={size}
+      height={size}
+      viewBox="-26 -26 52 44"
+      className="shrink-0 rounded-full bg-sauge"
+      dangerouslySetInnerHTML={{ __html: `<g transform="translate(0 ${GOAL_ICON_SHIFT[animal.key] ?? 0}) scale(0.9)">${ANIMAL_ART[animal.key as AnimalKey] ?? ""}</g>` }}
+    />
+  );
+}
+
+/** Les animaux qui volent ou se perchent sont dessinés haut : on les ramène dans la pastille (comme le carnet). */
+const GOAL_ICON_SHIFT: Partial<Record<string, number>> = { oiseaux: 100, chouette: 50, papillons: 38, ecureuil: 8, geai: 52, mesanges: 46, pic_vert: 34, loir: 30, libellules: 24, chardonneret: 26, heron: 14 };
+
+const TUTO_KEY = "pousse:regle-ile-vue";
+
+const TUTO = [
+  { title: "Agis avec le +", text: "Chaque geste te rapporte des pousses et fait avancer une zone : trajets → Forêt, repas → Potager, achats → Plage, maison → Ruisseau." },
+  { title: "Débloque, plante, fais grandir", text: "Les actions et les défis débloquent des espèces. Planter coûte 10 pousses, puis chaque stade 30, 60 et 100." },
+  { title: "Fais revenir les animaux", text: "Les bonnes plantes côte à côte recréent un habitat. L'objectif, en haut de l'île, te dit quoi faire ensuite." },
+];
+
+/** La règle du jeu en trois étapes. */
+function TutoPanel({ onClose }: { onClose: () => void }) {
+  return (
+    <section aria-labelledby="regle-ile" className="pointer-events-auto flex flex-col gap-3 rounded-[24px] bg-nuit p-4 text-white shadow-lg motion-safe:animate-[panel-up_0.4s_cubic-bezier(0.2,0.9,0.3,1.2)]">
+      <div>
+        <p className="text-xs font-bold tracking-wider text-pollen uppercase">Comment ça marche</p>
+        <h2 id="regle-ile" className="font-display text-2xl leading-tight">
+          Ton île revit avec tes gestes
+        </h2>
+      </div>
+      <ol className="flex flex-col gap-2.5">
+        {TUTO.map((t, i) => (
+          <li key={t.title} className="flex gap-3">
+            <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-pollen font-display text-encre">
+              {i + 1}
+            </span>
+            <span className="text-sm leading-snug">
+              <strong className="block text-white">{t.title}</strong>
+              <span className="text-nuit-pale">{t.text}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <button type="button" className="btn-primary min-h-11 text-sm" onClick={onClose}>
+        C&apos;est parti
+      </button>
+    </section>
+  );
+}
+
+/** Le détail de l'objectif : ses étapes, et un bouton pour faire la prochaine. */
+function GoalPanel({ goal, onAction, onClose }: { goal: Goal; onAction: (a: GoalAction) => void; onClose: () => void }) {
+  const a = goal.next;
+  return (
+    <section aria-labelledby="objectif-ile" className="pointer-events-auto flex flex-col gap-3 rounded-[24px] bg-papier p-4 shadow-lg motion-safe:animate-[panel-up_0.3s_cubic-bezier(0.2,0.9,0.3,1.2)]">
+      <div className="flex items-center gap-3">
+        <AnimalBadge animal={goal.animal} size={44} />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold tracking-wider text-chloro uppercase">Prochain objectif</p>
+          <h2 id="objectif-ile" className="font-display text-xl leading-tight">
+            Faire revenir : {goal.animal.name}
+          </h2>
+        </div>
+        <button type="button" aria-label="Fermer l'objectif" className="-mr-2 flex size-11 items-center justify-center rounded-full" onClick={onClose}>
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </div>
+      <ol className="flex flex-col gap-1.5">
+        {goal.steps.map((step, i) => (
+          <li key={i} className={`flex items-start gap-2 text-sm ${step.done ? "text-terre line-through" : ""}`}>
+            <span
+              aria-hidden="true"
+              className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${step.done ? "bg-chloro text-white" : "bg-sable text-brun"}`}
+            >
+              {step.done ? "✓" : i + 1}
+            </span>
+            <span>
+              <span className="sr-only">{step.done ? "Fait : " : "À faire : "}</span>
+              {step.label}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="text-xs leading-snug text-terre">{goal.animal.why}</p>
+      {a.kind === "lien" ? (
+        <Link href={a.href} className="btn-primary min-h-11 text-sm">
+          {a.label}
+        </Link>
+      ) : (
+        <button type="button" className="btn-primary min-h-11 text-sm" onClick={() => onAction(a)}>
+          {a.label}
+        </button>
+      )}
+    </section>
+  );
+}
+
 /** Les commandes du jeu, posées sur l'île de l'accueil : graines, plantation, fiche d'une plante. */
 /** `top` et `bottom` : marges (px) laissées libres en haut (en-tête) et en bas (feuille du fil). */
 export function IslandControls({ top = 12, bottom = 12, compact = false }: { top?: number; bottom?: number; compact?: boolean } = {}) {
   const { data, mine, status, seeds, seed, tile, inspect, toast, pending, chooseSeed, setTile, setInspect, say, plant, grow, moving, startMove, uproot, newcomer, dismissNewcomer } =
     useIsland();
   const living = animalsOn(data.plants, guestsOf(data)).length;
+  const goal = mine ? nextGoal(data) : null;
+  const [goalOpen, setGoalOpen] = useState(false);
+  // La règle du jeu en 3 étapes : ouverte d'office à la première visite, puis avec le bouton « ? ».
+  const [tutoOpen, setTutoOpen] = useState(false);
+  useEffect(() => {
+    if (!mine) return;
+    try {
+      if (!window.localStorage.getItem(TUTO_KEY)) setTutoOpen(true);
+    } catch {
+      // Navigation privée : pas d'ouverture automatique.
+    }
+  }, [mine]);
+  const closeTuto = () => {
+    setTutoOpen(false);
+    try {
+      window.localStorage.setItem(TUTO_KEY, "1");
+    } catch {
+      // Navigation privée : elle se rouvrira à la prochaine visite.
+    }
+  };
+  // Toucher une plante ou choisir une graine referme l'objectif et la règle du jeu.
+  const interacting = Boolean(inspect || tile || seed || moving);
+  useEffect(() => {
+    if (!interacting) return;
+    setGoalOpen(false);
+    setTutoOpen((open) => {
+      if (open) {
+        try {
+          window.localStorage.setItem(TUTO_KEY, "1");
+        } catch {
+          // Navigation privée.
+        }
+      }
+      return false;
+    });
+  }, [interacting]);
+
+  const runGoal = (a: GoalAction) => {
+    setGoalOpen(false);
+    if (a.kind === "planter") {
+      if (seeds.some((s) => s.key === a.species)) chooseSeed(a.species);
+      else say("Cette espèce n'est pas encore débloquée : regarde dans la Serre comment l'obtenir.", "erreur");
+    } else if (a.kind === "ile") {
+      say(a.label);
+    }
+  };
   // La première récompense pas encore fêtée sur cet appareil (lue après le premier rendu).
   const [seen, setSeen] = useState<string[] | null>(null);
   useEffect(() => setSeen(readSeen()), []);
@@ -89,6 +240,16 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
             </Link>
           ) : null}
           {mine ? (
+            <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Comment ça marche"
+              aria-expanded={tutoOpen}
+              onClick={() => (tutoOpen ? closeTuto() : setTutoOpen(true))}
+              className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-papier/90 font-display text-lg text-sapin shadow-sm backdrop-blur"
+            >
+              ?
+            </button>
             <Link
               href="/ile/serre"
               className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-pollen px-3 text-sm font-bold text-encre shadow-sm"
@@ -101,6 +262,7 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
               </svg>
               <span>Serre</span>
             </Link>
+            </div>
           ) : (
             <>
               <p className="rounded-full bg-papier/90 px-4 py-2 font-display text-lg shadow-sm backdrop-blur">L&apos;île de {name}</p>
@@ -110,6 +272,26 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
             </>
           )}
         </div>
+        {goal && !seed && !moving ? (
+          <button
+            type="button"
+            aria-expanded={goalOpen}
+            onClick={() => {
+              setGoalOpen((v) => !v);
+              setInspect(null);
+              if (tutoOpen) closeTuto();
+            }}
+            className="pointer-events-auto flex min-h-11 max-w-full items-center gap-2 rounded-full bg-nuit/90 py-1 pr-3.5 pl-1 text-left text-sm font-bold text-white shadow-sm backdrop-blur"
+          >
+            <AnimalBadge animal={goal.animal} />
+            <span className="min-w-0 truncate">
+              <span className="text-pollen">Objectif</span> · faire revenir : {goal.animal.name}
+            </span>
+            <span className="shrink-0 rounded-full bg-white/15 px-1.5 text-xs tabular-nums">
+              {goal.done}/{goal.total}
+            </span>
+          </button>
+        ) : null}
         <div aria-live="polite" className="flex w-full justify-center">
           {toast ? (
             <p className={`rounded-full px-4 py-2 text-center text-sm font-bold shadow-md ${toast.tone === "erreur" ? "bg-papier text-alerte" : "bg-nuit text-white"}`}>
@@ -226,6 +408,10 @@ export function IslandControls({ top = 12, bottom = 12, compact = false }: { top
               ) : null}
             </div>
           </section>
+        ) : tutoOpen && mine ? (
+          <TutoPanel onClose={closeTuto} />
+        ) : goalOpen && goal ? (
+          <GoalPanel goal={goal} onAction={runGoal} onClose={() => setGoalOpen(false)} />
         ) : moving && movingLook ? (
           <div className="pointer-events-auto flex items-center gap-2 rounded-[22px] bg-papier p-2 pl-4 shadow-lg">
             <SeedDot seed={movingLook} />

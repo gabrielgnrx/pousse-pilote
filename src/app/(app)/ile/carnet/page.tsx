@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireProfile } from "@/lib/session";
 import { getMyIsland } from "@/lib/game/data.ts";
-import { ANIMALS, animalsOn, zoneStates } from "@/lib/game/ecosystem.ts";
+import { ANIMALS, animalsOn, zoneStates, type AnimalKey } from "@/lib/game/ecosystem.ts";
+import { goalsOf, nextGoal } from "@/lib/game/goals.ts";
 import { guestsOf } from "@/lib/game/island.ts";
 import { ANIMAL_ART } from "@/components/island/ecosystem-layer.ts";
 
@@ -18,15 +19,21 @@ export default async function CarnetPage() {
   if (!data) notFound();
   const zones = zoneStates(data.plants);
   const present = new Set(animalsOn(data.plants, guestsOf(data)).map((a) => a.animal.key));
+  // Les animaux revenus d'abord, puis les prochains objectifs dans l'ordre du jeu, puis le reste.
+  const upcoming: string[] = goalsOf(data).map((g) => g.animal.key);
+  const rank = (key: AnimalKey) => (present.has(key) ? -1 : upcoming.includes(key) ? upcoming.indexOf(key) : 1000);
+  const ordered = [...ANIMALS].sort((a, b) => rank(a.key) - rank(b.key));
+  const next = nextGoal(data)?.animal.key ?? null;
 
   return (
     <>
-      <div className="flex items-baseline justify-between gap-3">
-        <h1 className="font-display text-2xl">Carnet de biodiversité</h1>
-        <span className="font-display text-xl tabular-nums">
+      <h1 className="sr-only">Carnet de biodiversité</h1>
+      <p className="-mt-1 text-sm text-brun">
+        <strong className="font-display text-xl text-encre tabular-nums">
           {present.size}/{ANIMALS.length}
-        </span>
-      </div>
+        </strong>{" "}
+        animaux revenus sur ton île. Chacun revient quand tu lui recrées un habitat : une association de plantes, ou une zone restaurée.
+      </p>
 
       <section aria-labelledby="zones" className="card flex flex-col gap-3">
         <h2 id="zones" className="label">
@@ -58,10 +65,12 @@ export default async function CarnetPage() {
           Les animaux
         </h2>
         <ul className="grid grid-cols-2 gap-2">
-          {ANIMALS.map((a) => {
+          {ordered.map((a) => {
             const here = present.has(a.key);
+            const isNext = a.key === next;
             return (
-              <li key={a.key} className={`flex flex-col gap-1 rounded-[18px] p-3 ${here ? "bg-papier" : "bg-sable"}`}>
+              <li key={a.key} className={`flex flex-col gap-1 rounded-[18px] p-3 ${here ? "bg-papier" : isNext ? "bg-pollen-pale ring-2 ring-pollen" : "bg-sable"}`}>
+                {isNext ? <p className="text-[11px] font-bold tracking-wider text-pollen-texte uppercase">Prochain objectif</p> : null}
                 <div className="flex items-center gap-2">
                   {here ? (
                     <svg

@@ -55,7 +55,7 @@ export interface IslandData extends GardenData {
 /** Planter coûte 10 pousses ; puis passer du stade 1 au 2 : 30, du 2 au 3 : 60, du 3 au 4 : 100. */
 export const PLANT_COST = 10;
 export const GROW_COST: Readonly<Record<number, number>> = { 1: 30, 2: 60, 3: 100 };
-export const ISLAND_STAGE_NAMES = ["", "Planté", "Pousse", "Jeune plant", "Adulte"] as const;
+export const ISLAND_STAGE_NAMES = ["", "Planté", "Germe", "Jeune plant", "Adulte"] as const;
 
 /** L'île est un disque d'emplacements : x² + z² ≤ 10 (37 emplacements). */
 export const ISLAND_RADIUS2 = 10;

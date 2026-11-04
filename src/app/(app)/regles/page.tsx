@@ -20,7 +20,8 @@ export default function ReglesPage() {
           C&apos;est le seul chiffre qui compte pour le classement. On en gagne avec chaque action
           enregistrée avec le bouton + (sans preuve, sauf pour quelques grosses actions), les quêtes du jour, une série de jours actifs, un meilleur choix au scanner. Quelqu&apos;un de très sobre gagne autant de pousses que quelqu&apos;un
           qui part de loin : une bonne habitude que tu as déjà (vélo, repas végé…) rapporte autant qu&apos;un
-          changement, même si elle n&apos;évite pas de CO₂ en plus. Les petits gestes (escaliers, gourde…) rapportent
+          changement, même si elle n&apos;évite pas de CO₂ en plus. Les gros leviers rapportent un bonus : +5 pousses
+          au-delà de 1 kg de CO₂ évité, +10 au-delà de 3 kg. Les petits gestes (escaliers, gourde…) rapportent
           5 pousses par jour au plus, tous confondus : ils comptent quand même pour ta série et tes quêtes. Le
           train, les vacances en train et les réparations se confirment sur l&apos;honneur et sont plafonnés chaque
           année d&apos;après ton bilan (autant de voyages en train que de vols déclarés, 2 réparations). Les

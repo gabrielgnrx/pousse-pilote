@@ -174,6 +174,12 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
             </p>
           ) : null}
 
+          {action.bonus && action.points > 0 ? (
+            <p className="-mt-1 text-xs text-terre">Dont +{action.bonus} de bonus gros levier : plus de 1 kg de CO₂ évité.</p>
+          ) : null}
+
+          {action.island && !action.provisional ? <IslandCard nudge={action.island} /> : null}
+
           {c ? (
             <ol className="grid grid-cols-7 gap-1.5 rounded-[20px] border border-trait bg-papier p-3" aria-label="Ta semaine">
               {week.map((d) => (
@@ -300,7 +306,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
             ) : (
               <>
                 <button ref={primary} type="button" onClick={finish} className="btn-primary min-h-14 font-display text-[19px] font-normal">
-                  {c && !challengeDone ? "Je continue !" : "Super !"}
+                  {c && !challengeDone ? "Je continue !" : action.island ? "Voir mon île" : "Super !"}
                 </button>
                 <button type="button" onClick={() => setPublishing(true)} className="btn-ghost">
                   Publier dans le fil
@@ -328,5 +334,28 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
         </div>
       </div>
     </div>
+  );
+}
+
+
+/** Ce que l'action change sur l'île : le lien entre le geste et le jeu, dit tout de suite. */
+function IslandCard({ nudge }: { nudge: NonNullable<LoggedAction["island"]> }) {
+  const lines: string[] = [];
+  if (nudge.unlocked.length) lines.push(`Nouvelle espèce débloquée : ${nudge.unlocked.join(", ")} ! Plante-la dans la zone ${nudge.zone}.`);
+  if (nudge.next) lines.push(`${nudge.zone} : encore ${nudge.next.need - nudge.next.have} action${nudge.next.need - nudge.next.have > 1 ? "s" : ""} de cette famille pour débloquer ${nudge.next.name} (${nudge.next.have}/${nudge.next.need}).`);
+  if (nudge.grow) lines.push(`Avec tes ${nudge.pousses} pousses, tu peux faire grandir ton ${nudge.grow.name} (${nudge.grow.cost} pousses).`);
+  if (!lines.length && nudge.goal) lines.push(`Objectif en cours : faire revenir ${nudge.goal.animal} (${nudge.goal.done}/${nudge.goal.total}).`);
+  if (!lines.length) return null;
+  return (
+    <section aria-labelledby="sur-ton-ile" className={`flex flex-col gap-1.5 rounded-[20px] px-4 py-3 ${nudge.unlocked.length ? "bg-pollen-pale ring-2 ring-pollen" : "border border-trait bg-papier"}`}>
+      <h3 id="sur-ton-ile" className="text-xs font-bold tracking-wider text-chloro uppercase">
+        Sur ton île
+      </h3>
+      <ul className="flex flex-col gap-1 text-sm leading-snug">
+        {lines.map((l) => (
+          <li key={l}>{l}</li>
+        ))}
+      </ul>
+    </section>
   );
 }

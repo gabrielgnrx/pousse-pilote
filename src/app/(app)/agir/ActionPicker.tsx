@@ -10,6 +10,15 @@ import { ActionDone } from "./ActionDone";
 import { NaturalEntry } from "./NaturalEntry";
 import type { Habits } from "@/lib/co2/footprint.ts";
 import { ThemeIcon } from "./ThemeIcon";
+import { co2Bonus } from "@/lib/co2/bonus.ts";
+import { familyZone } from "@/lib/game/goals.ts";
+import { ZONE_BY_KEY } from "@/lib/game/island.ts";
+
+/** La zone de l'île que fait revivre un thème du + (d'après la famille de ses actions). */
+function zoneOfTheme(items: ActionItem[], theme: Theme): string | null {
+  const zone = items.filter((i) => i.theme === theme).map((i) => familyZone(i.category)).find((z) => z !== null);
+  return zone ? ZONE_BY_KEY[zone].name : null;
+}
 
 const normalize = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -235,18 +244,23 @@ export function ActionPicker({
           </section>
           <section className="flex flex-col gap-2">
             <h2 className="label">Par thème</h2>
+            <p className="-mt-1 text-xs text-terre">Chaque thème fait revivre une zone de ton île et y débloque de nouvelles espèces.</p>
             <div className="flex flex-wrap gap-2">
-              {THEMES.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTheme(t.id)}
-                  className="flex min-h-11 items-center gap-1.5 rounded-full bg-papier px-3.5 text-sm font-semibold shadow-[inset_0_0_0_1px_var(--color-trait)] hover:bg-sable"
-                >
-                  <ThemeIcon theme={t.id} size={16} />
-                  {t.label}
-                </button>
-              ))}
+              {THEMES.map((t) => {
+                const zone = zoneOfTheme(items, t.id);
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTheme(t.id)}
+                    className="flex min-h-11 items-center gap-1.5 rounded-full bg-papier px-3.5 text-sm font-semibold shadow-[inset_0_0_0_1px_var(--color-trait)] hover:bg-sable"
+                  >
+                    <ThemeIcon theme={t.id} size={16} />
+                    {t.label}
+                    {zone ? <span aria-hidden="true" className="text-xs font-medium text-chloro">→ {zone}</span> : null}
+                  </button>
+                );
+              })}
             </div>
           </section>
         </>
@@ -259,7 +273,8 @@ export function ActionPicker({
       <p className="text-center text-xs leading-relaxed text-brun">
         Pas de preuve demandée : chaque action se déclare sur l&apos;honneur. Des plafonds gardent le compteur de l&apos;entreprise
         juste : 2 trajets et 2 repas par jour, chaque semaine 2 trajets par jour de bureau déclaré dans ton bilan, et chaque année
-        autant de voyages en train que de vols déclarés. Les petits gestes rapportent 5 pousses par jour au plus, tous confondus.
+        autant de voyages en train que de vols déclarés. Les gros leviers rapportent un bonus (+5 au-delà de 1 kg évité, +10 au-delà
+        de 3 kg) ; les petits gestes, 5 pousses par jour au plus, tous confondus.
       </p>
 
       {confirmFor && byKey[confirmFor] ? (
@@ -392,7 +407,7 @@ function ActionSheet({
         {kg !== null && kg > 0 ? <p className="rounded-2xl bg-sauge px-3 py-2 text-[13px] text-sapin">≈ {formatKg(kg)} de CO₂ évités</p> : null}
         {error ? <p role="alert" className="text-sm font-semibold text-alerte">{error}</p> : null}
         <button type="submit" disabled={pending || !ready} className="btn-dark disabled:opacity-60">
-          {pending ? "Enregistrement…" : `Valider · +${boostedPoints(item.points * Math.max(units, 1), boost)}`}
+          {pending ? "Enregistrement…" : `Valider · +${boostedPoints((item.points - item.bonus) * Math.max(units, 1) + co2Bonus(kg ?? item.kg), boost)}`}
         </button>
       </form>
     </div>
