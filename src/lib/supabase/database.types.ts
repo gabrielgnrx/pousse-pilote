@@ -330,6 +330,106 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"island_catalog": {
+                  Row: {
+                    "key": string,"kind": string,"price": number | null,"tier": string,"unlock": number | null,"zone": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "key": string,"kind": string,"price"?: number | null,"tier": string,"unlock"?: number | null,"zone"?: string | null
+                  }
+                  Update: {
+                    "key"?: string,"kind"?: string,"price"?: number | null,"tier"?: string,"unlock"?: number | null,"zone"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"island_inventory": {
+                  Row: {
+                    "cost": number,"created_at": string,"from_user": string | null,"id": string,"item": string,"ref": string,"source": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cost"?: number,"created_at"?: string,"from_user"?: string | null,"id"?: string,"item": string,"ref": string,"source": string,"user_id": string
+                  }
+                  Update: {
+                    "cost"?: number,"created_at"?: string,"from_user"?: string | null,"id"?: string,"item"?: string,"ref"?: string,"source"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "island_inventory_from_user_fkey"
+      columns: ["from_user"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "island_inventory_item_fkey"
+      columns: ["item"]
+isOneToOne: false
+      referencedRelation: "island_catalog"
+      referencedColumns: ["key"]
+    },{
+      foreignKeyName: "island_inventory_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"island_launch": {
+                  Row: {
+                    "launched_at": string,"singleton": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "launched_at"?: string,"singleton"?: boolean
+                  }
+                  Update: {
+                    "launched_at"?: string,"singleton"?: boolean
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"island_plants": {
+                  Row: {
+                    "fed": number,"free": boolean,"grown_at": string,"id": string,"planted_at": string,"rare": boolean,"species": string,"spent": number,"stage": number,"user_id": string,"x": number,"z": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "fed"?: number,"free"?: boolean,"grown_at"?: string,"id"?: string,"planted_at"?: string,"rare"?: boolean,"species": string,"spent"?: number,"stage"?: number,"user_id": string,"x": number,"z": number
+                  }
+                  Update: {
+                    "fed"?: number,"free"?: boolean,"grown_at"?: string,"id"?: string,"planted_at"?: string,"rare"?: boolean,"species"?: string,"spent"?: number,"stage"?: number,"user_id"?: string,"x"?: number,"z"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "island_plants_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"island_starts": {
+                  Row: {
+                    "started_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "started_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "started_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "island_starts_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"mystery_seeds": {
                   Row: {
                     "day": string,"opened_at": string | null,"points": number,"reward": string | null,"user_id": string
@@ -1084,6 +1184,69 @@ isOneToOne: false
 "is_org_admin":
 { Args: { "p_company": string }; Returns: boolean
                            },
+"island":
+{ Args: { "p_user": string }; Returns: Json
+                           },
+"island_category_zone":
+{ Args: { "p_category": string }; Returns: string
+                           },
+"island_challenge_reward":
+{ Args: { "p_category": string,"p_days": number,"p_level": string,"p_target": number }; Returns: (string)[]
+                           },
+"island_claim":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"island_consolation":
+{ Args: { "p_category": string }; Returns: string
+                           },
+"island_free":
+{ Args: { "p_user": string }; Returns: Json
+                           },
+"island_gift":
+{ Args: { "p_to": string }; Returns: undefined
+                           },
+"island_grow":
+{ Args: { "p_x": number,"p_z": number }; Returns: Json
+                           },
+"island_grow_cost":
+{ Args: { "p_stage": number }; Returns: number
+                           },
+"island_migration":
+{ Args: { "p_team": string,"p_week": string }; Returns: Json
+                           },
+"island_move":
+{ Args: { "p_from_x": number,"p_from_z": number,"p_to_x": number,"p_to_z": number }; Returns: Json
+                           },
+"island_plant":
+{ Args: { "p_species": string,"p_x": number,"p_z": number }; Returns: Json
+                           },
+"island_pousses":
+{ Args: { "p_user": string }; Returns: number
+                           },
+"island_rare_exploit":
+{ Args: { "p_species": string }; Returns: string
+                           },
+"island_species_zone":
+{ Args: { "p_species": string }; Returns: string
+                           },
+"island_tile_fits":
+{ Args: { "p_species": string,"p_x": number,"p_z": number }; Returns: boolean
+                           },
+"island_tile_ok":
+{ Args: { "p_x": number,"p_z": number }; Returns: boolean
+                           },
+"island_tile_zone":
+{ Args: { "p_x": number,"p_z": number }; Returns: string
+                           },
+"island_unlocked":
+{ Args: { "p_counts": Json,"p_user": string }; Returns: (string)[]
+                           },
+"island_uproot":
+{ Args: { "p_x": number,"p_z": number }; Returns: Json
+                           },
+"island_zone_seeds":
+{ Args: { "p_counts": Json,"p_zone": string }; Returns: number
+                           },
 "join_company":
 { Args: { "p_code": string,"p_consent_feedback": boolean,"p_consent_team_stats": boolean,"p_display_name": string,"p_team": string }; Returns: undefined
                            },
@@ -1141,6 +1304,9 @@ isOneToOne: false
                            },
 "my_plan_inputs":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_pousses":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "my_reminder":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -1277,6 +1443,9 @@ isOneToOne: false
       } },
 "share_challenge":
 { Args: { "p_challenge": string,"p_event": string }; Returns: undefined
+                           },
+"team_garden":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "team_kind_count":
 { Args: { "p_from": string,"p_kind": string,"p_team": string,"p_to": string,"p_user": string }; Returns: number
