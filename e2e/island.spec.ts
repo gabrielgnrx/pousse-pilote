@@ -36,6 +36,13 @@ test("une action rapporte des pousses, qu'on dépense pour planter, puis on dép
 
   // 3. Les quatre plantes de départ sont là. Choisir le potager, laisser l'appli choisir la case.
   await expect.poll(() => occupied(page)).toHaveLength(4);
+  // Une carte de récompense (migrateur de l'équipe, défi réussi…) peut s'ouvrir sur l'île : on la ferme.
+  const card = page.getByRole("button", { name: /^(Super !|Plus tard)$/ });
+  for (let i = 0; i < 4; i++) {
+    const shown = await card.first().waitFor({ state: "visible", timeout: 2000 }).then(() => true, () => false);
+    if (!shown) break;
+    await card.first().click();
+  }
   const before = await occupied(page);
   const graines = page.getByRole("region", { name: /Tes graines/ });
   await graines.getByRole("button", { name: /Potager/ }).click();
