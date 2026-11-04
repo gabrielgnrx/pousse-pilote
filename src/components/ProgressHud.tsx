@@ -38,7 +38,7 @@ const RING = 2 * Math.PI * 19;
 
 /** Le titre affiché à côté de l'avatar, pour les 4 onglets de la barre du bas. */
 const TITLES: { prefix: string; title: string }[] = [
-  { prefix: "/ile/carnet", title: "Carnet de biodiversité" },
+  { prefix: "/ile/carnet", title: "Carnet" },
   { prefix: "/ile/serre", title: "La Serre" },
   { prefix: "/ile", title: "Ton île" },
   { prefix: "/fil", title: "Le fil" },
