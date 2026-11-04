@@ -16,12 +16,12 @@ test("zones : 9 cases chacune, la case centrale à part, toutes loin d'une front
 });
 
 test("zones : une graine se plante dans sa zone (ou au centre), les fleurs partout", () => {
-  assert.equal(checkTile([], { key: "transport", rare: false }, -1, -1), "nouvelle");
-  assert.equal(checkTile([], { key: "transport", rare: false }, 1, 1), "hors_zone");
-  assert.equal(checkTile([], { key: "transport", rare: false }, 0, 0), "nouvelle");
-  assert.equal(checkTile([], { key: "scan", rare: false }, 1, 1), "nouvelle");
+  assert.equal(checkTile([], { key: "transport" }, -1, -1), "nouvelle");
+  assert.equal(checkTile([], { key: "transport" }, 1, 1), "hors_zone");
+  assert.equal(checkTile([], { key: "transport" }, 0, 0), "nouvelle");
+  assert.equal(checkTile([], { key: "scan" }, 1, 1), "nouvelle");
   // « Planter pour moi » vise sa zone avant la case centrale.
-  const t = bestTile([], { key: "alimentation", rare: false })!;
+  const t = bestTile([], { key: "alimentation" })!;
   assert.equal(zoneOfTile(t.x, t.z), "potager");
 });
 
