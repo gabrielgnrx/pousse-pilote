@@ -324,6 +324,15 @@ function ActionSheet({
       : item.pick === "distance"
         ? null
         : item.kg;
+  // Comme la base : une ligne par article choisi, chacune avec ses pousses et son bonus gros levier.
+  const base = item.points - item.bonus;
+  const sheetPoints =
+    item.pick === "items"
+      ? (item.choices ?? []).reduce((sum, c) => {
+          const n = qty[c.variant] ?? 0;
+          return n ? sum + base * n + co2Bonus(c.kg * n) : sum;
+        }, 0)
+      : base + co2Bonus(kg ?? item.kg);
   const ready = item.pick === "items" ? units > 0 : item.pick === "distance" ? Number(km.replace(",", ".")) >= 50 : true;
   const step = (variant: string, delta: number, max: number) =>
     setQty((q) => ({ ...q, [variant]: Math.min(max, Math.max(0, (q[variant] ?? 0) + delta)) }));
@@ -407,7 +416,7 @@ function ActionSheet({
         {kg !== null && kg > 0 ? <p className="rounded-2xl bg-sauge px-3 py-2 text-[13px] text-sapin">≈ {formatKg(kg)} de CO₂ évités</p> : null}
         {error ? <p role="alert" className="text-sm font-semibold text-alerte">{error}</p> : null}
         <button type="submit" disabled={pending || !ready} className="btn-dark disabled:opacity-60">
-          {pending ? "Enregistrement…" : `Valider · +${boostedPoints((item.points - item.bonus) * Math.max(units, 1) + co2Bonus(kg ?? item.kg), boost)}`}
+          {pending ? "Enregistrement…" : `Valider · +${boostedPoints(sheetPoints, boost)}`}
         </button>
       </form>
     </div>
