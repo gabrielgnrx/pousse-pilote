@@ -92,12 +92,12 @@ export default async function ProductPage({
       </Link>
 
       {choix ? (
-        <p role="status" className="animate-pousse-pop -mt-2 rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-[#3a1606]">
+        <p role="status" className="animate-pousse-pop -mt-2 rounded-2xl bg-abricot px-4 py-3 text-sm font-bold text-encre">
           Bien joué : +5 pousses pour ce meilleur choix !
         </p>
       ) : null}
       {erreur ? (
-        <p role="alert" className="-mt-2 rounded-2xl bg-peche px-4 py-3 text-sm font-semibold text-argile-fonce">{erreur}</p>
+        <p role="alert" className="-mt-2 rounded-2xl bg-peche px-4 py-3 text-sm font-semibold text-alerte">{erreur}</p>
       ) : null}
 
       <section className="card flex flex-col gap-3">

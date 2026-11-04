@@ -16,12 +16,14 @@ export interface CompanyPulse {
 /**
  * En haut de l'accueil : ce que toute l'entreprise a évité ensemble, l'objectif du pilote,
  * et ta part. C'est le seul endroit où cette jauge apparaît.
+ * Posé à plat sur la page (pas de carte) : c'est le haut de la tige d'où part le fil d'actu.
  */
 export function CompanyHero({ pulse }: { pulse: CompanyPulse }) {
   const kg = Number(pulse.kg);
   const goal = Number(pulse.goal_kg);
   const pct = goal > 0 ? Math.min(100, (kg / goal) * 100) : 0;
   const left = Math.max(0, goal - kg);
+  const shown = Math.max(pct, kg > 0 ? 3 : 0);
   const active = Number(pulse.active_today);
   const rank =
     pulse.team_rank && pulse.team_size && pulse.team_size > 1 ? (pulse.team_rank === 1 ? "1er" : `${pulse.team_rank}e`) : null;
@@ -29,40 +31,44 @@ export function CompanyHero({ pulse }: { pulse: CompanyPulse }) {
   return (
     <Link
       href="/equipes/classement"
-      className="relative flex flex-col gap-3 overflow-hidden rounded-[32px_32px_32px_12px] bg-sapin p-5 text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]"
+      aria-label={`Ensemble chez ${pulse.name} : ${formatKg(kg)} de CO₂ évités. Voir le classement des équipes`}
+      className="relative flex flex-col pt-1 pb-5 text-encre"
     >
-      <Mascot size={88} className="absolute top-3.5 right-3.5" />
-      <span className="relative text-[13px] font-semibold text-[#c8dcc4]">Ensemble chez {pulse.name}</span>
-      <span className="relative flex flex-col gap-0.5 pr-24">
-        <span className="font-display text-[46px] leading-none tabular-nums">{formatKg(kg)}</span>
-        <span className="text-[15px] text-[#dfe9da]">de CO₂ évités ensemble (déclaré)</span>
-      </span>
-      <span className="relative flex flex-col gap-2">
-        <span className="flex justify-between text-[13px] text-[#dfe9da]">
-          <span>{left > 0 ? `Encore ${formatKg(left)} avant l'objectif` : "Objectif atteint !"}</span>
-          <span className="font-semibold text-white">{formatKg(goal)}</span>
-        </span>
+      <Mascot size={96} className="absolute -top-1 -right-1" />
+      <span className="text-sm font-semibold text-brun">Ensemble chez {pulse.name}</span>
+      <span className="mt-0.5 pr-24 font-display text-[48px] leading-none tracking-tight tabular-nums">{formatKg(kg)}</span>
+      <span className="mt-1 text-base text-brun">de CO₂ évités ensemble (déclaré)</span>
+      <span className="mt-4 flex flex-col gap-2">
         <span
-          className="h-2.5 overflow-hidden rounded-full bg-sapin-fonce"
+          className="relative h-3 rounded-full bg-trait"
           role="progressbar"
           aria-label={`Objectif de l'entreprise : ${formatKg(goal)}`}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(pct)}
         >
-          <span className="block h-full rounded-full bg-feuille transition-[width] duration-1000" style={{ width: `${Math.max(pct, kg > 0 ? 3 : 0)}%` }} />
+          <span className="absolute inset-y-0 left-0 rounded-full bg-chloro transition-[width] duration-1000" style={{ width: `${shown}%` }} />
+          <span
+            aria-hidden="true"
+            className="absolute -top-[5px] -ml-[11px] size-[22px] rounded-full border-[3px] border-creme bg-pollen transition-[left] duration-1000"
+            style={{ left: `${shown}%` }}
+          />
+        </span>
+        <span className="flex justify-between text-[13px] text-brun">
+          <span>{left > 0 ? `Encore ${formatKg(left)} avant l'objectif` : "Objectif atteint !"}</span>
+          <span className="font-bold text-encre">{formatKg(goal)}</span>
         </span>
       </span>
-      <span className="relative grid grid-cols-2 gap-2">
-        <span className="flex flex-col rounded-2xl bg-sapin-fonce px-3 py-2.5">
-          <span className="text-lg font-bold">+{formatKg(Number(pulse.today_kg))}</span>
-          <span className="text-xs text-[#c8dcc4]">
+      <span className="mt-3.5 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+        <span>
+          <span className="font-bold">+{formatKg(Number(pulse.today_kg))}</span>{" "}
+          <span className="text-brun">
             aujourd&apos;hui · {active} actif{active > 1 ? "s" : ""}
           </span>
         </span>
-        <span className="flex flex-col rounded-2xl bg-creme px-3 py-2.5 text-encre">
-          <span className="text-lg font-bold">{formatKg(Number(pulse.my_kg))}</span>
-          <span className="text-xs text-terre">ta part{rank ? ` · ${rank} de ton équipe` : ""}</span>
+        <span>
+          <span className="font-bold">{formatKg(Number(pulse.my_kg))}</span>{" "}
+          <span className="text-brun">ta part{rank ? ` · ${rank} de ton équipe` : ""}</span>
         </span>
       </span>
     </Link>

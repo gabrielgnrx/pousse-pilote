@@ -38,9 +38,9 @@ export function InstallPrompt() {
 
   if (mode === "none") return null;
   return (
-    <section className="flex items-center gap-3 rounded-[18px] border border-encre/10 bg-papier px-3.5 py-2.5" aria-label="Installer Pousse">
+    <section className="flex items-center gap-3 rounded-[20px] border border-encre/10 bg-papier px-3.5 py-2.5" aria-label="Installer Pousse">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/icon-192.png" alt="" width={36} height={36} className="rounded-[9px]" />
+      <img src="/icon-192.png" alt="" width={36} height={36} className="rounded-xl" />
       <p className="min-w-0 flex-1 text-xs leading-snug">
         <strong className="block text-sm">Pousse sur ton écran d&apos;accueil</strong>
         {mode === "ios" ? (

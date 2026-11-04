@@ -1,30 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-  /* Refonte « Jardin clair » : lin, vert sapin, sauge et terracotta. Les noms historiques sont gardés. */
-  --color-creme: #f6f3ea; /* fond de page (lin) */
-  --color-sable: #ece6d6; /* surface discrète, pastilles */
+  /*
+   * Direction « La Tige » : deux accents seulement.
+   * Chlorophylle (vert) = agir, progresser. Pollen (jaune) = récompenser : pousses, séries, bouton +, duels.
+   * Les noms historiques sont gardés pour que toutes les pages basculent d'un coup ;
+   * chaque ligne dit à quoi sert la couleur. N'écris pas de code couleur en dur dans les pages.
+   */
+  --color-creme: #f3f6f0; /* Rosée : fond de page */
+  --color-sable: #e1ebdb; /* Lichen : surface discrète, pastilles, onglets */
   --color-papier: #ffffff; /* cartes */
-  --color-trait: #e3dccb; /* bordures, pistes de progression */
-  --color-sapin: #1f5134; /* vert principal */
-  --color-sapin-fonce: #173f28; /* relief sous le vert */
-  --color-sapin-clair: #f6f3ea; /* texte sur le vert */
-  --color-feuille: #a9d18e; /* bouton + et appels à l'action */
-  --color-feuille-fonce: #6f9c58; /* relief sous la feuille */
-  --color-nuit: #1f2a1e; /* barre du bas, cartes sombres */
-  --color-argile: #b4532a; /* terracotta : défis, séries */
-  --color-argile-fonce: #8a3c1c;
-  --color-sauge: #e4eddc;
-  --color-sauge-fonce: #c9dcbd;
-  --color-peche: #f7e1d3;
-  --color-peche-fonce: #ecc4aa;
-  --color-abricot: #e8a27c;
-  --color-encre: #1f2a1e;
-  --color-brun: #3f4a3c;
-  --color-terre: #5b6458;
+  --color-trait: #d5dfcf; /* bordures, pistes de progression */
+  --color-tige: #c9dcc0; /* la tige qui relie les éléments du fil */
+  --color-chloro: #2e7a4c; /* Chlorophylle : actions, liens, barres de progression */
+  --color-sapin: #1e5634; /* vert profond : texte vert, cartes vertes */
+  --color-sapin-fonce: #17462a; /* piste sur fond vert */
+  --color-sapin-clair: #ffffff; /* texte sur le vert */
+  --color-sapin-pale: #cfe2cd; /* texte secondaire sur le vert */
+  --color-feuille: #f2c14e; /* Pollen : bouton +, appels à l'action récompensés */
+  --color-feuille-fonce: #d9a42c;
+  --color-pollen: #f2c14e;
+  --color-pollen-pale: #fbefc9; /* fond des pastilles « +N pousses » */
+  --color-pollen-texte: #6b4e0a; /* texte sur pollen pâle */
+  --color-nuit: #14261b; /* Sous-bois : cartes de compétition, duels */
+  --color-nuit-pale: #bfd1c2; /* texte secondaire sur Sous-bois */
+  --color-argile: #8a6512; /* séries, défis (pollen foncé, lisible en texte) */
+  --color-argile-fonce: #6b4e0a;
+  --color-alerte: #c2562e; /* pastille de notification, erreurs */
+  --color-sauge: #e1ebdb;
+  --color-sauge-fonce: #c9dcc0;
+  --color-peche: #fbefc9;
+  --color-peche-fonce: #f2db9a;
+  --color-abricot: #f2c14e;
+  --color-encre: #14261b; /* texte principal */
+  --color-brun: #4a5a4e; /* Mousse : texte secondaire (6,7:1 sur Rosée) */
+  --color-terre: #4a5a4e;
 
-  --font-display: var(--font-calistoga), Georgia, serif;
-  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
 }
 
 html,
@@ -39,36 +52,44 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-argile);
+  outline: 3px solid var(--color-chloro);
   outline-offset: 2px;
 }
 
-/* Calistoga n'existe qu'en un seul poids : pas de faux gras calculé par le navigateur. */
+/* Titres et chiffres : Bricolage Grotesque, chargé en 700 et 800. Pas de faux gras calculé. */
 .font-display {
   font-synthesis: none;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 /* Classes réutilisables (Tailwind v4 : @utility, compatibles avec les variantes). */
 @utility btn-primary {
-  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[18px] bg-feuille px-5 text-[15px] font-semibold text-encre shadow-[inset_0_-4px_0_var(--color-feuille-fonce)] transition active:translate-y-px active:shadow-[inset_0_-2px_0_var(--color-feuille-fonce)] disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-pollen px-5 text-base font-bold text-encre transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-dark {
-  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[18px] bg-sapin px-5 text-[15px] font-semibold text-sapin-clair shadow-[inset_0_-4px_0_var(--color-sapin-fonce)] transition active:translate-y-px active:shadow-[inset_0_-2px_0_var(--color-sapin-fonce)] disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-chloro px-5 text-base font-bold text-white transition hover:bg-sapin active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-ghost {
-  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[18px] border border-sapin bg-transparent px-5 text-[15px] font-semibold text-sapin transition hover:bg-sauge disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-papier px-5 text-base font-bold text-encre shadow-[inset_0_0_0_1.5px_var(--color-trait)] transition hover:bg-sable disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility card {
-  @apply rounded-[24px] bg-papier p-4 shadow-[0_8px_28px_rgba(31,42,30,0.06)];
+  @apply rounded-[20px] bg-papier p-4;
 }
 @utility label {
-  @apply text-xs font-semibold tracking-wide text-argile-fonce uppercase;
+  @apply text-xs font-bold tracking-wider text-brun uppercase;
 }
 @utility input {
-  @apply w-full rounded-2xl border border-[#d8d0bd] bg-papier px-4 py-3 text-base text-encre placeholder:text-terre/80;
+  @apply w-full rounded-[20px] border-[1.5px] border-trait bg-papier px-4 py-3 text-base text-encre placeholder:text-terre/80;
 }
+/* Les champs d'une ligne sont des pilules ; les zones de texte gardent un arrondi de carte. */
+input.input,
+select.input {
+  border-radius: 9999px;
+}
+
 @utility chip {
-  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold;
 }
 
 /* Pousses : compteur qui monte, « +N » qui s'envole, feuilles qui tombent au passage de niveau. */

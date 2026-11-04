@@ -31,7 +31,7 @@ export function DuelForm({
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(DUEL_KINDS).map(([k, v]) => (
             <label key={k} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-creme px-3 text-sm has-[:checked]:bg-sauge has-[:checked]:font-bold">
-              <input type="radio" name="kind" value={k} defaultChecked={k === (defaultKind ?? "repas")} className="accent-[#1f5134]" />
+              <input type="radio" name="kind" value={k} defaultChecked={k === (defaultKind ?? "repas")} className="accent-chloro" />
               {v.label}
             </label>
           ))}
@@ -48,7 +48,7 @@ export function DuelForm({
       <p className="text-xs leading-relaxed text-terre">
         Chaque action enregistrée avec le bouton + compte, avec ou sans photo, et vaut ×1,5 pendant le duel (pour le scanner : chaque meilleur choix). {DUEL_STAKES}
       </p>
-      {state.error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{state.error}</p> : null}
+      {state.error ? <p role="alert" className="text-sm font-semibold text-alerte">{state.error}</p> : null}
       <button type="submit" disabled={pending} className="btn-primary">{pending ? "Envoi…" : "Envoyer le défi"}</button>
     </form>
   );

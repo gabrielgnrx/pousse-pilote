@@ -112,8 +112,8 @@ function FieldInput({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`rounded-2xl border-2 font-semibold ${compact ? "min-h-12 min-w-14 px-4" : "min-h-14 px-4 text-left"} ${
-              on ? "border-sapin bg-sauge" : "border-transparent bg-sable"
+            className={`rounded-[14px] border-2 font-semibold ${compact ? "min-h-12 min-w-14 px-4" : "min-h-14 px-4 text-left"} ${
+              on ? "border-chloro bg-sauge" : "border-transparent bg-papier"
             }`}
           >
             {o.label}

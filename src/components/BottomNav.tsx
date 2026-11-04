@@ -61,12 +61,12 @@ function TabLink({ t, path }: { t: Tab; path: string }) {
       <Link
         href={t.href}
         aria-current={active ? "page" : undefined}
-        className={`flex min-h-11 min-w-14 flex-col items-center justify-center gap-0.5 ${active ? "text-white" : "text-[#c3cfbe]"}`}
+        className={`flex min-h-[52px] min-w-14 flex-col items-center justify-center gap-0.5 ${active ? "text-sapin" : "text-brun"}`}
       >
-        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" style={active ? { fill: "var(--color-sauge)" } : undefined} stroke="currentColor" strokeWidth={active ? 2.2 : 1.9} strokeLinecap="round" strokeLinejoin="round">
           {t.icon}
         </svg>
-        <span className={`text-[11px] ${active ? "font-semibold" : "font-medium"}`}>{t.label}</span>
+        <span className={`text-[11px] ${active ? "font-bold" : "font-semibold"}`}>{t.label}</span>
       </Link>
     </li>
   );
@@ -78,9 +78,9 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigation principale"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-[calc(env(safe-area-inset-bottom)+14px)]"
+      className="fixed inset-x-0 bottom-0 z-20 bg-papier pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_0_var(--color-trait)]"
     >
-      <ul className="pointer-events-auto mx-auto flex h-[66px] max-w-md items-center rounded-full bg-nuit px-1.5 shadow-[0_12px_30px_rgba(31,42,30,0.25)]">
+      <ul className="mx-auto flex h-[68px] max-w-md items-center px-2">
         {LEFT.map((t) => (
           <TabLink key={t.href} t={t} path={path} />
         ))}
@@ -89,9 +89,9 @@ export function BottomNav() {
             href="/agir"
             aria-label="Enregistrer une action"
             aria-current={recording ? "page" : undefined}
-            className="-mt-7 flex size-[60px] items-center justify-center rounded-[22px] bg-feuille text-encre shadow-[inset_0_-5px_0_var(--color-feuille-fonce),0_10px_20px_rgba(31,42,30,0.3)] transition active:translate-y-px"
+            className="-mt-8 flex size-[60px] items-center justify-center rounded-full bg-pollen text-encre shadow-[0_0_0_5px_var(--color-papier),0_8px_18px_rgba(20,38,27,0.18)] transition active:scale-95"
           >
-            <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+            <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
           </Link>

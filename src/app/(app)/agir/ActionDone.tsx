@@ -63,22 +63,22 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
       <div className="mx-auto flex min-h-full max-w-md flex-col">
         <section
           className={`relative flex flex-col items-center gap-1 overflow-hidden rounded-b-[40px] px-5 pt-6 pb-7 text-center ${
-            c ? "bg-argile text-white shadow-[inset_0_-8px_0_var(--color-argile-fonce)]" : "bg-sapin text-sapin-clair shadow-[inset_0_-8px_0_var(--color-sapin-fonce)]"
+            c ? "bg-nuit text-white" : "bg-sapin text-sapin-clair"
           }`}
         >
           <button
             type="button"
             onClick={close}
             aria-label="Fermer"
-            className={`absolute top-4 right-4 flex size-11 items-center justify-center rounded-full ${c ? "bg-argile-fonce" : "bg-sapin-fonce"}`}
+            className={`absolute top-4 right-4 flex size-11 items-center justify-center rounded-full bg-white/10`}
           >
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
           <Confetti className="animate-pousse-pop pointer-events-none absolute top-9 left-1/2 -translate-x-1/2" />
           {c ? (
-            <span className="rounded-full bg-argile-fonce px-3 py-1.5 text-[13px] font-semibold">Défi · {action.title}</span>
+            <span className="rounded-full bg-pollen px-3 py-1.5 text-[13px] font-bold text-encre">Défi · {action.title}</span>
           ) : null}
-          <Mascot size={112} grown pot={c ? "#f7e1d3" : "#b4532a"} rim={c ? "#ffffff" : "#d27a4f"} className="animate-pousse-grow mt-2" />
+          <Mascot size={112} grown pot={c ? "#26392d" : "#17462a"} className="animate-pousse-grow mt-2" />
           {c ? (
             <>
               <h2 id="action-done-title" className="mt-1 font-display text-[30px] leading-tight">
@@ -94,11 +94,11 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
                     <span
                       key={i}
                       className={`flex h-11 flex-1 items-center justify-center rounded-[14px] ${
-                        done ? "bg-white shadow-[inset_0_-4px_0_#f0c9b3]" : "border-2 border-dashed border-[#f0c9b3]"
+                        done ? "bg-pollen text-encre" : "border-2 border-dashed border-white/40"
                       }`}
                     >
                       {done ? (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b4532a" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c2562e" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5 9-10" /></svg>
                       ) : null}
                     </span>
                   ))}
@@ -110,14 +110,14 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
               <h2 id="action-done-title" className="mt-1 font-display text-[28px] leading-tight">
                 {action.firstName ? `Bien joué, ${action.firstName} !` : "Bien joué !"}
               </h2>
-              <p className="flex items-center gap-1.5 text-[15px] text-[#c8dcc4]">
-                <ThemeIcon theme={action.theme} size={18} color="#c8dcc4" />
+              <p className="flex items-center gap-1.5 text-[15px] text-sapin-pale">
+                <ThemeIcon theme={action.theme} size={18} color="#cfe2cd" />
                 {action.title}
               </p>
               {action.kg > 0 ? (
                 <p className="mt-2 flex items-baseline gap-2">
                   <span className="font-display text-[56px] leading-none">{formatKg(action.kg)}</span>
-                  <span className="text-base font-semibold text-[#c8dcc4]">de CO₂ évités</span>
+                  <span className="text-base font-semibold text-sapin-pale">de CO₂ évités</span>
                 </p>
               ) : null}
             </>
@@ -146,8 +146,8 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
           ) : null}
 
           <div className="grid grid-cols-2 gap-2.5">
-            <div className="animate-pousse-pop flex items-center gap-2.5 rounded-[20px] bg-sauge p-3 shadow-[inset_0_-4px_0_var(--color-sauge-fonce)]">
-              <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#a9d18e" stroke="#1f5134" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21v-9" /><path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" /><path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" /></svg>
+            <div className="animate-pousse-pop flex items-center gap-2.5 rounded-[20px] bg-sauge p-3">
+              <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#7db878" stroke="#1e5634" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21v-9" /><path d="M12 12c0-4 3-7 8-7 0 5-3 7-8 7Z" /><path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 5.5 7 5.5Z" /></svg>
               <span className="flex flex-col text-sapin">
                 <span className="font-display text-2xl leading-none">{action.provisional ? "…" : `+${action.points}`}</span>
                 <span className="text-[13px] font-semibold">
@@ -156,8 +156,8 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
                 </span>
               </span>
             </div>
-            <div className="flex items-center gap-2.5 rounded-[20px] bg-peche p-3 shadow-[inset_0_-4px_0_var(--color-peche-fonce)]">
-              <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#e8a27c" stroke="#8a3c1c" strokeWidth="1.6" strokeLinejoin="round"><path d="M12 2c2 4-2 5-2 8a4 4 0 1 0 8 0c0-2-1-3-2-4 1 3-1 4-2 3 1-2-1-3-2-7Z" /></svg>
+            <div className="flex items-center gap-2.5 rounded-[20px] bg-peche p-3">
+              <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#f2c14e" stroke="#6b4e0a" strokeWidth="1.6" strokeLinejoin="round"><path d="M12 2c2 4-2 5-2 8a4 4 0 1 0 8 0c0-2-1-3-2-4 1 3-1 4-2 3 1-2-1-3-2-7Z" /></svg>
               <span className="flex flex-col text-argile-fonce">
                 <span className="font-display text-2xl leading-none">
                   {action.provisional ? "…" : `${action.streak} ${action.streak > 1 ? "jours" : "jour"}`}
@@ -185,7 +185,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
                         : d.isToday
                           ? "border-2 border-argile"
                           : d.inChallenge && d.future
-                            ? "border-[1.5px] border-dashed border-[#c9bfa8]"
+                            ? "border-[1.5px] border-dashed border-trait"
                             : "bg-sable"
                     }`}
                   >
@@ -289,7 +289,7 @@ export function ActionDone({ action, onClose }: { action: LoggedAction; onClose:
                   className="text-sm"
                   onChange={(e) => void compressInput(e.currentTarget)}
                 />
-                {state.error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{state.error}</p> : null}
+                {state.error ? <p role="alert" className="text-sm font-semibold text-alerte">{state.error}</p> : null}
                 <button type="submit" disabled={sending} className="btn-primary">{sending ? "Publication…" : "Publier dans le fil"}</button>
                 <button type="button" onClick={() => setPublishing(false)} className="min-h-11 text-[13px] font-semibold text-terre underline underline-offset-2">
                   Finalement, garder pour moi

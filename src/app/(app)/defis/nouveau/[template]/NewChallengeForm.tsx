@@ -79,7 +79,7 @@ export function NewChallengeForm({
       {inspiredBy ? (
         <>
           <input type="hidden" name="via" value={inspiredBy.id} />
-          <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-[#1f5134]">
+          <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-sapin">
             Tu relèves ce défi grâce à <strong>{inspiredBy.name}</strong> : ta première validation lui
             rapportera 15 pousses.
           </p>
@@ -143,7 +143,7 @@ export function NewChallengeForm({
               checked={mode === m.id}
               disabled={m.disabled}
               onChange={() => chooseMode(m.id)}
-              className="mt-0.5 size-5 shrink-0 accent-[#1f5134]"
+              className="mt-0.5 size-5 shrink-0 accent-chloro"
             />
             <span className="flex flex-1 flex-col gap-1">
               <span className="flex justify-between text-[15px] font-bold">
@@ -172,7 +172,7 @@ export function NewChallengeForm({
                 ))}
               </select>
             </label>
-            <p className="text-xs leading-relaxed text-[#3f4a3c]">
+            <p className="text-xs leading-relaxed text-brun">
               Vous avez 7 jours pour faire {target} {target > 1 ? template.unit.many : template.unit.one} chacun. Refuser ne lui coûte rien.
             </p>
           </div>
@@ -207,7 +207,7 @@ export function NewChallengeForm({
       ) : null}
 
       {mode === "equipe" ? (
-        <section className="rounded-2xl bg-peche p-4 text-[#3a1606]">
+        <section className="rounded-2xl bg-peche p-4 text-encre">
           <p className="text-xs font-bold tracking-wider uppercase">Défi d&apos;équipe</p>
           <p className="mt-1 text-sm leading-snug">
             Ta proposition passe en tête du vote de lundi (9 h – 14 h) dans le QG. Si l&apos;équipe la choisit, chaque action qui

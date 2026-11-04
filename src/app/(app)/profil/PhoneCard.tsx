@@ -71,7 +71,7 @@ export function PhoneCard({ vapidKey }: { vapidKey: string | null }) {
 
       <div className="flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icon-192.png" alt="" width={40} height={40} className="rounded-[10px]" />
+        <img src="/icon-192.png" alt="" width={40} height={40} className="rounded-xl" />
         <div className="min-w-0 flex-1 text-sm">
           <p className="font-bold">Appli Pousse</p>
           <p className="text-xs text-terre">

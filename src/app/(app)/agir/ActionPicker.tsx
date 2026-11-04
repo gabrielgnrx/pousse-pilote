@@ -112,15 +112,15 @@ export function ActionPicker({
           type="button"
           onClick={() => record(item)}
           disabled={pending}
-          className="flex min-h-16 w-full items-center gap-3 rounded-[20px] bg-papier p-3 text-left shadow-[inset_0_-3px_0_var(--color-sable)] transition active:translate-y-px disabled:opacity-60"
+          className="flex min-h-16 w-full items-center gap-3 rounded-[20px] bg-papier p-3 text-left transition active:scale-[0.99] disabled:opacity-60"
         >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-sauge">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-sauge">
             <ThemeIcon theme={item.theme} />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] leading-snug font-semibold">{item.title}</span>
             {boost ? (
-              <span className={`mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${boost.kind === "equipe" ? "bg-abricot text-[#3a1606]" : "bg-sapin text-sapin-clair"}`}>
+              <span className={`mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${boost.kind === "equipe" ? "bg-pollen text-encre" : "bg-nuit text-white"}`}>
                 {boost.label} · {fmtMult(boost.mult)}
               </span>
             ) : null}
@@ -146,8 +146,40 @@ export function ActionPicker({
             <span className={`text-sm font-bold ${item.kg > 0 ? "text-sapin" : "text-terre"}`}>
               {item.kg > 0 ? `${item.pick ? "dès " : ""}−${formatKg(item.kg)}` : "≈ 0 kg"}
             </span>
-            <span className="text-xs font-semibold text-argile-fonce">+{boostedPoints(item.points, boost)}</span>
+            <span className="text-xs font-bold text-pollen-texte">+{boostedPoints(item.points, boost)}</span>
           </span>
+        </button>
+      </li>
+    );
+  };
+
+  /** Tes habitudes en tuiles : un tap suffit, comme sur la maquette. */
+  const tile = (item: ActionItem) => {
+    const busy = pending && busyKey === item.key;
+    const boost = boosts[item.key];
+    const count = counts[item.key] ?? 0;
+    return (
+      <li key={item.key}>
+        <button
+          type="button"
+          onClick={() => record(item)}
+          disabled={pending}
+          className="relative flex h-full min-h-[132px] w-full flex-col items-center justify-center gap-1.5 rounded-[20px] bg-papier px-2 py-3 text-center transition active:scale-[0.97] disabled:opacity-60"
+        >
+          {boost ? (
+            <span className="absolute top-2 right-2 rounded-full bg-pollen px-1.5 py-0.5 text-[11px] font-extrabold text-encre" title={boost.label}>
+              {fmtMult(boost.mult)}
+            </span>
+          ) : null}
+          <span className="flex size-11 items-center justify-center rounded-full bg-sauge">
+            <ThemeIcon theme={item.theme} />
+          </span>
+          <span className="text-sm leading-tight font-bold">{busy ? "Enregistrement…" : item.title}</span>
+          <span className="text-xs font-semibold text-sapin">
+            {item.kg > 0 ? `−${formatKg(item.kg)}` : "≈ 0 kg"} · <span className="text-pollen-texte">+{boostedPoints(item.points, boost)}</span>
+          </span>
+          {count > 0 ? <span className="text-[11px] text-brun">{doneToday[item.key] ? "Déjà fait aujourd'hui" : `${count} fois ce mois-ci`}</span> : null}
+          {boost ? <span className="sr-only">{boost.label}</span> : null}
         </button>
       </li>
     );
@@ -155,13 +187,9 @@ export function ActionPicker({
 
   return (
     <>
-      <div className="relative flex flex-col gap-1 overflow-hidden rounded-[28px_28px_28px_10px] bg-sapin p-5 text-sapin-clair shadow-[inset_0_-6px_0_var(--color-sapin-fonce)]">
-        <svg aria-hidden="true" width="150" height="130" viewBox="0 0 170 150" className="absolute -top-5 -right-9">
-          <path d="M30 130C20 70 60 20 150 10c10 70-30 120-120 120Z" fill="#2c6a45" />
-          <path d="M150 10C110 50 70 90 34 128" stroke="#3f7f57" strokeWidth="3" fill="none" />
-        </svg>
-        <p className="relative text-[13px] font-semibold text-[#c8dcc4]">Une action, aujourd&apos;hui</p>
-        <h1 className="relative font-display text-[28px] leading-tight">Qu&apos;as-tu fait de bien ?</h1>
+      <div className="flex flex-col gap-1">
+        <p className="label">Une action, aujourd&apos;hui</p>
+        <h1 className="mb-2 font-display text-[28px] leading-tight">Qu&apos;as-tu fait de bien ?</h1>
         <NaturalEntry
           habits={habits}
           onProvisional={(a) => {
@@ -173,8 +201,8 @@ export function ActionPicker({
         />
       </div>
 
-      <label className="flex h-[50px] items-center gap-2 rounded-2xl border border-trait bg-papier px-4">
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5b6458" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4-4" /></svg>
+      <label className="flex h-12 items-center gap-2 rounded-full border-[1.5px] border-trait bg-papier px-4 focus-within:border-chloro">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a5a4e" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4-4" /></svg>
         <span className="sr-only">Chercher une action</span>
         <input
           type="search"
@@ -186,14 +214,14 @@ export function ActionPicker({
       </label>
 
       {error ? (
-        <p role="alert" className="rounded-2xl bg-peche px-4 py-3 text-sm font-semibold text-argile-fonce">{error}</p>
+        <p role="alert" className="rounded-[20px] bg-pollen-pale px-4 py-3 text-sm font-semibold text-alerte">{error}</p>
       ) : null}
 
       {list ? (
         <section className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-display text-[19px] normal-case">{query ? "Résultats" : THEMES.find((t) => t.id === theme)?.label}</h2>
-            <button type="button" onClick={() => { setQuery(""); setTheme(null); }} className="text-xs font-bold underline underline-offset-2">
+            <h2 className="font-display text-xl">{query ? "Résultats" : THEMES.find((t) => t.id === theme)?.label}</h2>
+            <button type="button" onClick={() => { setQuery(""); setTheme(null); }} className="-my-2 min-h-11 text-[13px] font-bold text-sapin underline underline-offset-2">
               Tout voir
             </button>
           </div>
@@ -202,18 +230,18 @@ export function ActionPicker({
       ) : (
         <>
           <section className="flex flex-col gap-2">
-            <h2 className="font-display text-[19px] normal-case">Ou en un tap · tes habitudes</h2>
-            <ul className="flex flex-col gap-2">{favorites.map((k) => byKey[k]).filter(Boolean).map(row)}</ul>
+            <h2 className="label">En un tap · tes habitudes</h2>
+            <ul className="grid grid-cols-2 gap-2">{favorites.map((k) => byKey[k]).filter(Boolean).map(tile)}</ul>
           </section>
           <section className="flex flex-col gap-2">
-            <h2 className="font-display text-[19px] normal-case">Ou par thème</h2>
+            <h2 className="label">Par thème</h2>
             <div className="flex flex-wrap gap-2">
               {THEMES.map((t) => (
                 <button
                   key={t.id}
                   type="button"
                   onClick={() => setTheme(t.id)}
-                  className="flex min-h-11 items-center gap-1.5 rounded-full border border-trait bg-papier px-3.5 text-sm font-medium"
+                  className="flex min-h-11 items-center gap-1.5 rounded-full bg-papier px-3.5 text-sm font-semibold shadow-[inset_0_0_0_1px_var(--color-trait)] hover:bg-sable"
                 >
                   <ThemeIcon theme={t.id} size={16} />
                   {t.label}
@@ -224,11 +252,11 @@ export function ActionPicker({
         </>
       )}
 
-      <Link href="/defis?onglet=catalogue" className="self-center py-2 text-center text-sm font-semibold text-sapin">
+      <Link href="/defis?onglet=catalogue" className="self-center py-2 text-center text-sm font-bold text-sapin underline underline-offset-2">
         Un objectif sur plusieurs jours ? C&apos;est dans Mon plan
       </Link>
 
-      <p className="text-center text-xs text-terre">
+      <p className="text-center text-xs leading-relaxed text-brun">
         Pas de preuve demandée : chaque action se déclare sur l&apos;honneur. Des plafonds gardent le compteur de l&apos;entreprise
         juste : 2 trajets et 2 repas par jour, chaque semaine 2 trajets par jour de bureau déclaré dans ton bilan, et chaque année
         autant de voyages en train que de vols déclarés. Les petits gestes rapportent 5 pousses par jour au plus, tous confondus.
@@ -297,11 +325,11 @@ function ActionSheet({
     >
       <form
         action={onSubmit}
-        className="flex max-h-[90dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-creme p-5 sm:rounded-[28px]"
+        className="flex max-h-[90dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-[28px] bg-creme p-5 sm:rounded-[24px]"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold tracking-wider text-argile-fonce uppercase">
+            <p className="label">
               {item.pick === "items" ? "Qu'as-tu acheté ou gardé ?" : item.pick === "distance" ? "Quelle distance ?" : "Grosse action · sur l'honneur"}
             </p>
             <h2 id="action-titre" className="font-display text-xl leading-tight">{item.title}</h2>
@@ -362,7 +390,7 @@ function ActionSheet({
           </label>
         ) : null}
         {kg !== null && kg > 0 ? <p className="rounded-2xl bg-sauge px-3 py-2 text-[13px] text-sapin">≈ {formatKg(kg)} de CO₂ évités</p> : null}
-        {error ? <p role="alert" className="text-sm font-semibold text-argile-fonce">{error}</p> : null}
+        {error ? <p role="alert" className="text-sm font-semibold text-alerte">{error}</p> : null}
         <button type="submit" disabled={pending || !ready} className="btn-dark disabled:opacity-60">
           {pending ? "Enregistrement…" : `Valider · +${boostedPoints(item.points * Math.max(units, 1), boost)}`}
         </button>

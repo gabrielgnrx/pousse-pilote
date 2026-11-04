@@ -48,19 +48,12 @@ const PATHS: Record<Theme, React.ReactNode> = {
   ),
 };
 
-const COLOR: Record<Theme, string> = {
-  trajets: "#8a3c1c",
-  repas: "#7a5a12",
-  achats: "#1f5134",
-  maison: "#3f4a3c",
-  voyages: "#1f4a6b",
-  bureau: "#1f5134",
-  nature: "#1f5134",
-};
+/** Une seule couleur pour toutes les icônes de thème : elles sont posées sur une pastille lichen. */
+const COLOR = "#1e5634";
 
 export function ThemeIcon({ theme, size = 22, color }: { theme: Theme; size?: number; color?: string }) {
   return (
-    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color ?? COLOR[theme]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color ?? COLOR} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       {PATHS[theme]}
     </svg>
   );

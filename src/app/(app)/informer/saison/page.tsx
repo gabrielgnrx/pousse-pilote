@@ -58,7 +58,7 @@ export default async function SaisonPage({ searchParams }: { searchParams: Promi
       ))}
 
       {next.length ? (
-        <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-[#1f5134]">
+        <p className="rounded-2xl bg-sauge px-4 py-3 text-sm text-sapin">
           <strong>Le mois prochain :</strong> {next.map((p) => p.name.toLowerCase()).join(", ")}.
         </p>
       ) : null}
@@ -69,7 +69,7 @@ export default async function SaisonPage({ searchParams }: { searchParams: Promi
           {IMPORTED.map((p) => (
             <li key={p.name} className="flex justify-between gap-2">
               <span>{p.name}</span>
-              <span className={`font-bold ${p.kg > 5 ? "text-argile-fonce" : "text-terre"}`}>{kg(p.kg)}</span>
+              <span className={`font-bold ${p.kg > 5 ? "text-alerte" : "text-brun"}`}>{kg(p.kg)}</span>
             </li>
           ))}
         </ul>

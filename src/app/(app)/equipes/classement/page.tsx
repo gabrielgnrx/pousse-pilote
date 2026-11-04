@@ -105,7 +105,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: P
         </section>
       ) : null}
 
-      <p className="rounded-2xl bg-sauge px-4 py-3 text-xs leading-relaxed text-[#1f5134]">
+      <p className="rounded-2xl bg-sauge px-4 py-3 text-xs leading-relaxed text-sapin">
         Ton employeur voit les totaux par équipe, jamais ton nom ni tes défis. Les équipes de moins de 5
         membres ne sont pas classées. Le score par personne est lissé vers la moyenne de l&apos;entreprise,
         pour qu&apos;une petite équipe ne gagne pas sur un coup de chance.

@@ -80,20 +80,20 @@ export default async function QGPage({ searchParams }: { searchParams: Promise<{
   return (
     <>
       {propose ? (
-        <p role="status" className="rounded-2xl bg-sauge px-4 py-3 text-sm font-bold text-[#1f5134]">
+        <p role="status" className="rounded-[20px] bg-sauge px-4 py-3 text-sm font-bold text-sapin">
           Proposé ! Ton défi sera en tête du vote de lundi prochain, de 9 h à 14 h, ici dans le chat.
         </p>
       ) : null}
       <h1 className="sr-only">{team?.name ? `QG ${team.name}` : "QG de l'équipe"}</h1>
-      <p className="-mt-2 text-xs text-terre">
+      <p className="-mt-2 text-[13px] text-brun">
         {members ? `${members} membre${members > 1 ? "s" : ""}` : "Pas encore d'équipe"}
         {mineIndex >= 0 ? ` · ${ordinal(mineIndex + 1)} de l'entreprise cette semaine` : ""}
       </p>
 
-      <section aria-labelledby="classement" className="flex flex-col gap-2.5 rounded-[28px] bg-nuit p-4 text-sapin-clair shadow-[inset_0_-6px_0_#121a12]">
+      <section aria-labelledby="classement" className="flex flex-col gap-2.5 rounded-[24px] bg-nuit p-4 text-sapin-clair">
         <div className="flex items-center justify-between">
-          <h2 id="classement" className="font-display text-[19px]">Classement des équipes</h2>
-          <Link href="/equipes/classement" className="-my-2 flex min-h-11 items-center text-[13px] font-semibold text-feuille">
+          <h2 id="classement" className="text-xs font-bold tracking-wider text-nuit-pale uppercase">Classement de la semaine</h2>
+          <Link href="/equipes/classement" className="-my-2 flex min-h-11 items-center text-[13px] font-bold text-pollen">
             Tout voir
           </Link>
         </div>
@@ -102,21 +102,21 @@ export default async function QGPage({ searchParams }: { searchParams: Promise<{
             {podium.map((t) => (
               <li
                 key={t.team_name}
-                className={`flex items-center gap-2.5 min-h-11 rounded-[14px] px-2.5 py-1.5 text-sm ${t.is_mine ? "bg-feuille font-semibold text-encre shadow-[inset_0_-3px_0_var(--color-feuille-fonce)]" : ""}`}
+                className={`flex items-center gap-2.5 min-h-11 rounded-[14px] px-2.5 py-1.5 text-sm ${t.is_mine ? "-mx-1 bg-pollen font-bold text-encre" : ""}`}
               >
-                <span className={`w-7 font-bold ${t.is_mine ? "text-sapin" : "text-[#c3cfbe]"}`}>{ordinal(t.rank)}</span>
+                <span className={`w-7 font-extrabold ${t.is_mine ? "text-encre" : "text-nuit-pale"}`}>{ordinal(t.rank)}</span>
                 <span className="min-w-0 flex-1 truncate">
                   {t.team_name}
                   {t.is_mine ? " · vous" : ""}
                 </span>
-                <span className={`shrink-0 text-xs ${t.is_mine && gap ? "font-bold text-argile-fonce" : "font-bold"}`}>
+                <span className="shrink-0 text-xs font-bold">
                   {t.is_mine && gap ? gap : `${fr(Number(t.points_per_person))} /pers.`}
                 </span>
               </li>
             ))}
           </ol>
         ) : (
-          <p className="text-sm text-[#e3dccb]">Le classement apparaît dès qu&apos;une équipe compte 5 participants.</p>
+          <p className="text-sm text-nuit-pale">Le classement apparaît dès qu&apos;une équipe compte 5 participants.</p>
         )}
       </section>
 

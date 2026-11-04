@@ -22,7 +22,7 @@ export function GardenView({ data, mine }: { data: GardenData; mine: boolean }) 
         <h2 id="especes" className="label">Les espèces</h2>
         <ul className="grid grid-cols-2 gap-2.5">
           {g.plants.map((p) => (
-            <li key={p.key} className={`flex flex-col items-center gap-1 rounded-[18px] border border-encre/10 px-2 py-3 text-center ${p.stage ? "bg-papier" : "bg-creme"}`}>
+            <li key={p.key} className={`flex flex-col items-center gap-1 rounded-[20px] border border-encre/10 px-2 py-3 text-center ${p.stage ? "bg-papier" : "bg-creme"}`}>
               <PlantArt shape={p.shape} color={p.color} accent={p.accent} stage={p.stage} label={`${p.name}, ${STAGE_NAMES[p.stage]}`} />
               <p className="font-display text-base">{p.name}</p>
               <p className="text-xs font-semibold">{STAGE_NAMES[p.stage]}</p>
