@@ -1,15 +1,8 @@
-import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/admin/session";
 import { SubmitButton } from "@/components/ui";
 import { LaunchForm } from "./LaunchForm";
 import { addTeams } from "./actions";
-
-async function siteUrl() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`;
-}
+import { siteUrl } from "@/lib/site-url";
 
 /** Lancement en self-serve, puis invitation des salariés et gestion des équipes. */
 export default async function LaunchPage({ searchParams }: { searchParams: Promise<{ org?: string; cree?: string; nouvelle?: string }> }) {

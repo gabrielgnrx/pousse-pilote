@@ -31,7 +31,7 @@ export const SPECIES: Species[] = [
 
 /** Seuils des 4 stades : 1 action pour germer, puis 5, 15 et 40. */
 export const STAGES = [1, 5, 15, 40] as const;
-export const STAGE_NAMES = ["À planter", "Pousse", "Jeune plant", "Adulte", "En pleine forme"] as const;
+export const STAGE_NAMES = ["À planter", "Germe", "Jeune plant", "Adulte", "En pleine forme"] as const;
 
 export function stageFor(count: number): { stage: number; next: number | null } {
   let stage = 0;

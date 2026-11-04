@@ -4,6 +4,7 @@ import { createChallenge } from "./actions";
 import { FormError, SubmitButton } from "@/components/ui";
 import { carKmEquivalent, formatKg, impactLevel } from "@/lib/co2/challenges.ts";
 import { BONUS, MODES, fmtMult } from "@/lib/boosts";
+import { ITEM_BY_KEY, TIER_LABEL, challengeReward, isDemanding, rewardLabel } from "@/lib/game/catalog.ts";
 
 interface VariantView {
   key: string;
@@ -38,6 +39,9 @@ export function NewChallengeForm({
     minTarget: number;
     pointsPerUnit: number;
     source: string;
+    /** Thème et niveau : ils choisissent la plante gagnée sur l'île. */
+    category: string;
+    level?: string;
   };
   variants: VariantView[];
   initialVariant: string;
@@ -66,6 +70,9 @@ export function NewChallengeForm({
   const current = variants.find((v) => v.key === variant)!;
   const total = current.kg * target;
   const level = impactLevel(total);
+  const reward = challengeReward(template.category, days, target, template.level);
+  const rewardTier = ITEM_BY_KEY[reward[0]]?.tier;
+  const demanding = isDemanding(days, target, template.level);
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -235,6 +242,16 @@ export function NewChallengeForm({
         <p className="mt-2 text-xs">
           Impact {level} · soit {carKmEquivalent(total)} km en voiture thermique
         </p>
+        <div className="mt-3 flex items-center gap-2 rounded-[14px] bg-white/10 px-3 py-2">
+          <span className="text-xs font-bold tracking-wider text-pollen uppercase">Débloque</span>
+          <span className="min-w-0 flex-1 text-sm font-bold">
+            {rewardLabel(reward)}
+            {rewardTier ? <span className="font-normal"> · {TIER_LABEL[rewardTier].toLowerCase()} débloquée, la première offerte</span> : null}
+          </span>
+        </div>
+        {!demanding && template.level !== "expert" ? (
+          <p className="mt-1 text-xs">Vise au moins 4 fois par semaine : la récompense sera plus belle.</p>
+        ) : null}
         <p className="mt-2 text-xs leading-relaxed">
           Calcul : {target} × ({current.formula}).{" "}
           <a href={template.source} target="_blank" rel="noreferrer" className="underline">Source ADEME</a>

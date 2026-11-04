@@ -6,6 +6,7 @@
  */
 import { TEMPLATE_BY_ID, unitImpact } from "./co2/challenges.ts";
 import type { Habits } from "./co2/footprint.ts";
+import { co2Bonus } from "./co2/bonus.ts";
 
 export type Theme = "trajets" | "repas" | "achats" | "maison" | "voyages" | "bureau" | "nature";
 
@@ -27,7 +28,10 @@ export interface ActionItem {
   theme: Theme;
   /** kg de CO₂ évités par cette action, pour cette personne. */
   kg: number;
+  /** Pousses de base plus le bonus gros leviers (co2Bonus) sur le CO₂ affiché. */
   points: number;
+  /** La part du bonus gros leviers dans `points`. */
+  bonus: number;
   /** Pourquoi 0 kg, le cas échéant. */
   note?: string;
   /** Grosse action : confirmation sur l'honneur (plafond annuel ou hebdomadaire en base). */
@@ -132,6 +136,12 @@ export function themeOf(templateId: string): Theme {
   return THEME_OF[templateId] ?? "bureau";
 }
 
+/** Ajoute le bonus gros leviers aux pousses affichées (même règle que log_action, 0053). */
+function withBonus<T extends { points: number; kg: number }>(item: T): T & { bonus: number } {
+  const bonus = co2Bonus(item.kg);
+  return { ...item, points: item.points + bonus, bonus };
+}
+
 /** Les 16 actions du +, avec leur gain pour cette personne. */
 export function actionItems(h: Habits): ActionItem[] {
   return QUICK.flatMap((q) => {
@@ -156,14 +166,14 @@ export function actionItems(h: Habits): ActionItem[] {
       const eligible = choices.filter((c) => c.kg > 0);
       // Le CO₂ affiché : celui du choix le moins émetteur (le détail se fait dans l'action).
       const kg = eligible.length ? Math.min(...eligible.map((c) => c.kg)) : 0;
-      return [{ ...base, kg, choices, note: kg > 0 ? undefined : unitImpact(t.id, t.variants[0].key, h).reason }];
+      return [withBonus({ ...base, kg, choices, note: kg > 0 ? undefined : unitImpact(t.id, t.variants[0].key, h).reason })];
     }
     if (q.pick === "distance") {
       // Le train : CO₂ selon la distance saisie ; on montre celui d'un trajet de 500 km.
       const impact = unitImpact(t.id, "500", h);
-      return [{ ...base, kg: impact.eligible ? impact.kg : 0, note: impact.eligible ? undefined : impact.reason }];
+      return [withBonus({ ...base, kg: impact.eligible ? impact.kg : 0, note: impact.eligible ? undefined : impact.reason })];
     }
     const impact = unitImpact(t.id, q.variant, h);
-    return [{ ...base, kg: impact.eligible ? impact.kg : 0, note: impact.eligible ? undefined : impact.reason }];
+    return [withBonus({ ...base, kg: impact.eligible ? impact.kg : 0, note: impact.eligible ? undefined : impact.reason })];
   });
 }

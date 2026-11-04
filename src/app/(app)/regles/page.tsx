@@ -20,7 +20,8 @@ export default function ReglesPage() {
           C&apos;est le seul chiffre qui compte pour le classement. On en gagne avec chaque action
           enregistrée avec le bouton + (sans preuve, sauf pour quelques grosses actions), les quêtes du jour, une série de jours actifs, un meilleur choix au scanner. Quelqu&apos;un de très sobre gagne autant de pousses que quelqu&apos;un
           qui part de loin : une bonne habitude que tu as déjà (vélo, repas végé…) rapporte autant qu&apos;un
-          changement, même si elle n&apos;évite pas de CO₂ en plus. Les petits gestes (escaliers, gourde…) rapportent
+          changement, même si elle n&apos;évite pas de CO₂ en plus. Les gros leviers rapportent un bonus : +5 pousses
+          au-delà de 1 kg de CO₂ évité, +10 au-delà de 3 kg. Les petits gestes (escaliers, gourde…) rapportent
           5 pousses par jour au plus, tous confondus : ils comptent quand même pour ta série et tes quêtes. Le
           train, les vacances en train et les réparations se confirment sur l&apos;honneur et sont plafonnés chaque
           année d&apos;après ton bilan (autant de voyages en train que de vols déclarés, 2 réparations). Les
@@ -63,6 +64,32 @@ export default function ReglesPage() {
             plante rare pour ton jardin.</li>
           <li><strong>Jardin.</strong> Chaque type d&apos;action fait pousser une espèce (4 stades), les exploits
             débloquent des plantes rares. Tes collègues peuvent le voir.</li>
+        </ul>
+      </section>
+
+      <section className="card flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="chip bg-pollen-pale text-pollen-texte">Ton île</span>
+          <h2 className="font-display text-lg">Le défi débloque, les pousses font grandir</h2>
+        </div>
+        <ul className="flex flex-col gap-2 text-sm leading-relaxed">
+          <li><strong>Au départ.</strong> Quatre graines sont plantées sur ton île : bouleau (forêt), potager, fougère
+            (plage) et olivier (ruisseau).</li>
+          <li><strong>Faire grandir.</strong> Chaque action te rapporte des pousses. Planter coûte 10 pousses, puis chaque
+            stade 30, 60 et 100 : une plante adulte, c&apos;est 200 pousses. Arracher une plante rend les pousses
+            dépensées. Dépenser ne change jamais ton classement : il compte les pousses gagnées.</li>
+          <li><strong>Débloquer.</strong> Les défis ouvrent les plus belles espèces : le thème choisit la zone, la durée
+            la rareté (1 semaine : une fleur rare, 1 mois : une plante spéciale, 3 mois : un arbre remarquable qui
+            attire un animal), et viser au moins 4 fois par semaine une variante en fleurs ou en fruits. Le premier
+            exemplaire est offert. Les plantes communes de chaque zone s&apos;ouvrent avec les actions de sa famille,
+            certaines fleurs en essayant une activité (un quiz réussi, un bravo, le scanner).</li>
+          <li><strong>Les zones.</strong> Une zone revit avec les plantes qui y grandissent.</li>
+          <li><strong>Les animaux.</strong> Chacun revient avec sa recette : par exemple un merisier en fleurs et deux
+            noisetiers côte à côte font venir le geai des chênes.</li>
+          <li><strong>Le migrateur de la semaine.</strong> Il se pose chez chaque membre qui contribue au défi voté au
+            QG. Si la moitié de l&apos;équipe l&apos;accueille (au moins 3 îles), il arrive dans le carnet de toute l&apos;équipe.</li>
+          <li><strong>Le myosotis.</strong> Chaque jour, tu peux en offrir un à un collègue. Trois myosotis sur une île
+            attirent le rouge-gorge.</li>
         </ul>
       </section>
 

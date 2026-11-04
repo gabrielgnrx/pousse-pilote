@@ -8,6 +8,7 @@ const LEFT: Tab[] = [
   {
     href: "/fil",
     label: "Accueil",
+    also: ["/ile", "/jardin"],
     icon: (
       <>
         <path d="M3 11l9-8 9 8" />

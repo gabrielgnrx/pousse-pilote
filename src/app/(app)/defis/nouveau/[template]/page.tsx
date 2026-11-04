@@ -59,7 +59,7 @@ export default async function NewChallengePage({
       <h1 className="-mt-2 font-display text-2xl">{t.title}</h1>
       {firstEligible ? (
         <NewChallengeForm
-          template={{ id: t.id, unit: t.unit, variantQuestion: t.variantQuestion, proofHint: t.proofHint, defaultTarget: Math.max(t.defaultTarget, minTarget(t.id)), minTarget: minTarget(t.id), pointsPerUnit: t.pointsPerUnit, source: t.source }}
+          template={{ id: t.id, unit: t.unit, variantQuestion: t.variantQuestion, proofHint: t.proofHint, defaultTarget: Math.max(t.defaultTarget, minTarget(t.id)), minTarget: minTarget(t.id), pointsPerUnit: t.pointsPerUnit, source: t.source, category: t.category, level: t.level }}
           variants={variants.map((v) => ({ key: v.key, label: v.label, kg: v.impact.kg, eligible: v.impact.eligible, reason: v.impact.reason, formula: v.impact.formula }))}
           initialVariant={firstEligible.key}
           inspiredBy={inspiredBy}

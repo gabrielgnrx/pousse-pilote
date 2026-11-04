@@ -38,7 +38,10 @@ const RING = 2 * Math.PI * 19;
 
 /** Le titre affiché à côté de l'avatar, pour les 4 onglets de la barre du bas. */
 const TITLES: { prefix: string; title: string }[] = [
-  { prefix: "/fil", title: "Pousse" },
+  { prefix: "/ile/carnet", title: "Carnet" },
+  { prefix: "/ile/serre", title: "La Serre" },
+  { prefix: "/ile", title: "Ton île" },
+  { prefix: "/fil", title: "Le fil" },
   { prefix: "/defis", title: "Mon plan" },
   { prefix: "/duels", title: "Mon plan" },
   { prefix: "/informer", title: "S'informer" },
@@ -53,22 +56,26 @@ const TITLES: { prefix: string; title: string }[] = [
   { prefix: "/regles", title: "Le barème" },
   { prefix: "/avis", title: "Ton avis" },
 ];
-const BACK = ["/profil", "/bilan", "/jardin", "/notifications", "/regles", "/avis"];
+const BACK = ["/ile", "/profil", "/bilan", "/jardin", "/notifications", "/regles", "/avis"];
 
 /**
  * La barre du haut, identique sur toutes les pages : l'avatar (ton niveau en anneau) qui ouvre ton profil,
- * le nom de la rubrique, et un seul compteur pour le jeu : tes pousses et ta série.
- * La jauge de l'entreprise vit sur l'accueil (CompanyHero), plus ici.
+ * le nom de la rubrique, et un seul compteur pour le jeu : les pousses qu'il te reste à dépenser et ta
+ * série. Le niveau (anneau de l'avatar) compte toutes les pousses gagnées.
  */
 export function ProgressHud({
   initial,
   total,
+  balance,
   streak,
   notifications,
   teamName,
 }: {
   initial: string;
+  /** Pousses gagnées en tout : le niveau. */
   total: number;
+  /** Pousses qu'il reste à dépenser (gagnées moins les plantes de l'île). */
+  balance: number;
   streak: number;
   notifications: number;
   /** Le nom de ton équipe : l'onglet Équipe s'appelle « QG <équipe> ». */
@@ -76,18 +83,20 @@ export function ProgressHud({
 }) {
   const path = usePathname();
   const router = useRouter();
+  // Sur l'accueil, l'en-tête flotte sur l'île.
+  const onHome = path === "/fil";
   const withBack = BACK.some((p) => path === p || path.startsWith(`${p}/`));
   const level = levelFor(total);
-  const pousses = Math.round(useCountUp(total, "pousse.hud.total"));
+  const pousses = Math.round(useCountUp(balance, "pousse.hud.solde"));
   const found = TITLES.find((t) => path === t.prefix || path.startsWith(`${t.prefix}/`))?.title ?? "Pousse";
   const title = path === "/equipes" ? (teamName ? `QG ${teamName}` : "QG de l'équipe") : found;
 
   return (
-    <header className="flex items-center gap-2.5 px-5 pt-4 pb-2">
+    <header className={`flex items-center gap-2.5 px-5 pt-4 pb-2 ${onHome ? "absolute inset-x-0 top-0 z-20" : ""}`}>
       {withBack ? (
         <button
           type="button"
-          onClick={() => (window.history.length > 1 ? router.back() : router.push("/fil"))}
+          onClick={() => (window.history.length > 1 ? router.back() : router.push("/ile"))}
           aria-label="Retour"
           className="-mr-1 flex size-11 shrink-0 items-center justify-center rounded-full bg-papier shadow-[inset_0_0_0_1px_var(--color-trait)]"
         >
@@ -118,6 +127,7 @@ export function ProgressHud({
             className="transition-[stroke-dashoffset] duration-1000"
           />
         </svg>
+        <span className="absolute inset-[3px] -z-10 rounded-full bg-papier" aria-hidden="true" />
         <span className="absolute inset-[6px] flex items-center justify-center rounded-full bg-pollen-pale font-display text-[16px] text-encre">
           {initial}
         </span>
@@ -126,11 +136,12 @@ export function ProgressHud({
         </span>
       </Link>
 
-      <p className={`min-w-0 flex-1 truncate font-display ${withBack ? "text-xl" : "text-[26px]"}`}>{title}</p>
+      <p className={`min-w-0 flex-1 truncate font-display ${withBack ? "text-xl" : "text-[26px]"} ${onHome ? "sr-only" : ""}`}>{title}</p>
+      {onHome ? <span aria-hidden="true" className="flex-1" /> : null}
 
       <Link
-        href="/profil#pousses"
-        aria-label={`${total} pousses, série de ${streak} jour${streak > 1 ? "s" : ""} d'affilée`}
+        href="/ile/serre"
+        aria-label={`${balance} pousses à dépenser, série de ${streak} jour${streak > 1 ? "s" : ""} d'affilée`}
         className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-papier px-3 text-sm font-bold text-encre shadow-[inset_0_0_0_1px_var(--color-trait)]"
       >
         <span className="flex items-center gap-1 tabular-nums">

@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/session";
+import { ISLAND_ERRORS } from "@/lib/game/island.ts";
 
 const ERRORS: Record<string, string> = {
   no_team: "Tu n'as pas encore d'équipe.",
@@ -34,4 +35,20 @@ export async function reportTeamMessage(id: string): Promise<{ error?: string }>
   if (error) return { error: message(error.message) };
   revalidatePath("/equipes");
   return {};
+}
+
+export type GiftState = { ok?: string; error?: string };
+
+/** Offrir un myosotis à un collègue (un par jour, island_gift) : l'espèce est débloquée, le premier offert. */
+export async function giftMyosotis(_prev: GiftState, form: FormData): Promise<GiftState> {
+  const to = String(form.get("to") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(to)) return { error: "Choisis un collègue." };
+  const { supabase } = await requireProfile();
+  const { error } = await supabase.rpc("island_gift", { p_to: to });
+  if (error) {
+    const key = Object.keys(ISLAND_ERRORS).find((k) => error.message?.includes(k));
+    return { error: (key && ISLAND_ERRORS[key]) || "Le cadeau n'a pas pu partir. Réessaie." };
+  }
+  revalidatePath("/equipes");
+  return { ok: "Myosotis envoyé ! Il apparaîtra sur son île." };
 }

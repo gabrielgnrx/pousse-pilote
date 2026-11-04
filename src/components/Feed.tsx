@@ -123,22 +123,33 @@ export function ActionPost(p: ActionPostProps) {
         {p.reported ? <p className="text-xs font-semibold text-argile-fonce">Signalé, l&apos;équipe Pousse va vérifier.</p> : null}
 
         <div className="flex items-center gap-1">
-          <form action={p.cheerAction}>
-            <input type="hidden" name="validation" value={p.id} />
-            <button
-              type="submit"
-              aria-pressed={p.cheered}
-              className={`flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold transition active:scale-95 ${
-                p.cheered ? "bg-chloro text-white" : "bg-sauge text-sapin"
-              }`}
-            >
+          {p.mine ? (
+            // Sa propre publication : on voit les bravos reçus, on ne se félicite pas soi-même.
+            <p className="flex h-10 items-center gap-1.5 rounded-full bg-sable px-3.5 text-sm font-bold text-brun">
               <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 10v11H3V10h4Z" />
                 <path d="M7 10l4-8c2 0 3 1.5 3 3v3h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7" />
               </svg>
-              Bravo · {p.cheers}
-            </button>
-          </form>
+              {p.cheers ? `${p.cheers} bravo${p.cheers > 1 ? "s" : ""} reçu${p.cheers > 1 ? "s" : ""}` : "Pas encore de bravo"}
+            </p>
+          ) : (
+            <form action={p.cheerAction}>
+              <input type="hidden" name="validation" value={p.id} />
+              <button
+                type="submit"
+                aria-pressed={p.cheered}
+                className={`flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold transition active:scale-95 ${
+                  p.cheered ? "bg-chloro text-white" : "bg-sauge text-sapin"
+                }`}
+              >
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 10v11H3V10h4Z" />
+                  <path d="M7 10l4-8c2 0 3 1.5 3 3v3h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7" />
+                </svg>
+                Bravo · {p.cheers}
+              </button>
+            </form>
+          )}
           {p.tryHref ? (
             <Link href={p.tryHref} className="flex h-10 items-center px-3 text-sm font-bold text-encre">
               J&apos;essaie aussi

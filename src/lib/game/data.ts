@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { IslandData } from "./island.ts";
 import type { GardenData } from "./garden.ts";
 
 export type { Quiz } from "./quiz.ts";
@@ -51,4 +52,43 @@ export function duelOutcome(d: Duel): "gagne" | "partage" | "perdu" | "nul" | nu
 export async function getGarden(supabase: SupabaseClient, userId: string): Promise<GardenData | null> {
   const { data, error } = await supabase.rpc("garden", { p_user: userId });
   return error || !data ? null : (data as GardenData);
+}
+
+/** L'île de quelqu'un de mon entreprise : son jardin et ses plantes posées (fonction island(), 0047_ile.sql). */
+export async function getIsland(supabase: SupabaseClient, userId: string): Promise<IslandData | null> {
+  const { data, error } = await supabase.rpc("island", { p_user: userId });
+  return error || !data ? null : (data as IslandData);
+}
+
+/**
+ * Mon île, après avoir récupéré ce qui m'est dû (island_claim, 0051_ile_serre.sql) : plantes de départ,
+ * récompenses des défis, consolations, migrateurs de l'équipe. Rejouer ne donne rien deux fois.
+ */
+export async function getMyIsland(supabase: SupabaseClient, userId: string): Promise<IslandData | null> {
+  await supabase.rpc("island_claim");
+  return getIsland(supabase, userId);
+}
+
+export interface Migration {
+  bird: string;
+  week: string;
+  /** Le défi de la semaine voté au QG (null : vote pas encore clos). */
+  kind: string | null;
+  members: number;
+  needed: number;
+  hosts: { id: string; name: string }[];
+  done: boolean;
+}
+
+export interface TeamGarden {
+  migration: Migration | null;
+  /** Défis de la semaine réussis par l'équipe : un arbre chacun dans le bosquet. */
+  grove: number;
+  gifted_today: boolean;
+  colleagues: { id: string; name: string; team: boolean }[];
+}
+
+export async function getTeamGarden(supabase: SupabaseClient): Promise<TeamGarden | null> {
+  const { data, error } = await supabase.rpc("team_garden");
+  return error || !data ? null : (data as TeamGarden);
 }
