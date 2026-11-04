@@ -59,18 +59,22 @@ const BACK = ["/ile", "/profil", "/bilan", "/jardin", "/notifications", "/regles
 
 /**
  * La barre du haut, identique sur toutes les pages : l'avatar (ton niveau en anneau) qui ouvre ton profil,
- * le nom de la rubrique, et un seul compteur pour le jeu : tes pousses et ta série.
- * La jauge de l'entreprise vit sur l'accueil (CompanyHero), plus ici.
+ * le nom de la rubrique, et un seul compteur pour le jeu : les pousses qu'il te reste à dépenser et ta
+ * série. Le niveau (anneau de l'avatar) compte toutes les pousses gagnées.
  */
 export function ProgressHud({
   initial,
   total,
+  balance,
   streak,
   notifications,
   teamName,
 }: {
   initial: string;
+  /** Pousses gagnées en tout : le niveau. */
   total: number;
+  /** Pousses qu'il reste à dépenser (gagnées moins les plantes de l'île). */
+  balance: number;
   streak: number;
   notifications: number;
   /** Le nom de ton équipe : l'onglet Équipe s'appelle « QG <équipe> ». */
@@ -82,7 +86,7 @@ export function ProgressHud({
   const onHome = path === "/fil";
   const withBack = BACK.some((p) => path === p || path.startsWith(`${p}/`));
   const level = levelFor(total);
-  const pousses = Math.round(useCountUp(total, "pousse.hud.total"));
+  const pousses = Math.round(useCountUp(balance, "pousse.hud.solde"));
   const found = TITLES.find((t) => path === t.prefix || path.startsWith(`${t.prefix}/`))?.title ?? "Pousse";
   const title = path === "/equipes" ? (teamName ? `QG ${teamName}` : "QG de l'équipe") : found;
 
@@ -135,8 +139,8 @@ export function ProgressHud({
       {onHome ? <span aria-hidden="true" className="flex-1" /> : null}
 
       <Link
-        href="/profil#pousses"
-        aria-label={`${total} pousses, série de ${streak} jour${streak > 1 ? "s" : ""} d'affilée`}
+        href="/ile/serre"
+        aria-label={`${balance} pousses à dépenser, série de ${streak} jour${streak > 1 ? "s" : ""} d'affilée`}
         className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-papier px-3 text-sm font-bold text-encre shadow-[inset_0_0_0_1px_var(--color-trait)]"
       >
         <span className="flex items-center gap-1 tabular-nums">

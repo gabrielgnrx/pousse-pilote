@@ -8,7 +8,6 @@ import { claimDailyRewards } from "@/lib/engagement-data";
 import { IntroCard } from "@/components/IntroCard";
 import { getDuels, getMyIsland } from "@/lib/game/data.ts";
 import { IslandHero } from "@/components/island/IslandHero";
-import { CompanyHero, type CompanyPulse } from "@/components/CompanyHero";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { duelKindForTemplate } from "@/lib/game/labels.ts";
 import { actionTitle } from "@/lib/actions-catalog";
@@ -50,11 +49,10 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
     .eq("status", "valid");
   if (teamOnly) postsQuery = postsQuery.eq("team_id", profile.team_id as string);
 
-  const [{ data: posts }, { data: myReports }, cookieStore, { data: pulse }, { data: challengeEvents }] = await Promise.all([
+  const [{ data: posts }, { data: myReports }, cookieStore, { data: challengeEvents }] = await Promise.all([
     postsQuery.order("created_at", { ascending: false }).limit(30).returns<Post[]>(),
     supabase.from("reports").select("validation_id").eq("user_id", user.id),
     cookies(),
-    supabase.rpc("company_pulse"),
     supabase.rpc("company_challenge_feed", { p_team_only: teamOnly }),
   ]);
   const showIntro = !cookieStore.get(INTRO_COOKIE);
@@ -127,7 +125,6 @@ export default async function FilPage({ searchParams }: { searchParams: Promise<
       <div className={`flex flex-col gap-4 ${island ? "relative -mx-4 -mt-14 rounded-t-[28px] bg-creme px-4 pt-2 shadow-[0_-8px_24px_rgba(20,38,27,0.14)]" : ""}`}>
       {island ? <span aria-hidden="true" className="mx-auto h-1.5 w-11 rounded-full bg-trait" /> : null}
       {showIntro ? <IntroCard /> : null}
-      {pulse ? <CompanyHero pulse={pulse as CompanyPulse} /> : null}
       <InstallPrompt />
 
       <div id="publications" className="-mx-4 flex scroll-mt-4 items-center justify-between gap-2 border-t border-trait px-4 pt-4">

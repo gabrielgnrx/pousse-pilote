@@ -53,6 +53,7 @@ rappels (`pousse-rappels`) et la purge des photos (`pousse-purge`, Edge Function
 | 0047 – 0049 | L'île : graines plantées, déplacées ou arrachées, zones à restaurer |
 | 0050 | Île : Graineterie (achats en pousses, prix calés sur la démo), plantes gagnées en défi, migrateur d'équipe, myosotis offerts |
 | 0051 | Île : le défi débloque une espèce, les pousses la font grandir (Serre, plantes de départ) |
+| 0052 | Compteur du haut : les pousses qu'il reste à dépenser |
 
 ### Données de démo
 
