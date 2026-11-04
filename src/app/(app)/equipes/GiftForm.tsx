@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { SubmitButton } from "@/components/ui";
-import { giftMyosotis } from "../ile/graineterie/actions";
+import { giftMyosotis } from "./actions";
 
 /** Offrir le myosotis du jour à un collègue : il apparaît dans ses graines, sur son île. */
 export function GiftForm({ colleagues }: { colleagues: { id: string; name: string; team: boolean }[] }) {

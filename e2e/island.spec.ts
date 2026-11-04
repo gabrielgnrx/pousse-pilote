@@ -18,11 +18,11 @@ async function occupied(page: Page): Promise<string[]> {
 }
 
 /**
- * L'île : une action enregistrée donne une graine ; on la plante, elle reste après un rechargement ;
- * on peut la déplacer puis l'arracher (sa graine revient dans le bac).
+ * L'île : quatre plantes de départ ; une action rapporte des pousses ; on plante un potager avec, il
+ * reste après un rechargement ; on peut le déplacer puis l'arracher (ses pousses reviennent).
  */
-test("une action donne une graine, qu'on plante, déplace et arrache sur l'île", async ({ page }) => {
-  // 1. Une action de la famille « repas » : une graine de potager.
+test("une action rapporte des pousses, qu'on dépense pour planter, puis on déplace et arrache", async ({ page }) => {
+  // 1. Une action de la famille « repas » : des pousses.
   await page.goto("/agir");
   await page.getByRole("button", { name: "Repas", exact: true }).click();
   await page.getByRole("button", { name: /Repas végé/ }).first().click();
@@ -34,12 +34,13 @@ test("une action donne une graine, qu'on plante, déplace et arrache sur l'île"
   await page.waitForURL(/\/ile$/);
   await expect(page.locator("svg.pi")).toBeVisible();
 
-  // 3. Choisir la graine, laisser l'appli choisir la case.
+  // 3. Les quatre plantes de départ sont là. Choisir le potager, laisser l'appli choisir la case.
+  await expect.poll(() => occupied(page)).toHaveLength(4);
   const before = await occupied(page);
   const graines = page.getByRole("region", { name: /Tes graines/ });
   await graines.getByRole("button", { name: /Potager/ }).click();
   await graines.getByRole("button", { name: "Planter pour moi" }).click();
-  await expect(page.getByText(/Nouvelle plante : Potager|Potager : \d+ graines/)).toBeVisible();
+  await expect(page.getByText(/Nouvelle plante : Potager · −10 pousses/)).toBeVisible();
 
   // 4. La plante est enregistrée : elle est encore là après un rechargement.
   await page.reload();
@@ -71,7 +72,7 @@ test("une action donne une graine, qu'on plante, déplace et arrache sur l'île"
   await tapTile(page, free[0]!, free[1]!);
   await page.getByRole("button", { name: "Arracher" }).click();
   await page.getByRole("button", { name: "Arracher" }).last().click();
-  await expect(page.getByText(/Plante arrachée : \d+ graines? de retour/)).toBeVisible();
+  await expect(page.getByText("Plante arrachée : 10 pousses rendues")).toBeVisible();
   await page.reload();
   await expect(page.getByRole("region", { name: /Tes graines/ }).getByRole("button", { name: /Potager/ })).toBeVisible();
 });

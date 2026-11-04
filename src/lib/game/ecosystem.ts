@@ -4,25 +4,25 @@
  * restaurée). Tout se déduit des plantes posées : rien n'est stocké, un animal repart si on arrache
  * ce qui l'a attiré.
  */
-import { ZONES, lookOf, zoneOfTile, type IslandPlant, type Zone } from "./island.ts";
+import { ZONES, lookOf, stageOf, zoneOfSpecies, zoneOfTile, type IslandPlant, type Zone } from "./island.ts";
 
 export interface ZoneState {
   key: Zone;
   name: string;
   grownBy: string;
-  /** Graines de la bonne famille plantées dans la zone. */
+  /** Stades cumulés des plantes de la zone (une plante adulte : 4). */
   fed: number;
   target: number;
   /** De 0 (abîmée) à 1 (restaurée). */
   health: number;
 }
 
-/** L'état des quatre zones : seules les plantes de la famille de la zone, posées dans la zone, comptent. */
+/** L'état des quatre zones : les stades des plantes de la zone, posées dans la zone (0051_ile_serre.sql). */
 export function zoneStates(plants: IslandPlant[]): ZoneState[] {
   return ZONES.map((z) => {
     const fed = plants
-      .filter((p) => !p.rare && p.species === z.species && zoneOfTile(p.x, p.z) === z.key)
-      .reduce((n, p) => n + p.fed, 0);
+      .filter((p) => zoneOfSpecies(p.species) === z.key && zoneOfTile(p.x, p.z) === z.key)
+      .reduce((n, p) => n + stageOf(p), 0);
     return { key: z.key, name: z.name, grownBy: z.grownBy, fed, target: z.target, health: Math.min(1, fed / z.target) };
   });
 }
@@ -406,10 +406,10 @@ export const HABITATS: ReadonlyArray<{ animal: AnimalKey; zone: Zone | null; nee
 ];
 
 /**
- * Où en est chaque recette : pour chaque plante, combien sont sur l'île ou dans le bac (`have`),
- * sur combien. `here` : l'animal est déjà là.
+ * Où en est chaque recette : pour chaque plante, combien sont posées sur l'île (`have`), sur combien,
+ * et si l'espèce est débloquée. `here` : l'animal est déjà là.
  */
-export function habitatProgress(plants: IslandPlant[], inventory: Record<string, number> = {}, guests: readonly string[] = []) {
+export function habitatProgress(plants: IslandPlant[], unlocked: readonly string[] = [], guests: readonly string[] = []) {
   const present = new Set(animalsOn(plants, guests).map((a) => a.animal.key));
   return HABITATS.map((h) => ({
     animal: ANIMAL_BY_KEY[h.animal],
@@ -418,7 +418,8 @@ export function habitatProgress(plants: IslandPlant[], inventory: Record<string,
     needs: h.needs.map(([item, need]) => ({
       item,
       need,
-      have: plants.filter((p) => p.rare && p.species === item).length + Number(inventory[item] ?? 0),
+      have: plants.filter((p) => p.species === item).length,
+      unlocked: unlocked.includes(item),
     })),
   }));
 }

@@ -11,7 +11,7 @@ const PlantInput = z.object({
 
 export type PlantResult = { ok: true; data: IslandData } | { ok: false; error: string };
 
-/** Plante une graine : island_plant() vérifie qu'elle a bien été gagnée par une action. */
+/** Plante une espèce débloquée : island_plant() vérifie le déblocage, la case et le solde de pousses. */
 export async function plantSeed(input: { species: string; x: number; z: number }): Promise<PlantResult> {
   const parsed = PlantInput.safeParse(input);
   if (!parsed.success) return { ok: false, error: ISLAND_ERRORS.off_island ?? "Emplacement invalide." };
@@ -60,5 +60,15 @@ export async function uprootPlant(input: { x: number; z: number }): Promise<Plan
   const { supabase } = await requireProfile();
   const { data, error } = await supabase.rpc("island_uproot", { p_x: at.data.x, p_z: at.data.z });
   if (error || !data) return failure(error?.message, "La plante n'a pas pu être arrachée. Réessaie.");
+  return { ok: true, data: data as IslandData };
+}
+
+/** Fait grandir une de mes plantes d'un stade avec mes pousses (island_grow). */
+export async function growPlant(input: { x: number; z: number }): Promise<PlantResult> {
+  const at = Tile.safeParse(input);
+  if (!at.success) return { ok: false, error: ISLAND_ERRORS.off_island ?? "Emplacement invalide." };
+  const { supabase } = await requireProfile();
+  const { data, error } = await supabase.rpc("island_grow", { p_x: at.data.x, p_z: at.data.z });
+  if (error || !data) return failure(error?.message, "La plante n'a pas pu grandir. Réessaie.");
   return { ok: true, data: data as IslandData };
 }

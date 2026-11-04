@@ -45,7 +45,7 @@ export default async function CarnetPage() {
                   <div className="h-2 rounded-full bg-chloro" style={{ width: `${Math.max(pct, pct ? 4 : 0)}%` }} />
                 </div>
                 <p className="mt-1 text-xs text-terre">
-                  {z.fed}/{z.target} graines · {z.grownBy}
+                  {z.fed}/{z.target} stades · plantes de la zone
                 </p>
               </li>
             );

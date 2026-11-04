@@ -1,8 +1,12 @@
 /**
- * L'île : chaque action comptée par le jardin donne une graine de son espèce. Une graine se plante sur un
- * emplacement libre (nouvelle plante) ou sur une plante de la même espèce (elle grandit). Les plantes
- * rares obtenues se posent une fois, adultes. Le calcul officiel est dans island_plant() (0047_ile.sql) ;
- * ce module sert l'affichage et doit suivre les mêmes règles.
+ * L'île : le défi décide quoi, les pousses décident combien (0051_ile_serre.sql).
+ *
+ * On plante une espèce débloquée (au départ : bouleau, potager, fougère, olivier ; les autres par
+ * les défis, les actions de leur famille, ou un cadeau) sur une case libre de sa zone, pour 10 pousses
+ * (le premier exemplaire gagné ou reçu est offert). Puis chaque stade coûte des pousses : 30, 60 et 100.
+ * Arracher rend les pousses dépensées. Les plantes rares d'exploits se posent une fois, adultes.
+ * Le calcul officiel est dans island_plant() et island_grow() ; ce module sert l'affichage et suit les
+ * mêmes règles.
  */
 import { RARES, RARE_BY_KEY, SPECIES, stageFor, type GardenData, type Rare, type Shape, type Species } from "./garden.ts";
 import { ITEM_BY_KEY, TIER_LABEL, type Tier } from "./catalog.ts";
@@ -14,6 +18,12 @@ export interface IslandPlant {
   x: number;
   z: number;
   fed: number;
+  /** Stade, de 1 (planté) à 4 (adulte). Absent : calculé depuis les graines (avant la 0051). */
+  stage?: number;
+  /** Pousses dépensées pour elle (rendues si on l'arrache). */
+  spent?: number;
+  /** Exemplaire offert (gagné en défi, reçu en cadeau, ou plante de départ). */
+  free?: boolean;
   planted_at: string;
   grown_at: string;
 }
@@ -30,13 +40,22 @@ export interface Reward {
 
 export interface IslandData extends GardenData {
   plants: IslandPlant[];
-  /** Plantes du catalogue possédées et pas encore posées (0050_ile_graineterie.sql). */
+  /** Plantes du catalogue possédées (récompenses, cadeaux, migrateurs). */
   inventory?: Record<string, number>;
-  /** Pousses à dépenser à la Graineterie (seulement pour moi). */
+  /** Espèces que je peux planter. */
+  unlocked?: string[];
+  /** Exemplaires offerts encore à planter, par espèce. */
+  free?: Record<string, number>;
+  /** Pousses à dépenser (seulement pour moi). */
   pousses?: number | null;
   /** Récompenses des 30 derniers jours (seulement pour moi). */
   recent?: Reward[] | null;
 }
+
+/** Planter coûte 10 pousses ; puis passer du stade 1 au 2 : 30, du 2 au 3 : 60, du 3 au 4 : 100. */
+export const PLANT_COST = 10;
+export const GROW_COST: Readonly<Record<number, number>> = { 1: 30, 2: 60, 3: 100 };
+export const ISLAND_STAGE_NAMES = ["", "Planté", "Pousse", "Jeune plant", "Adulte"] as const;
 
 /** L'île est un disque d'emplacements : x² + z² ≤ 10 (37 emplacements). */
 export const ISLAND_RADIUS2 = 10;
@@ -57,11 +76,12 @@ export const ISLAND_TILES: ReadonlyArray<{ x: number; z: number }> = (() => {
  * La case centrale accueille toutes les espèces.
  */
 export type Zone = "foret" | "potager" | "plage" | "ruisseau";
+/** `target` : stades à cumuler dans la zone pour la restaurer (quatre plantes adultes). */
 export const ZONES: ReadonlyArray<{ key: Zone; name: string; grownBy: string; species: string; target: number }> = [
-  { key: "foret", name: "Forêt", grownBy: "tes trajets", species: "transport", target: 20 },
-  { key: "potager", name: "Potager", grownBy: "tes repas", species: "alimentation", target: 20 },
-  { key: "plage", name: "Plage", grownBy: "tes achats évités", species: "consommation", target: 10 },
-  { key: "ruisseau", name: "Ruisseau", grownBy: "ta maison", species: "logement", target: 8 },
+  { key: "foret", name: "Forêt", grownBy: "tes trajets", species: "transport", target: 16 },
+  { key: "potager", name: "Potager", grownBy: "tes repas", species: "alimentation", target: 16 },
+  { key: "plage", name: "Plage", grownBy: "tes achats évités", species: "consommation", target: 16 },
+  { key: "ruisseau", name: "Ruisseau", grownBy: "ta maison", species: "logement", target: 16 },
 ];
 export const ZONE_BY_KEY = Object.fromEntries(ZONES.map((z) => [z.key, z])) as Record<Zone, (typeof ZONES)[number]>;
 
@@ -101,7 +121,7 @@ export function tileFits(species: string, x: number, z: number): boolean {
   return want === null || zone === null || zone === want;
 }
 
-/** Ce qu'il faut pour dessiner une plante : forme, couleurs, stade (0 à 4). */
+/** Ce qu'il faut pour dessiner une plante : forme, couleurs, stade (1 à 4). */
 export interface PlantLook {
   key: string;
   name: string;
@@ -109,7 +129,7 @@ export interface PlantLook {
   color: string;
   accent: string;
   stage: number;
-  /** Graines nécessaires pour le stade suivant (null : adulte). */
+  /** Pousses pour le stade suivant (null : adulte). */
   next: number | null;
   rare: boolean;
   /** Fleurs ou fruits semés sur le feuillage, taille du feuillage (plantes du catalogue). */
@@ -119,61 +139,62 @@ export interface PlantLook {
 
 const SPECIES_BY_KEY: Record<string, Species> = Object.fromEntries(SPECIES.map((s) => [s.key, s]));
 
-export function lookOf(p: Pick<IslandPlant, "species" | "rare" | "fed">): PlantLook | null {
-  if (p.rare) {
-    const item = ITEM_BY_KEY[p.species];
-    if (item && item.kind !== "visiteur") {
-      return { key: item.key, name: item.name, shape: item.shape, color: item.color, accent: item.accent, stage: 4, next: null, rare: true, dots: item.dots, big: item.big };
-    }
-    const r: Rare | undefined = RARE_BY_KEY[p.species];
-    if (!r) return null;
-    return { key: r.key, name: r.name, shape: r.shape, color: r.color, accent: r.accent, stage: 4, next: null, rare: true };
+/** Le stade d'une plante : enregistré, sinon calculé depuis ses graines (plantes d'avant la 0051). */
+export function stageOf(p: Pick<IslandPlant, "rare" | "fed" | "stage">): number {
+  if (p.stage) return p.stage;
+  return p.rare ? 4 : Math.max(1, stageFor(p.fed).stage);
+}
+
+export function lookOf(p: Pick<IslandPlant, "species" | "rare" | "fed" | "stage">): PlantLook | null {
+  const stage = stageOf(p);
+  const next = GROW_COST[stage] ?? null;
+  const item = ITEM_BY_KEY[p.species];
+  if (item && item.kind !== "visiteur") {
+    return { key: item.key, name: item.name, shape: item.shape, color: item.color, accent: item.accent, stage, next, rare: true, dots: item.dots, big: item.big };
   }
+  const r: Rare | undefined = RARE_BY_KEY[p.species];
+  if (r) return { key: r.key, name: r.name, shape: r.shape, color: r.color, accent: r.accent, stage: 4, next: null, rare: true };
   const s = SPECIES_BY_KEY[p.species];
   if (!s) return null;
-  const { stage, next } = stageFor(p.fed);
   return { key: s.key, name: s.name, shape: s.shape, color: s.color, accent: s.accent, stage, next, rare: false };
 }
 
 export interface Seed {
   key: string;
   name: string;
-  /** Ce qui la fait gagner, pour la légende. */
+  /** D'où vient l'espèce, pour la légende. */
   how: string;
   shape: Shape;
   color: string;
   accent: string;
+  /** Plante rare d'exploit : posée une fois, adulte. */
   rare: boolean;
-  available: number;
-  /** Plante du catalogue : sa rareté (achat, défi, cadeau). */
+  /** Exemplaires offerts restants (gagnés en défi, reçus en cadeau). */
+  free: number;
+  /** Coût de la prochaine plantation : 0 si un exemplaire offert reste, sinon 10. */
+  cost: number;
+  /** Plante du catalogue : sa rareté. */
   tier?: Tier;
 }
 
-/** Les graines à planter : par espèce, celles gagnées moins celles déjà plantées ; puis les rares à poser. */
+/** Les espèces que je peux planter : celles débloquées, puis les plantes rares d'exploits pas encore posées. */
 export function seedsOf(data: IslandData): Seed[] {
-  const spent: Record<string, number> = {};
-  for (const p of data.plants) if (!p.rare) spent[p.species] = (spent[p.species] ?? 0) + p.fed;
+  const free = data.free ?? {};
+  const unlocked = (data.unlocked ?? []).flatMap((key) => {
+    const n = Number(free[key] ?? 0);
+    const item = ITEM_BY_KEY[key];
+    if (item) {
+      if (item.kind === "visiteur") return [];
+      return [{ key, name: item.name, how: TIER_LABEL[item.tier], shape: item.shape, color: item.color, accent: item.accent, rare: false, free: n, cost: n > 0 ? 0 : PLANT_COST, tier: item.tier }];
+    }
+    const s = SPECIES_BY_KEY[key];
+    return s ? [{ key, name: s.name, how: s.grownBy, shape: s.shape, color: s.color, accent: s.accent, rare: false, free: n, cost: n > 0 ? 0 : PLANT_COST }] : [];
+  });
   const placedRares = new Set(data.plants.filter((p) => p.rare).map((p) => p.species));
-
-  const common = SPECIES.map((s) => ({
-    key: s.key,
-    name: s.name,
-    how: s.grownBy,
-    shape: s.shape,
-    color: s.color,
-    accent: s.accent,
-    rare: false,
-    available: Math.max(0, Number(data.counts[s.key] ?? 0) - (spent[s.key] ?? 0)),
-  }));
   const rares = RARES.filter((r) => (r.exploit ? Boolean(data.exploits[r.exploit]) : data.rares.includes(r.key)))
     .filter((r) => !placedRares.has(r.key))
-    .map((r) => ({ key: r.key, name: r.name, how: r.how, shape: r.shape, color: r.color, accent: r.accent, rare: true, available: 1 }));
-  const items = Object.entries(data.inventory ?? {}).flatMap(([key, n]) => {
-    const item = ITEM_BY_KEY[key];
-    if (!item || item.kind === "visiteur" || Number(n) <= 0) return [];
-    return [{ key, name: item.name, how: TIER_LABEL[item.tier], shape: item.shape, color: item.color, accent: item.accent, rare: true, available: Number(n), tier: item.tier }];
-  });
-  return [...common.filter((s) => s.available > 0), ...rares, ...items];
+    .map((r) => ({ key: r.key, name: r.name, how: r.how, shape: r.shape, color: r.color, accent: r.accent, rare: true, free: 1, cost: 0 }));
+  return [...unlocked, ...rares];
 }
 
 /** Les migrateurs arrivés sur l'île grâce à l'équipe (ils ne se plantent pas). */
@@ -183,57 +204,64 @@ export function guestsOf(data: Pick<IslandData, "inventory">): string[] {
     .map(([key]) => key);
 }
 
-export type PlantCheck = "nouvelle" | "grandit" | "occupe" | "hors_ile" | "hors_zone";
+export type PlantCheck = "nouvelle" | "occupe" | "hors_ile" | "hors_zone";
 
-/** Ce que donnerait une graine posée en (x, z). */
-export function checkTile(plants: IslandPlant[], seed: Pick<Seed, "key" | "rare">, x: number, z: number): PlantCheck {
+/** Ce que donnerait une plantation en (x, z). */
+export function checkTile(plants: IslandPlant[], seed: Pick<Seed, "key">, x: number, z: number): PlantCheck {
   if (!tileOk(x, z)) return "hors_ile";
-  const here = plants.find((p) => p.x === x && p.z === z);
-  if (!here) return tileFits(seed.key, x, z) ? "nouvelle" : "hors_zone";
-  return !seed.rare && !here.rare && here.species === seed.key ? "grandit" : "occupe";
+  if (plants.some((p) => p.x === x && p.z === z)) return "occupe";
+  return tileFits(seed.key, x, z) ? "nouvelle" : "hors_zone";
 }
 
+const spend = (data: IslandData, n: number): IslandData["pousses"] => (data.pousses == null ? data.pousses : Math.max(0, data.pousses - n));
+
 /** Applique une plantation en local (affichage immédiat, avant la réponse du serveur). */
-export function plantLocally(data: IslandData, seed: Pick<Seed, "key" | "rare">, x: number, z: number): IslandData {
-  const check = checkTile(data.plants, seed, x, z);
-  if (check === "grandit") {
-    return { ...data, plants: data.plants.map((p) => (p.x === x && p.z === z ? { ...p, fed: p.fed + 1, grown_at: new Date().toISOString() } : p)) };
-  }
-  if (check !== "nouvelle") return data;
+export function plantLocally(data: IslandData, seed: Pick<Seed, "key" | "rare" | "cost">, x: number, z: number): IslandData {
+  if (checkTile(data.plants, seed, x, z) !== "nouvelle") return data;
   const now = new Date().toISOString();
+  const free = seed.cost === 0;
   return {
     ...data,
-    inventory: withItem(data.inventory, seed.key, -1),
-    plants: [...data.plants, { id: `local-${x}-${z}`, species: seed.key, rare: seed.rare, x, z, fed: 1, planted_at: now, grown_at: now }],
+    pousses: spend(data, seed.cost),
+    free: free && !seed.rare ? { ...data.free, [seed.key]: Math.max(0, Number(data.free?.[seed.key] ?? 0) - 1) } : data.free,
+    plants: [
+      ...data.plants,
+      { id: `local-${x}-${z}`, species: seed.key, rare: seed.rare || Boolean(ITEM_BY_KEY[seed.key]), x, z, fed: 1, stage: seed.rare ? 4 : 1, spent: seed.cost, free, planted_at: now, grown_at: now },
+    ],
   };
 }
 
-/** L'inventaire après avoir posé (−1) ou arraché (+1) une plante du catalogue. */
-function withItem(inventory: IslandData["inventory"], key: string, delta: number): IslandData["inventory"] {
-  if (!ITEM_BY_KEY[key]) return inventory;
-  return { ...inventory, [key]: Math.max(0, Number(inventory?.[key] ?? 0) + delta) };
+/** Fait grandir une plante d'un stade en local (null : adulte, ou pas assez de pousses). */
+export function growLocally(data: IslandData, at: { x: number; z: number }): IslandData | null {
+  const plant = data.plants.find((p) => p.x === at.x && p.z === at.z);
+  if (!plant) return null;
+  const stage = stageOf(plant);
+  const cost = GROW_COST[stage];
+  if (!cost || (data.pousses ?? 0) < cost) return null;
+  return {
+    ...data,
+    pousses: spend(data, cost),
+    plants: data.plants.map((p) => (p === plant ? { ...p, stage: stage + 1, spent: (p.spent ?? 0) + cost, grown_at: new Date().toISOString() } : p)),
+  };
 }
 
 export const ISLAND_ERRORS: Record<string, string> = {
-  no_seed: "Plus de graine de cette espèce : enregistre une action pour en gagner.",
-  tile_taken: "Cet emplacement est pris. Choisis une case libre, ou une plante de la même espèce.",
+  no_seed: "Cette espèce n'est pas encore débloquée.",
+  locked: "Cette espèce n'est pas encore débloquée : regarde dans la Serre comment l'obtenir.",
+  tile_taken: "Cet emplacement est pris : choisis une case libre.",
   off_island: "Cet emplacement est hors de l'île.",
   already_planted: "Cette plante rare est déjà sur ton île.",
   no_plant: "Cette plante n'est plus là : l'île a été mise à jour.",
   wrong_zone: "Cette plante pousse dans sa zone : choisis une case en surbrillance.",
   not_enough: "Pas assez de pousses : enregistre des actions pour en gagner.",
-  locked: "Cette plante signature se débloque avec plus d'actions de sa famille.",
-  not_for_sale: "Cette plante ne se vend pas : elle se gagne en relevant un défi.",
+  adult: "Cette plante est déjà adulte.",
   already_gifted: "Tu as déjà offert un myosotis aujourd'hui. Reviens demain !",
   not_colleague: "Choisis un collègue de ton entreprise.",
 };
 
-/** Les cases où cette graine peut aller (libres, ou une plante de la même espèce à faire grandir). */
-export function playableTiles(plants: IslandPlant[], seed: Pick<Seed, "key" | "rare">): number {
-  return ISLAND_TILES.filter((t) => {
-    const c = checkTile(plants, seed, t.x, t.z);
-    return c === "nouvelle" || c === "grandit";
-  }).length;
+/** Les cases libres où cette espèce peut aller. */
+export function playableTiles(plants: IslandPlant[], seed: Pick<Seed, "key">): number {
+  return ISLAND_TILES.filter((t) => checkTile(plants, seed, t.x, t.z) === "nouvelle").length;
 }
 
 /** Déplace une plante vers une case libre (affichage immédiat). */
@@ -243,28 +271,21 @@ export function moveLocally(data: IslandData, from: { x: number; z: number }, to
   return { ...data, plants: data.plants.map((p) => (p.x === from.x && p.z === from.z ? { ...p, x: to.x, z: to.z } : p)) };
 }
 
-/** Arrache une plante : ses graines reviennent dans le bac (seedsOf les recompte). */
+/** Arrache une plante : les pousses dépensées reviennent, l'exemplaire offert aussi. */
 export function uprootLocally(data: IslandData, at: { x: number; z: number }): IslandData {
   const plant = data.plants.find((p) => p.x === at.x && p.z === at.z);
+  if (!plant) return data;
+  const item = ITEM_BY_KEY[plant.species];
   return {
     ...data,
-    inventory: plant?.rare ? withItem(data.inventory, plant.species, 1) : data.inventory,
-    plants: data.plants.filter((p) => p.x !== at.x || p.z !== at.z),
+    pousses: data.pousses == null ? data.pousses : data.pousses + (plant.spent ?? 0),
+    free: plant.free && item ? { ...data.free, [plant.species]: Number(data.free?.[plant.species] ?? 0) + 1 } : data.free,
+    plants: data.plants.filter((p) => p !== plant),
   };
 }
 
-/**
- * « Planter pour moi » : faire grandir la plus petite plante de la même espèce qui n'est pas encore
- * adulte, sinon le premier emplacement libre en partant du centre.
- */
-export function bestTile(plants: IslandPlant[], seed: Pick<Seed, "key" | "rare">): { x: number; z: number } | null {
-  if (!seed.rare) {
-    const growing = plants
-      .filter((p) => !p.rare && p.species === seed.key && p.fed < 40)
-      .sort((a, b) => a.fed - b.fed)[0];
-    if (growing) return { x: growing.x, z: growing.z };
-  }
-  // Dans sa zone d'abord (la case centrale en dernier), au plus près du centre.
+/** « Planter pour moi » : la case libre de sa zone la plus proche du centre (la case centrale en dernier). */
+export function bestTile(plants: IslandPlant[], seed: Pick<Seed, "key">): { x: number; z: number } | null {
   const centreLast = (t: { x: number; z: number }) => (zoneOfSpecies(seed.key) && zoneOfTile(t.x, t.z) === null ? 1 : 0);
   const free = ISLAND_TILES.filter((t) => checkTile(plants, seed, t.x, t.z) === "nouvelle").sort(
     (a, b) => centreLast(a) - centreLast(b) || a.x * a.x + a.z * a.z - (b.x * b.x + b.z * b.z) || a.x - b.x || a.z - b.z,
